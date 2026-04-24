@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,8 +22,10 @@ public class DistrictStatisticFilter {
 
     // either both or current
     @JsonFormat(pattern = "dd.MM.yyyy")
+    @DateTimeFormat(pattern = "dd.MM.yyyy")
     private LocalDate startDate;
     @JsonFormat(pattern = "dd.MM.yyyy")
+    @DateTimeFormat(pattern = "dd.MM.yyyy")
     private LocalDate endDate;
 
 

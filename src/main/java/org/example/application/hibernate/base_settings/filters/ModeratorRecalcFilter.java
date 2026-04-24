@@ -1,11 +1,16 @@
 package org.example.application.hibernate.base_settings.filters;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.application.hibernate.base_settings.sorting_types.ModeratorRecalcSortType;
 import org.example.application.models.types.ModeratorVerdict;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,13 +21,21 @@ import java.util.List;
 @Builder
 public class ModeratorRecalcFilter {
     private List<Long> moderatorIds;
+    @Positive( message = "moderatorId must be > 0")
     private Long moderatorId;
 
     private List<Long> goodIds;
+    @Positive( message = "goodId must be > 0")
     private Long goodId;
 
+    @JsonFormat(pattern = "dd.MM.yyyy")
+    @DateTimeFormat(pattern = "dd.MM.yyyy")
     private LocalDate startDate;
+    @JsonFormat(pattern = "dd.MM.yyyy")
+    @DateTimeFormat(pattern = "dd.MM.yyyy")
     private LocalDate endDate;
+    @JsonFormat(pattern = "dd.MM.yyyy")
+    @DateTimeFormat(pattern = "dd.MM.yyyy")
     private LocalDate curDate;
 
     private ModeratorVerdict verdict;
@@ -31,7 +44,10 @@ public class ModeratorRecalcFilter {
     private ModeratorRecalcSortType sortType = ModeratorRecalcSortType.ASC;
 
     @Builder.Default
+    @PositiveOrZero(message = "page must be >=0")
     private Integer page = null;
+
     @Builder.Default
+    @Positive( message = "count > 0")
     private Integer count = null;
 }
