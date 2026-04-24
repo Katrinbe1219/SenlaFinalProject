@@ -1,0 +1,30 @@
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+<!--        выводит сгенериррованные sql запросы-->
+        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.jdbc.batch_size">75</property>
+<!--        упорядочивание для батчинга, чтобы не прыгать с таблицы на таблицу-->
+        <property name="hibernate.order_inserts">true</property>
+        <property name="hibernate.order_updates">true</property>
+
+
+        <mapping class="org.example.core.models.User" />
+        <mapping class="org.example.core.models.Category" />
+        <mapping class="org.example.core.models.Role" />
+        <mapping class="org.example.core.models.Unit" />
+        <mapping class="org.example.core.models.Good" />
+        <mapping class="org.example.core.models.Price" />
+        <mapping class="org.example.core.models.Shop" />
+    <mapping class="org.example.core.models.District" />
+            <mapping class="org.example.core.models.ModeratorRatingCheck" />
+            <mapping class="org.example.core.models.Privilege" />
+            <mapping class="org.example.core.models.RatingRecalculationLog" />
+            <mapping class="org.example.core.models.Review" />
+            <mapping class="org.example.core.models.Tag" />
+            <mapping class="org.example.core.models.RefreshToken" />
+            <mapping class="org.example.core.models.Favourite" />
+    </session-factory>
+</hibernate-configuration>
