@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+<!--    adding privileges-->
+    <changeSet id="1-1" author="katrinbe1219">
+        <insert tableName="privileges">
+            <column name="name">looking</column>
+        </insert>
+        <insert tableName="privileges">
+            <column name="name">favouring</column>
+        </insert>
+        <insert tableName="privileges">
+            <column name="name">rating</column>
+        </insert>
+        <insert tableName="privileges">
+            <column name="name">min_comparing</column>
+        </insert>
+        <insert tableName="privileges">
+            <column name="name">mid_comparing</column>
+        </insert>
+        <insert tableName="privileges">
+            <column name="name">max_comparing</column>
+        </insert>
+        <insert tableName="privileges">
+            <column name="name">moderating</column>
+        </insert>
+        <insert tableName="privileges">
+            <column name="name">analyzing</column>
+        </insert>
+        <insert tableName="privileges">
+            <column name="name">administrating</column>
+        </insert>
+    </changeSet>
+
+<!--    adding roles-->
+    <changeSet id="1-2" author="katrinbe1219">
+        <insert tableName="roles">
+            <column name="name">ADMIN</column>
+        </insert>
+        <insert tableName="roles">
+            <column name="name">MODERATOR</column>
+        </insert>
+        <insert tableName="roles">
+            <column name="name">ANALYST</column>
+        </insert>
+        <insert tableName="roles">
+            <column name="name">MAX_USER</column>
+        </insert>
+        <insert tableName="roles">
+            <column name="name">MIN_USER</column>
+        </insert>
+    </changeSet>
+
+<!--    adding basic users-->
+<!--    password: password-->
+    <changeSet id="1-3" author="katrinbe1219">
+        <insert tableName="users">
+            <column name="role_id" value="1" />
+            <column name="login" value="admin" />
+            <column name="username" value="admin123" />
+            <column name="password" value="$2a$12$s7earj1V.HSlBzO92KcV1eOGn6vNNZ58ShMx1oX1SBojF4JFEg.Ea"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="role_id" value="2" />
+            <column name="login" value="moderator" />
+            <column name="username" value="mod123" />
+            <column name="password" value="$2a$12$s7earj1V.HSlBzO92KcV1eOGn6vNNZ58ShMx1oX1SBojF4JFEg.Ea"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="role_id" value="3" />
+            <column name="login" value="analyst" />
+            <column name="username" value="an123" />
+            <column name="password" value="$2a$12$s7earj1V.HSlBzO92KcV1eOGn6vNNZ58ShMx1oX1SBojF4JFEg.Ea"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="role_id" value="4" />
+            <column name="login" value="muser" />
+            <column name="username" value="mauser123" />
+            <column name="password" value="$2a$12$s7earj1V.HSlBzO92KcV1eOGn6vNNZ58ShMx1oX1SBojF4JFEg.Ea"/>
+        </insert>
+
+        <insert tableName="users">
+            <column name="role_id" value="5" />
+            <column name="login" value="miuser" />
+            <column name="username" value="miuser123" />
+            <column name="password" value="$2a$12$s7earj1V.HSlBzO92KcV1eOGn6vNNZ58ShMx1oX1SBojF4JFEg.Ea"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

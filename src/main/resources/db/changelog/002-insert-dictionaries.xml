@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+
+    <!-- UNITS -->
+    <changeSet id="fill-units" author="katrinbe1219">
+        <insert tableName="units">
+            <column name="name" value="килограмм"/>
+            <column name="short_name" value="кг"/>
+        </insert>
+        <insert tableName="units">
+            <column name="name" value="грамм"/>
+            <column name="short_name" value="гр"/>
+        </insert>
+        <insert tableName="units">
+            <column name="name" value="миллилитр"/>
+            <column name="short_name" value="мл"/>
+        </insert>
+        <insert tableName="units">
+            <column name="name" value="литр"/>
+            <column name="short_name" value="л"/>
+        </insert>
+    </changeSet>
+
+
+    <!-- DISTRICTS -->
+
+    <changeSet id="fill-districts" author="katrinbe1219">
+        <insert tableName="districts">
+            <column name="name" value="Ворошиловский"/>
+        </insert>
+        <insert tableName="districts">
+            <column name="name" value="Советский"/>
+        </insert>
+        <insert tableName="districts">
+            <column name="name" value="Западный"/>
+        </insert>
+        <insert tableName="districts">
+            <column name="name" value="Железнодорожный"/>
+        </insert>
+    </changeSet>
+
+
+    <!-- CATEGORIES  -->
+
+    <changeSet id="fill-categories-root" author="katrinbe1219">
+        <insert tableName="categories">
+            <column name="name" value="молочка"/>
+            <column name="parent_id" value="null"/>
+        </insert>
+        <insert tableName="categories">
+            <column name="name" value="крупы"/>
+            <column name="parent_id" value="null"/>
+        </insert>
+        <insert tableName="categories">
+            <column name="name" value="мясо"/>
+            <column name="parent_id" value="null"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="fill-categories-children" author="katrinbe1219">
+        <insert tableName="categories">
+            <column name="name" value="сыр"/>
+            <column name="parent_id" valueComputed="(SELECT id FROM categories WHERE name = 'молочка')"/>
+        </insert>
+
+        <insert tableName="categories">
+            <column name="name" value="творог"/>
+            <column name="parent_id" valueComputed="(SELECT id FROM categories WHERE name = 'молочка')"/>
+        </insert>
+
+        <insert tableName="categories">
+            <column name="name" value="гречка"/>
+            <column name="parent_id" valueComputed="(SELECT id FROM categories WHERE name = 'крупы')"/>
+        </insert>
+
+        <insert tableName="categories">
+            <column name="name" value="рис"/>
+            <column name="parent_id" valueComputed="(SELECT id FROM categories WHERE name = 'крупы')"/>
+        </insert>
+
+        <insert tableName="categories">
+            <column name="name" value="говядина"/>
+            <column name="parent_id" valueComputed="(SELECT id FROM categories WHERE name = 'мясо')"/>
+        </insert>
+
+        <insert tableName="categories">
+            <column name="name" value="курица"/>
+            <column name="parent_id" valueComputed="(SELECT id FROM categories WHERE name = 'мясо')"/>
+        </insert>
+    </changeSet>
+
+    <!-- TAGS (Теги) -->
+    <changeSet id="fill-tags" author="katrinbe1219">
+        <insert tableName="tags">
+            <column name="name" value="без глютена"/>
+        </insert>
+        <insert tableName="tags">
+            <column name="name" value="обезжиренное"/>
+        </insert>
+        <insert tableName="tags">
+            <column name="name" value="постное"/>
+        </insert>
+        <insert tableName="tags">
+            <column name="name" value="масса набор"/>
+        </insert>
+    </changeSet>
+
+
+
+</databaseChangeLog>

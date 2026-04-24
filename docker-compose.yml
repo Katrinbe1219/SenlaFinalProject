@@ -1,0 +1,46 @@
+services:
+  database:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: senla_final_user
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: senla_final_database
+
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - senla-final-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U senla_final_user -d senla_final_database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+
+  application:
+    build:
+      dockerfile: ./Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DB_USER: senla_final_user
+      DB_PASSWORD: 123
+      DB_DATABASE: senla_final_database
+      DB_HOST: database
+      DB_PORT: 5432
+      SECRET: senla90final3secret%for_jwt321%?topic=monitoring_goods
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - senla-final-net
+
+volumes:
+  pgdata:
+
+
+networks:
+  senla-final-net:
+

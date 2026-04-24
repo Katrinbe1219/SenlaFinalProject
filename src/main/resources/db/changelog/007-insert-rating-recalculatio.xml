@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="fill-rating-recalculation-log" author="katrinbe1219">
+
+        <!-- Для каждого товара создаём запись в логе -->
+        <insert tableName="rating_recalculation_log">
+            <column name="good_id" valueComputed="(SELECT id FROM goods WHERE name = 'Творог обезжиренный')"/>
+            <column name="old_rate" valueNumeric="0.0"/>
+            <column name="new_rate" valueNumeric="0.0"/>
+            <column name="triggered_by" value="SCHEDULED"/>
+            <column name="status" value="FIRST_ADDED"/>
+            <column name="error_message" value="null"/>
+        </insert>
+
+        <insert tableName="rating_recalculation_log">
+            <column name="good_id" valueComputed="(SELECT id FROM goods WHERE name = 'Творог 5%')"/>
+            <column name="old_rate" valueNumeric="0.0"/>
+            <column name="new_rate" valueNumeric="0.0"/>
+            <column name="triggered_by" value="SCHEDULED"/>
+            <column name="status" value="FIRST_ADDED"/>
+            <column name="error_message" value="null"/>
+        </insert>
+
+        <insert tableName="rating_recalculation_log">
+            <column name="good_id" valueComputed="(SELECT id FROM goods WHERE name = 'Говядина шейная часть')"/>
+            <column name="old_rate" valueNumeric="0.0"/>
+            <column name="new_rate" valueNumeric="0.0"/>
+            <column name="triggered_by" value="SCHEDULED"/>
+            <column name="status" value="FIRST_ADDED"/>
+            <column name="error_message" value="null"/>
+        </insert>
+
+        <insert tableName="rating_recalculation_log">
+            <column name="good_id" valueComputed="(SELECT id FROM goods WHERE name = 'Говяжья голяшка (нарезка)')"/>
+            <column name="old_rate" valueNumeric="0.0"/>
+            <column name="new_rate" valueNumeric="0.0"/>
+            <column name="triggered_by" value="SCHEDULED"/>
+            <column name="status" value="FIRST_ADDED"/>
+            <column name="error_message" value="null"/>
+        </insert>
+
+        <insert tableName="rating_recalculation_log">
+            <column name="good_id" valueComputed="(SELECT id FROM goods WHERE name = 'Говядина духовая охлаждённая')"/>
+            <column name="old_rate" valueNumeric="0.0"/>
+            <column name="new_rate" valueNumeric="0.0"/>
+            <column name="triggered_by" value="SCHEDULED"/>
+            <column name="status" value="FIRST_ADDED"/>
+            <column name="error_message" value="null"/>
+        </insert>
+
+    </changeSet>
+</databaseChangeLog>

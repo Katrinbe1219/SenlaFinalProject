@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="fill-goods" author="katrinbe1219">
+
+        <insert tableName="goods">
+            <column name="name" value="Творог обезжиренный"/>
+            <column name="description" value="Нежный творог 0% жирности. Идеален для диетического питания и здорового завтрака. Без консервантов, содержит много кальция и белка."/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'творог')"/>
+            <column name="unit_id" valueComputed="(SELECT id FROM units WHERE name = 'килограмм')"/>
+
+        </insert>
+
+        <insert tableName="goods">
+            <column name="name" value="Творог 5%"/>
+            <column name="description" value="Классический творог 5% жирности. Оптимальный баланс пользы и вкуса. Подходит для приготовления запеканок, сырников и просто как самостоятельное блюдо."/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'творог')"/>
+            <column name="unit_id" valueComputed="(SELECT id FROM units WHERE name = 'килограмм')"/>
+
+        </insert>
+
+
+        <insert tableName="goods">
+            <column name="name" value="Говядина шейная часть"/>
+            <column name="description" value="Нежное мясо из шейной части с тонкими прожилками жира. Идеально для варки бульонов, тушения и приготовления гуляша. Мраморность придаёт блюдам сочность."/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'говядина')"/>
+            <column name="unit_id" valueComputed="(SELECT id FROM units WHERE name = 'килограмм')"/>
+
+        </insert>
+
+        <insert tableName="goods">
+            <column name="name" value="Говяжья голяшка (нарезка)"/>
+            <column name="description" value="Мясо с костью из голени. Богато желатином, придаёт бульонам наваристость и густоту. Отлично подходит для холодца, супов и длительного тушения."/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'говядина')"/>
+            <column name="unit_id" valueComputed="(SELECT id FROM units WHERE name = 'килограмм')"/>
+
+        </insert>
+
+
+        <insert tableName="goods">
+            <column name="name" value="Говядина духовая охлаждённая"/>
+            <column name="description" value="Отборное охлаждённое мясо для запекания и жарки. Мягкое, сочное, без лишнего жира. Идеально для стейков, ростбифа и праздничных блюд. Парное охлаждение сохраняет все полезные свойства."/>
+            <column name="category_id" valueComputed="(SELECT id FROM categories WHERE name = 'говядина')"/>
+            <column name="unit_id" valueComputed="(SELECT id FROM units WHERE name = 'килограмм')"/>
+
+        </insert>
+
+    </changeSet>
+</databaseChangeLog>

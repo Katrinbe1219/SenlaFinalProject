@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="fill-goods-tags" author="katrinbe1219">
+
+
+        <insert tableName="goods_tags">
+            <column name="good_id" valueComputed="(SELECT id FROM goods WHERE name = 'Говядина шейная часть')"/>
+            <column name="tag_id" valueComputed="(SELECT id FROM tags WHERE name = 'масса набор')"/>
+        </insert>
+
+        <insert tableName="goods_tags">
+            <column name="good_id" valueComputed="(SELECT id FROM goods WHERE name = 'Говяжья голяшка (нарезка)')"/>
+            <column name="tag_id" valueComputed="(SELECT id FROM tags WHERE name = 'масса набор')"/>
+        </insert>
+
+        <insert tableName="goods_tags">
+            <column name="good_id" valueComputed="(SELECT id FROM goods WHERE name = 'Творог обезжиренный')"/>
+            <column name="tag_id" valueComputed="(SELECT id FROM tags WHERE name = 'обезжиренное')"/>
+        </insert>
+
+    </changeSet>
+</databaseChangeLog>

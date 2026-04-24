@@ -1,0 +1,737 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="1.0" author="katrinbe1219">
+
+
+        <createSequence
+                sequenceName="reviews_id_seq"
+                startValue="1"
+                incrementBy="75"/>
+
+        <createSequence
+                sequenceName="rating_recalculation_log_id_seq"
+                startValue="1"
+                incrementBy="75"/>
+
+        <createSequence
+                sequenceName="prices_id_seq"
+                startValue="1"
+                incrementBy="75"/>
+
+    </changeSet>
+
+    <changeSet id="1" author="katrinbe1219">
+        <createTable tableName="units">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="short_name" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!--  DISTRICTS  -->
+    <changeSet id="2" author="katrinbe1219">
+        <createTable tableName="districts">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!--  CATEGORIES -->
+    <changeSet id="3" author="katrinbe1219">
+        <createTable tableName="categories">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <!-- NULL = корневая категория -->
+            <column name="parent_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Самоссылка - отдельный делается changeSEt, чтобы создалась бд -->
+    <changeSet id="4" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="categories"
+                baseColumnNames="parent_id"
+                constraintName="fk_category_parent"
+                referencedTableName="categories"
+                referencedColumnNames="id"
+                onDelete="SET NULL"/>
+        <!-- если удаляется родитель, дочерние становятся корневыми -->
+    </changeSet>
+
+    <!--  TAGS-->
+    <changeSet id="5" author="katrinbe1219">
+        <createTable tableName="tags">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!--  PRIVILEGES  -->
+    <changeSet id="6" author="katrinbe1219">
+        <createTable tableName="privileges">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- ROLES -->
+    <changeSet id="7" author="katrinbe1219">
+        <createTable tableName="roles">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!--  ROLES_PRIVILEGES  -->
+    <changeSet id="8" author="katrinbe1219">
+        <createTable tableName="roles_privileges">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privilege_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="9" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="roles_privileges"
+                baseColumnNames="role_id"
+                constraintName="fk_roles_privileges_role"
+                referencedTableName="roles"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="10" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="roles_privileges"
+                baseColumnNames="privilege_id"
+                constraintName="fk_roles_privileges_privilege"
+                referencedTableName="privileges"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- role_id and privilege_id - unique -->
+    <changeSet id="11" author="katrinbe1219">
+        <addUniqueConstraint
+                tableName="roles_privileges"
+                columnNames="role_id, privilege_id"
+                constraintName="uq_roles_privileges"/>
+    </changeSet>
+
+    <!-- USERS  -->
+    <changeSet id="12" author="katrinbe1219">
+        <createTable tableName="users">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="login" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="true" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="non_locked" type="bool" defaultValue="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="13" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="users"
+                baseColumnNames="role_id"
+                constraintName="fk_users_role"
+                referencedTableName="roles"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"/>
+        <!-- RESTRICT — нельзя удалить роль пока есть пользователи с ней -->
+    </changeSet>
+
+    <!--  SHOPS  -->
+    <changeSet id="14" author="katrinbe1219">
+        <createTable tableName="shops">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="district_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rating" type="DECIMAL(3,2)" defaultValueNumeric="0.0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rating_updated_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="15" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="shops"
+                baseColumnNames="district_id"
+                constraintName="fk_shops_district"
+                referencedTableName="districts"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"/>
+    </changeSet>
+
+    <!-- Уникальность: название + адрес + район -->
+    <changeSet id="16" author="katrinbe1219">
+        <addUniqueConstraint
+                tableName="shops"
+                columnNames="name, address, district_id"
+                constraintName="uq_shops_name_address_district"/>
+    </changeSet>
+
+    <!--  GOODS -->
+    <changeSet id="17" author="katrinbe1219">
+        <createTable tableName="goods">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="category_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="unit_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="moderator_status" type="VARCHAR(20)" defaultValue="APPROVED">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="rate" type="DECIMAL(3,2)" defaultValueNumeric="0.0">
+
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet id="17.1" author="katrinbe1219">
+        <sql>
+            ALTER TABLE goods
+                ADD CONSTRAINT chk_goods_moderator_status
+                    CHECK (moderator_status IN ('APPROVED', 'SUSPICIOUS'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="18" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="goods"
+                baseColumnNames="category_id"
+                constraintName="fk_goods_category"
+                referencedTableName="categories"
+                referencedColumnNames="id"
+                onDelete="SET NULL"/>
+    </changeSet>
+
+    <changeSet id="19" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="goods"
+                baseColumnNames="unit_id"
+                constraintName="fk_goods_unit"
+                referencedTableName="units"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"/>
+    </changeSet>
+
+    <!--  GOODS_TAGS  -->
+    <changeSet id="20" author="katrinbe1219">
+        <createTable tableName="goods_tags">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="good_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="21" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="goods_tags"
+                baseColumnNames="good_id"
+                constraintName="fk_goods_tags_good"
+                referencedTableName="goods"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="22" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="goods_tags"
+                baseColumnNames="tag_id"
+                constraintName="fk_goods_tags_tag"
+                referencedTableName="tags"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- Один тег — один раз на товар -->
+    <changeSet id="23" author="katrinbe1219">
+        <addUniqueConstraint
+                tableName="goods_tags"
+                columnNames="good_id, tag_id"
+                constraintName="uq_goods_tags"/>
+    </changeSet>
+
+    <!--  REVIEWS  -->
+    <changeSet id="24" author="katrinbe1219">
+        <createTable tableName="reviews">
+            <column name="id" type="BIGINT" defaultValueComputed="nextval('reviews_id_seq')">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="good_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Текст необязателен — можно оставить только оценку -->
+            <column name="review" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="rate" type="SMALLINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blocked" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blocked_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="blocked_by" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <sql>
+            ALTER SEQUENCE reviews_id_seq OWNED BY reviews.id;
+        </sql>
+    </changeSet>
+
+    <!-- Один пользователь — один отзыв на один товар -->
+    <changeSet id="25" author="katrinbe1219">
+        <addUniqueConstraint
+                tableName="reviews"
+                columnNames="good_id, user_id"
+                constraintName="uq_reviews_good_user"/>
+    </changeSet>
+    <changeSet id="25-1" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="reviews"
+                baseColumnNames="blocked_by"
+                constraintName="fk_reviews_blocked_by"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"/>
+    </changeSet>
+
+    <!-- rate строго от 1 до 5 -->
+    <changeSet id="26" author="katrinbe1219">
+        <sql>
+            ALTER TABLE reviews
+                ADD CONSTRAINT chk_reviews_rate CHECK (rate BETWEEN 1 AND 5);
+        </sql>
+    </changeSet>
+
+    <changeSet id="27" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="reviews"
+                baseColumnNames="good_id"
+                constraintName="fk_reviews_good"
+                referencedTableName="goods"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="28" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="reviews"
+                baseColumnNames="user_id"
+                constraintName="fk_reviews_user"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- PRICES-->
+    <changeSet id="29" author="katrinbe1219">
+        <createTable tableName="prices">
+            <column name="id" type="BIGINT" defaultValueComputed="nextval('prices_id_seq')">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="shop_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="good_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valid_from" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <!-- NULL = актуальная цена
+                 = Today когда устарела  -->
+            <column name="valid_to" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        <sql>
+            ALTER SEQUENCE prices_id_seq OWNED BY prices.id;
+        </sql>
+    </changeSet>
+
+    <changeSet id="30" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="prices"
+                baseColumnNames="shop_id"
+                constraintName="fk_prices_shop"
+                referencedTableName="shops"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="31" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="prices"
+                baseColumnNames="good_id"
+                constraintName="fk_prices_good"
+                referencedTableName="goods"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- Только одна актуальная цена (valid_to IS NULL) на товар в магазине -->
+    <!-- Partial unique index — работает только в PostgreSQL -->
+    <changeSet id="32" author="katrinbe1219">
+        <sql>
+            CREATE UNIQUE INDEX uq_prices_active
+                ON prices (shop_id, good_id)
+                WHERE valid_to IS NULL;
+        </sql>
+    </changeSet>
+
+    <!-- Цена должна быть положительной -->
+    <changeSet id="33" author="katrinbe1219">
+        <sql>
+            ALTER TABLE prices
+                ADD CONSTRAINT chk_prices_positive CHECK (price > 0);
+        </sql>
+    </changeSet>
+
+    <!-- valid_from не может быть позже valid_to -->
+    <changeSet id="34" author="katrinbe1219">
+        <sql>
+            ALTER TABLE prices
+                ADD CONSTRAINT chk_prices_dates
+                    CHECK (valid_to IS NULL OR valid_from &lt;= valid_to);
+        </sql>
+    </changeSet>
+
+    <!-- RATING_RECALCULATION_LOG  -->
+    <changeSet id="35" author="katrinbe1219">
+        <createTable tableName="rating_recalculation_log">
+            <column name="id" type="BIGINT" defaultValueComputed="nextval('rating_recalculation_log_id_seq')">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="good_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="triggered_by" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="error_message" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="old_rate" type="DECIMAL(3,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="new_rate" type="DECIMAL(3,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="recalculated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <sql>
+            ALTER SEQUENCE rating_recalculation_log_id_seq OWNED BY rating_recalculation_log.id;
+        </sql>
+    </changeSet>
+
+    <changeSet id="36" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="rating_recalculation_log"
+                baseColumnNames="good_id"
+                constraintName="fk_recalculation_log_good"
+                referencedTableName="goods"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="37" author="katrinbe1219">
+        <sql>
+            ALTER TABLE rating_recalculation_log
+                ADD CONSTRAINT chk_recalc_triggered_by
+                    CHECK (triggered_by IN ('SCHEDULED', 'MODERATOR'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="38" author="katrinbe1219">
+        <sql>
+            ALTER TABLE rating_recalculation_log
+                ADD CONSTRAINT chk_recalc_status
+                    CHECK (status IN ('SUCCESS', 'FAILED','FIRST_ADDED'));
+        </sql>
+    </changeSet>
+
+    <!-- ==================== MODERATOR_RATING_CHECKS ==================== -->
+    <changeSet id="39" author="katrinbe1219">
+        <createTable tableName="moderator_rating_checks">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="good_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="moderator_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="verdict" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="checked_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="40" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="moderator_rating_checks"
+                baseColumnNames="good_id"
+                constraintName="fk_moderator_checks_good"
+                referencedTableName="goods"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="41" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="moderator_rating_checks"
+                baseColumnNames="moderator_id"
+                constraintName="fk_moderator_checks_user"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="RESTRICT"/>
+    </changeSet>
+
+    <changeSet id="42" author="katrinbe1219">
+        <sql>
+            ALTER TABLE moderator_rating_checks
+                ADD CONSTRAINT chk_moderator_verdict
+                    CHECK (verdict IN ('APPROVED', 'SUSPICIOUS', 'RECALCULATED'));
+        </sql>
+    </changeSet>
+
+    <!--  INDEXES -->
+    <!-- Поиск товаров по категории -->
+    <changeSet id="43" author="katrinbe1219">
+        <createIndex tableName="goods" indexName="idx_goods_category_id">
+            <column name="category_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Поиск актуальных цен по товару -->
+    <changeSet id="44" author="katrinbe1219">
+        <createIndex tableName="prices" indexName="idx_prices_good_id">
+            <column name="good_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Поиск цен по магазину -->
+    <changeSet id="45" author="katrinbe1219">
+        <createIndex tableName="prices" indexName="idx_prices_shop_id">
+            <column name="shop_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Поиск отзывов по товару — частый запрос при пересчёте рейтинга -->
+    <changeSet id="46" author="katrinbe1219">
+        <createIndex tableName="reviews" indexName="idx_reviews_good_id">
+            <column name="good_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Поиск логов пересчёта по товару — для модератора -->
+    <changeSet id="47" author="katrinbe1219">
+        <createIndex tableName="rating_recalculation_log" indexName="idx_recalc_log_good_id">
+            <column name="good_id"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Поиск магазинов по району -->
+    <changeSet id="48" author="katrinbe1219">
+        <createIndex tableName="shops" indexName="idx_shops_district_id">
+            <column name="district_id"/>
+        </createIndex>
+    </changeSet>
+
+
+    <changeSet id="create-refresh-tokens-table" author="katrinbe1219">
+        <createTable tableName="refresh_tokens">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="token_hash" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="device_info" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="expires_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_used_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+
+    <changeSet id="add-refresh-token-fk-user" author="katrinbe1219">
+        <addForeignKeyConstraint
+                baseTableName="refresh_tokens"
+                baseColumnNames="user_id"
+                constraintName="fk_refresh_token_user"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+
+    <changeSet id="add-refresh-token-indexes" author="katrinbe1219">
+
+        <createIndex tableName="refresh_tokens" indexName="idx_refresh_token_user_id">
+            <column name="user_id"/>
+        </createIndex>
+
+
+        <createIndex tableName="refresh_tokens" indexName="idx_refresh_token_expires_at">
+            <column name="expires_at"/>
+        </createIndex>
+
+        <!-- user_id + expires_at -->
+        <createIndex tableName="refresh_tokens" indexName="idx_refresh_token_user_expires">
+            <column name="user_id"/>
+            <column name="expires_at"/>
+        </createIndex>
+
+        <createIndex tableName="refresh_tokens" indexName="idx_refresh_token_user_device_info">
+                <column name="user_id"/>
+                <column name="device_info"/>
+        </createIndex>
+    </changeSet>
+
+
+
+</databaseChangeLog>

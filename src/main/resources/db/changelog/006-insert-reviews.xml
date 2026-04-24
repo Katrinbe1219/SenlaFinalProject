@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="fill-reviews" author="katrinbe1219">
+
+        <insert tableName="reviews">
+            <column name="good_id" valueComputed="(SELECT id FROM goods WHERE name = 'Творог 5%')"/>
+            <column name="user_id" valueNumeric="4"/>
+            <column name="review" value="вкусный, мягкий, душистый"/>
+            <column name="rate" valueNumeric="5"/>
+            <column name="blocked" valueBoolean="false"/>
+        </insert>
+
+
+        <insert tableName="reviews">
+            <column name="good_id" valueComputed="(SELECT id FROM goods WHERE name = 'Творог обезжиренный')"/>
+            <column name="user_id" valueNumeric="4"/>
+            <column name="review" value="рассыпчатый, диетический, не горький"/>
+            <column name="rate" valueNumeric="5"/>
+            <column name="blocked" valueBoolean="false"/>
+        </insert>
+
+        <insert tableName="reviews">
+            <column name="good_id" valueComputed="(SELECT id FROM goods WHERE name = 'Говядина шейная часть')"/>
+            <column name="user_id" valueNumeric="4"/>
+            <column name="review" value="невкусная, жесткая"/>
+            <column name="rate" valueNumeric="2"/>
+            <column name="blocked" valueBoolean="false"/>
+        </insert>
+
+    </changeSet>
+</databaseChangeLog>

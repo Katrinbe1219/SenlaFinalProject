@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="fill-shops" author="katrinbe1219">
+
+        <insert tableName="shops">
+            <column name="name" value="Пятёрочка"/>
+            <column name="address" value="ул. Железнодорожная, 15"/>
+            <column name="district_id" valueComputed="(SELECT id FROM districts WHERE name = 'Железнодорожный')"/>
+        </insert>
+
+        <insert tableName="shops">
+            <column name="name" value="Пятёрочка"/>
+            <column name="address" value="ул. Советская, 42"/>
+            <column name="district_id" valueComputed="(SELECT id FROM districts WHERE name = 'Советский')"/>
+        </insert>
+
+        <insert tableName="shops">
+            <column name="name" value="Перекрёсток"/>
+            <column name="address" value="ул. Ворошилова, 78"/>
+            <column name="district_id" valueComputed="(SELECT id FROM districts WHERE name = 'Ворошиловский')"/>
+        </insert>
+
+        <insert tableName="shops">
+            <column name="name" value="Перекрёсток"/>
+            <column name="address" value="ул. Западная, 23"/>
+            <column name="district_id" valueComputed="(SELECT id FROM districts WHERE name = 'Западный')"/>
+        </insert>
+
+        <insert tableName="shops">
+            <column name="name" value="Магнит"/>
+            <column name="address" value="ул. Ворошилова, 12"/>
+            <column name="district_id" valueComputed="(SELECT id FROM districts WHERE name = 'Ворошиловский')"/>
+        </insert>
+
+        <insert tableName="shops">
+            <column name="name" value="Магнит"/>
+            <column name="address" value="ул. Советская, 56"/>
+            <column name="district_id" valueComputed="(SELECT id FROM districts WHERE name = 'Советский')"/>
+        </insert>
+
+        <insert tableName="shops">
+            <column name="name" value="Магнит"/>
+            <column name="address" value="ул. Западная, 7"/>
+            <column name="district_id" valueComputed="(SELECT id FROM districts WHERE name = 'Западный')"/>
+        </insert>
+
+        <insert tableName="shops">
+            <column name="name" value="Магнит"/>
+            <column name="address" value="ул. Железнодорожная, 34"/>
+            <column name="district_id" valueComputed="(SELECT id FROM districts WHERE name = 'Железнодорожный')"/>
+        </insert>
+
+    </changeSet>
+</databaseChangeLog>
