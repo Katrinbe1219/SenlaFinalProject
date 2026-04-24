@@ -7,7 +7,12 @@
     <groupId>org.example</groupId>
     <artifactId>application</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>pom</packaging>
+    <modules>
+        <module>core</module>
+        <module>annotations</module>
+        <module>annotations_processors</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -21,11 +26,7 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.hibernate.orm</groupId>
-            <artifactId>hibernate-core</artifactId>
-            <version>6.4.0.Final</version>
-        </dependency>
+
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -34,196 +35,6 @@
         </dependency>
 
 
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.ua-parser</groupId>
-            <artifactId>uap-java</artifactId>
-            <version>1.5.4</version>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.16.0</version>
-        </dependency>
-
-<!--        расширяет beans + component scan, repositories, services-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-beans</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-<!--        мост между spring и orm-фреймокров, внедряет session Factory, EntityManaherFactory-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-orm</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-tx</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-<!--        интегрирует Security в веб-слой; добавляет FilterChainProxy, защита от csrf-->
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-web</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-<!--      позволяет настраивать безопасность через java config; EnableWEbSEcurity  -->
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-config</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-<!--        Authentication, SecurityContextHilder, UserDEtails-->
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-core</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-        <!--        базовые утилиты, загрузка файлов, rest-client, webapplicationcontext-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-<!--        RequestMapping, model MVC, RestCOntroller, validation-->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-
-        <dependency>
-            <groupId>jakarta.annotation</groupId>
-            <artifactId>jakarta.annotation-api</artifactId>
-            <version>2.1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-            <scope>provided</scope>
-            <version>6.0.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.10.2</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.17.0</version>
-        </dependency>
-
-        <!-- Поддержка Java 8 Time API (LocalDate, LocalDateTime) -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>2.17.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jfree</groupId>
-            <artifactId>jfreechart</artifactId>
-            <version>1.5.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
-            <version>5.2.5</version>
-        </dependency>
-
-
-
-<!--        <dependency>-->
-<!--            <groupId>junit</groupId>-->
-<!--            <artifactId>junit</artifactId>-->
-<!--            <version>${junit.version}</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.10.2</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${postgresql.version}</version> <!--автоматически compile-->
-        </dependency>
-
-        <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
-            <version>4.24.0</version>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.32</version>
-            <scope>provided</scope> <!-- только во время компиляции, в jar не попадает -->
-        </dependency>
-
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <version>1.6.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>5.11.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-api</artifactId>
-            <version>${jjwt.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-impl</artifactId>
-            <version>${jjwt.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId>
-            <version>${jjwt.version}</version>
-            <scope>runtime</scope>
-        </dependency>
 
 
         <dependency>
@@ -237,43 +48,53 @@
 
     </dependencies>
 
-    <build>
-        <finalName>senla</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>3.3.2</version>
-                <configuration>
-                    <failOnMissingWebXml>false</failOnMissingWebXml>
-                </configuration>
-            </plugin>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>jakarta.annotation</groupId>
+                <artifactId>jakarta.annotation-api</artifactId>
+                <version>2.1.1</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+<!--    <build>-->
+<!--        <finalName>senla</finalName>-->
+<!--        <plugins>-->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-war-plugin</artifactId>-->
+<!--                <version>3.3.2</version>-->
+<!--                <configuration>-->
+<!--                    <failOnMissingWebXml>false</failOnMissingWebXml>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
 
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-                <configuration>
-                    <source>17</source>
-                    <target>17</target>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>1.18.32</version>
-                        </path>
-                        <path>
-                            <groupId>org.mapstruct</groupId>
-                            <artifactId>mapstruct-processor</artifactId>
-                            <version>1.6.3</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-compiler-plugin</artifactId>-->
+<!--                <version>3.13.0</version>-->
+<!--                <configuration>-->
+<!--                    <source>17</source>-->
+<!--                    <target>17</target>-->
+<!--                    <annotationProcessorPaths>-->
+<!--                        <path>-->
+<!--                            <groupId>org.projectlombok</groupId>-->
+<!--                            <artifactId>lombok</artifactId>-->
+<!--                            <version>1.18.32</version>-->
+<!--                        </path>-->
+<!--                        <path>-->
+<!--                            <groupId>org.mapstruct</groupId>-->
+<!--                            <artifactId>mapstruct-processor</artifactId>-->
+<!--                            <version>1.6.3</version>-->
+<!--                        </path>-->
+<!--                    </annotationProcessorPaths>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
 
 
-        </plugins>
-    </build>
+<!--        </plugins>-->
+<!--    </build>-->
 
 </project>
