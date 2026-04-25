@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.annotations.MutuallyExclusive;
+import org.example.annotations.MutuallyExclusiveExtended;
 import org.example.core.hibernate.base_settings.sorting_types.PriceSortTypes;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -19,13 +21,16 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@MutuallyExclusiveExtended(first = "curPrice", second = "maxPrice", third = "minPrice")
+@MutuallyExclusive(fields1 = "current", fields2 = "old")
+@MutuallyExclusive(fields2 = "shopIds", fields1 = "districtIds")
 public class PriceFilter {
-    private List<Long> categoriesId;
-    private List<Long> shopsId;
+    private List<Long> categoryIds;
+    private List<Long> shopIds;
 
     //  взаимоисключающие
-    private List<Long> goodsId;
-    private List<Long> districtsId;
+    private List<Long> goodIds;
+    private List<Long> districtIds;
 
     //  2  против 1
     @PositiveOrZero(message = "minPrice must be  >= 0")
@@ -51,10 +56,10 @@ public class PriceFilter {
 
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")
-    private  Integer page = 0;
+    private  Integer page = null;
     @Builder.Default
     @Positive(message = "size must be > 0")
-    private Integer size = 20;
+    private Integer size = null;
 
 
 

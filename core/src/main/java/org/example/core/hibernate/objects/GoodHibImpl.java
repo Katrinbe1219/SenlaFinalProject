@@ -37,6 +37,22 @@ public class GoodHibImpl extends HibernateAbstractDao<Good, Long, Logger> {
     }
 
     @Transactional
+    public Good getReferenceById(Long id) {
+        try{
+            Session session = getSessionFactory().getCurrentSession();
+            return session.getReference(Good.class, id);
+        }
+        catch(HibernateException e) {
+            logger.error("Hibernate Ошибка в GoodHinImpl getReferenceById " + e.getMessage());
+            throw new CanNotMakeExecution(e.getMessage());
+        }
+        catch (Exception e){
+            logger.error("NonHibernate Exception GoodHinImpl getReferenceById: "+e.getMessage());
+            throw new NonHibernateException(e.getMessage());
+        }
+    }
+
+    @Transactional
     public List<RecalculationForGoodDto> getAllIds(){
 
         try{

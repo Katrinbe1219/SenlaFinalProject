@@ -35,6 +35,7 @@ public class HibernateAbstractDao<T, ID extends Serializable, Logger extends org
     }
 
 
+
     @Override
     @Transactional(readOnly = true)
     public T findById(ID id, Logger logger) throws CanNotMakeExecution, NonHibernateException {

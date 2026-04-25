@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.annotations.MutuallyExclusive;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -12,6 +13,9 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@MutuallyExclusive(fields1 = "categoriesId", fields2 = "goodsId")
+@MutuallyExclusive(fields1 = "categoriesId", fields2 = "tagsIds")
+@MutuallyExclusive(fields1 = "tagsIds", fields2 = "goodsId")
 public class DistrictStatisticFilter {
     private List<Long> districtsId;
 

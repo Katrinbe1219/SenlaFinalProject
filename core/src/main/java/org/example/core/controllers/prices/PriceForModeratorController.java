@@ -1,5 +1,6 @@
 package org.example.core.controllers.prices;
 
+import jakarta.validation.Valid;
 import org.example.core.dto.creating.PriceCreateDto;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.dto.getting.prices.PriceGetResultForModerator;
@@ -13,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/moderator/prices")
 public class PriceForModeratorController {
-    // patch - не может быть, так как хранится история
+
     // delete - при остановке продажи какого-то товара изменяется поле валидности товара
     private PriceService priceService;
     public PriceForModeratorController(PriceService priceService) {
@@ -21,37 +22,20 @@ public class PriceForModeratorController {
     }
 
     @PostMapping
-    public PriceGetResultForModerator createPriceForGoodInShop(@RequestBody PriceCreateDto dto) {
-        if (dto.getGoodId() == null || dto.getShopId() == null || dto.getPrice() == null) {
-            throw new NotCorrectInput("Not all credentials were given");
-        }
+    public PriceGetResultForModerator createPriceForGoodInShop(@Valid  @RequestBody PriceCreateDto dto) {
         return priceService.createPrice(dto);
+    }
+
+    @PostMapping("/updated")
+    public PriceGetResultForModerator updatePriceForGoodInShop(@Valid @RequestBody PriceCreateDto dto) {
+        return priceService.updatePrice(dto);
+
     }
 
     @GetMapping
     public List<PriceGetResultForModerator> getPrices(
-            @RequestBody PriceFilter filters
-            ){
-
-        if (filters.getSize() <=0 ){
-            throw new NotCorrectInput("Size must be greater than 0");
-        }
-
-        if (filters.getPage() < 0){
-            throw new NotCorrectInput("Page must be more or equals 0");
-        }
-
-        if (filters.getMaxPrice() != null && (filters.getMinPrice() != null || filters.getCurPrice() != null)) {
-            throw new NotCorrectInput("Either price range or specific one");
-        }
-
-        if (filters.getCurrent() != null && filters.getOld() != null) {
-            throw new NotCorrectInput("Either current prices or old ones");
-        }
-
-        if (filters.getShopsId() != null && filters.getDistrictsId() != null) {
-            throw new NotCorrectInput("Either shops id or districts id");
-        }
+            @Valid @RequestBody PriceFilter filters
+    ){
         return priceService.getByFilters(filters);
 
     }

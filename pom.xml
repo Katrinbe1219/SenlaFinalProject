@@ -12,6 +12,7 @@
         <module>core</module>
         <module>annotations</module>
         <module>annotations_processors</module>
+        <module>notification_service</module>
     </modules>
 
     <properties>

@@ -23,18 +23,20 @@ import java.util.Map;
 public class CustomLoginFilter extends BasicAuthenticationFilter {
     private  static final Logger logger = LogManager.getLogger(CustomLoginFilter.class);
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
 
     private JwtService jwtService;
     private RefreshTokenService refreshTokenService;
     private DeviceInfoExtractor deviceInfoExtractor;
 
     public CustomLoginFilter(AuthenticationManager authenticationManager, JwtService jwtService,
-                             RefreshTokenService refreshTokenService, DeviceInfoExtractor deviceInfoExtractor) {
+                             RefreshTokenService refreshTokenService, DeviceInfoExtractor deviceInfoExtractor,
+                             ObjectMapper mapper) {
         super(authenticationManager);
         this.jwtService = jwtService;
         this.refreshTokenService = refreshTokenService;
         this.deviceInfoExtractor = deviceInfoExtractor;
+        this.mapper = mapper;
 
     }
 

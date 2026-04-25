@@ -1,6 +1,7 @@
 package org.example.core.controllers.prices;
 
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.example.core.dto.getting.goods.GoodAnalyseForShopDto;
 import org.example.core.dto.getting.goods.GoodPriceInShop;
 import org.example.core.dto.getting.prices.PriceInTime;
@@ -60,11 +61,8 @@ public class PriceForAnalyzeController {
     public void getGoodPricesInShops(
             HttpServletResponse response,
             @PathVariable("id") Long goodId,
-            @RequestBody GoodPriceInShopsFilter filters
+            @Valid @RequestBody GoodPriceInShopsFilter filters
     ) throws Exception {
-        if (filters.getShopIds() == null || filters.getShopIds().isEmpty()) {
-            throw new NotCorrectInput("shopIds param must be given");
-        }
 
         filters.setGoodId(goodId);
         List<GoodPriceInShop> prices = priceService.getGoodPricesInShops(filters);
@@ -85,13 +83,10 @@ public class PriceForAnalyzeController {
     // получение максимальных и минимальных продуктов
     public void getGoodsByShopId(
             HttpServletResponse response,
-            @RequestBody PriceInTimeFilter filters,
+            @Valid @RequestBody PriceInTimeFilter filters,
             @PathVariable("id") Long goodId,
             @PathVariable("shopId") Long shopId
     ) throws Exception {
-        if (filters.getFirstDate() == null || filters.getLastDate() == null){
-            throw new NotCorrectInput("firstDate and lastDate must be given");
-        }
 
         filters.setShopId(shopId);
 
@@ -116,14 +111,9 @@ public class PriceForAnalyzeController {
     //могут быть все - без параметров
     // могут быть определенные через параметры
     public List<ShopStatByCategoryDto> getShopsStatsByMainCategories(
-            @RequestBody ShopStatByCategoryFilter filters
+           @Valid @RequestBody ShopStatByCategoryFilter filters
     ){
-        if (filters.getCategoryIds() != null && filters.getCategoryIds().isEmpty()){
-            throw new NotCorrectInput("Categories ids must be given");
-        }
-        if (filters.getShopIds() != null && filters.getShopIds().isEmpty()){
-            throw new NotCorrectInput("Categories ids must be given");
-        }
+
         return priceService.getShopsStatByMainCategories(filters);
     }
 
@@ -131,12 +121,10 @@ public class PriceForAnalyzeController {
     public void getShopsStatsByMainShopIdGraph(
             HttpServletResponse response,
             @PathVariable("id") Long shopId,
-            @RequestBody ShopStatByCategoryFilter filters
+            @Valid @RequestBody ShopStatByCategoryFilter filters
     ) throws Exception {
         filters.setShopIds(List.of(shopId));
-        if (filters.getCategoryIds() != null && filters.getCategoryIds().isEmpty()){
-            throw new NotCorrectInput("Categories ids must be given");
-        }
+
 
         List<ShopStatByCategoryDto> categories = priceService.getShopsStatByMainCategories(filters);
         if (categories.isEmpty()){
@@ -160,14 +148,9 @@ public class PriceForAnalyzeController {
 
     @GetMapping("/categories/sub")
     public List<ShopStatByCategoryDto> getShopsStatsBySubCategories(
-            @RequestBody ShopStatByCategoryFilter filters
+            @Valid @RequestBody ShopStatByCategoryFilter filters
     ){
-        if (filters.getCategoryIds() != null && filters.getCategoryIds().isEmpty()){
-            throw new NotCorrectInput("Categories ids must be given");
-        }
-        if (filters.getShopIds() != null && filters.getShopIds().isEmpty()){
-            throw new NotCorrectInput("Categories ids must be given");
-        }
+
         return priceService.getShopsStatBySubCategories(filters);
     }
 
@@ -175,12 +158,8 @@ public class PriceForAnalyzeController {
     public void getShopsStatsBySubCategoriesInShopGraph(
             HttpServletResponse response,
             @PathVariable("id") Long shopId,
-            @RequestBody ShopStatByCategoryFilter filters
+            @Valid @RequestBody ShopStatByCategoryFilter filters
     ) throws Exception {
-
-        if (filters.getCategoryIds() != null && filters.getCategoryIds().isEmpty()){
-            throw new NotCorrectInput("Categories ids must be given");
-        }
 
         filters.setShopIds(List.of(shopId));
 
@@ -205,7 +184,7 @@ public class PriceForAnalyzeController {
 
     @GetMapping("/shops/districts")
     public List<DistrictStatisticDto> getShopStatsByDistricts(
-            @RequestBody DistrictStatisticFilter filters
+            @Valid @RequestBody DistrictStatisticFilter filters
     ){
         return priceService.getShopsStatByDistricts(filters);
 
@@ -215,7 +194,7 @@ public class PriceForAnalyzeController {
     public void getCategoriesStatsByDistrictGraph(
             HttpServletResponse response,
             @PathVariable("id") Long districtId,
-            @RequestBody DistrictStatisticFilter filters
+           @Valid @RequestBody DistrictStatisticFilter filters
     ) throws Exception {
         filters.setDistrictsId(List.of(districtId));
         response.setContentType("image/png");
@@ -238,7 +217,7 @@ public class PriceForAnalyzeController {
     public void getCategoryStatsByDistrictsGraph(
             HttpServletResponse response,
             @PathVariable("id") Long categoryId,
-            @RequestBody DistrictStatisticFilter filters
+            @Valid @RequestBody DistrictStatisticFilter filters
     ) throws Exception {
         filters.setCategoriesId(List.of(categoryId));
 
@@ -266,15 +245,9 @@ public class PriceForAnalyzeController {
 
     @GetMapping("/shops/cart")
     public List<ShopCartDto> compareCartInShops(
-            @RequestBody CartStatisticRequest request
+            @Valid @RequestBody CartStatisticRequest request
             ){
 
-        if (request.getShopIds() == null || request.getShopIds().isEmpty()){
-            throw new NotCorrectInput("Shop ids must be given");
-        }
-        if (request.getGoodIds() == null || request.getGoodIds().isEmpty()){
-            throw new NotCorrectInput("Good ids must be given");
-        }
         return priceService.compareCartByShops(request);
     }
 
@@ -282,15 +255,9 @@ public class PriceForAnalyzeController {
     @GetMapping(value="/shops/cart/graph", produces = MediaType.IMAGE_PNG_VALUE)
     public void compareCartInShopsGraph(
             HttpServletResponse response,
-            @RequestBody CartStatisticRequest request
+            @Valid@RequestBody CartStatisticRequest request
     ) throws Exception {
 
-        if (request.getShopIds() == null || request.getShopIds().isEmpty()){
-            throw new NotCorrectInput("Shop ids must be given");
-        }
-        if (request.getGoodIds() == null || request.getGoodIds().isEmpty()){
-            throw new NotCorrectInput("Good ids must be given");
-        }
         List<ShopCartDto> shops = priceService.compareCartByShops(request);
 
         if (shops.isEmpty()){

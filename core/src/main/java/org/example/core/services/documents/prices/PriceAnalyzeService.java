@@ -37,16 +37,6 @@ public class PriceAnalyzeService {
 
     @Transactional
     public List<DistrictStatisticDto> getShopsStatByDistricts(DistrictStatisticFilter filters){
-        if(filters.getCategoriesId() != null && filters.getGoodsId() != null && filters.getTagsIds() != null){
-            throw new NotCorrectInput("Either categories or goods or tags");
-        }
-
-        if ((filters.getCategoriesId() != null && filters.getGoodsId() != null) ||
-                (filters.getCategoriesId() != null && filters.getTagsIds() != null) ||
-                (filters.getGoodsId() != null && filters.getTagsIds() != null)
-        ){
-            throw new NotCorrectInput("Either categories or goods or tags");
-        }
         return priceHib.getDistrictStatistic(filters);
     }
 

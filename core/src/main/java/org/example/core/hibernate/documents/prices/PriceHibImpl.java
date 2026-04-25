@@ -10,6 +10,7 @@ import org.example.core.exceptions.CanNotMakeExecution;
 import org.example.core.exceptions.NonHibernateException;
 import org.example.core.hibernate.base_settings.HibernateAbstractDao;
 import org.example.core.hibernate.base_settings.filters.prices.PriceFilter;
+import org.example.core.hibernate.base_settings.service_dto.CheckingPriceGoodShopExistence;
 import org.example.core.models.Price;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -57,7 +58,7 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
         Session session = getSessionFactory().getCurrentSession();
         try{
             return session.createQuery("""
-              SELECT new org.example.application.dto.getting.prices.PriceGetResultForModerator(
+              SELECT new org.example.core.dto.getting.prices.PriceGetResultForModerator(
                     p.id, p.price, p.validTo, p.validFrom, g.id , g.name,
                  s.id , s.name , s.address, c.name , c.id
     )
@@ -161,11 +162,40 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
     }
 
     // for moderator--------------------------
+
     @Transactional
-    public void makeInvalidPrice(Long goodId, Long shopId) {
+    public CheckingPriceGoodShopExistence checkBeforeAddPrice(Long shopId, Long goodId){
+        try{
+            Session session = getSessionFactory().getCurrentSession();
+            return session.createNativeQuery("""
+    WITH shop_check AS (SELECT id FROM shops WHERE id = :goodId), 
+         good_check AS (SELECT id FROM goods WHERE id = :shopId),
+         price_check AS (SELECT id, price FROM prices WHERE good_id=:goodId AND shop_id=:shopId)
+     SELECT (SELECT id FROM shop_check) AS shopId,
+              (SELECT id FROM good_check) AS goodId,
+              (SELECT id FROM price_check) AS priceId,
+              (SELECT price FROM price_check) AS price; 
+""", CheckingPriceGoodShopExistence.class)
+                    .setParameter("shopId", shopId)
+                    .setParameter("goodId", goodId)
+                    .uniqueResultOptional().orElse(null);
+        }
+        catch(HibernateException e) {
+            logger.error("Hibernate Ошибка в PriceHinImpl CheckingPriceGoodShopExistence " + e.getMessage());
+            throw new CanNotMakeExecution(e.getMessage());
+        }
+        catch (Exception e){
+            logger.error("NonHibernate Exception PriceHinImpl CheckingPriceGoodShopExistence: "+e.getMessage());
+            throw new NonHibernateException(e.getMessage());
+        }
+
+
+    }
+    @Transactional
+    public Integer makeInvalidPrice(Long goodId, Long shopId) {
         Session session = getSessionFactory().getCurrentSession();
         try{
-            session.createMutationQuery("""
+            Integer num = session.createMutationQuery("""
               UPDATE Price p SET p.validTo = :newValidTo 
     WHERE p.good.id = :goodId AND p.shop.id = :shopId AND p.validTo is null 
     
@@ -173,6 +203,7 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
                     .setParameter("shopId", shopId)
                     .setParameter("newValidTo", Instant.now())
                     .executeUpdate();
+            return num;
         }
         catch(HibernateException e) {
             logger.error("Hibernate Ошибка в PriceHinImpl makeInvalidPrice " + e.getMessage());
@@ -297,27 +328,27 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
                     builder.or(first, sec)
             );
         }
-        if (filters.getShopsId()!=null){
+        if (filters.getShopIds()!=null){
             predicates.add(
-                    builder.in(root.get("shop").get("id"), filters.getShopsId())
+                    builder.in(root.get("shop").get("id"), filters.getShopIds())
             );
         }
 
-        if (filters.getDistrictsId() != null){
+        if (filters.getDistrictIds() != null){
             predicates.add(
-                    builder.in(root.get("shop").get("district").get("id"), filters.getDistrictsId())
+                    builder.in(root.get("shop").get("district").get("id"), filters.getDistrictIds())
             );
         }
 
-        if (filters.getGoodsId()!=null){
+        if (filters.getGoodIds()!=null){
             predicates.add(
-                    builder.in(root.get("good").get("id"), filters.getGoodsId())
+                    builder.in(root.get("good").get("id"), filters.getGoodIds())
             );
         }
 
-        if (filters.getCategoriesId() != null){
+        if (filters.getCategoryIds() != null){
             predicates.add(
-                    builder.in(root.get("good").get("category").get("id"), filters.getCategoriesId())
+                    builder.in(root.get("good").get("category").get("id"), filters.getCategoryIds())
             );
         }
 

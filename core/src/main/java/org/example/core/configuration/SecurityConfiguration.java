@@ -1,5 +1,6 @@
 package org.example.core.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.core.security.*;
 import org.example.core.services.auth.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,15 +23,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 public class SecurityConfiguration implements WebMvcConfigurer {
 
-    private UserDetailsCustomService userDetailsCustomService;
     private RefreshTokenService refreshTokenService;
     private DeviceInfoExtractor deviceInfoExtractor;
 
 
-    public SecurityConfiguration(UserDetailsCustomService userDetailsCustomService, RefreshTokenService refreshTokenService, DeviceInfoExtractor deviceInfoExtractor) {
+    public SecurityConfiguration( RefreshTokenService refreshTokenService, DeviceInfoExtractor deviceInfoExtractor) {
         this.deviceInfoExtractor = deviceInfoExtractor;
         this.refreshTokenService = refreshTokenService;
-        this.userDetailsCustomService = userDetailsCustomService;
     }
     @Autowired
     JwtCheckFilter jwtCheckFilter;
@@ -40,9 +39,11 @@ public class SecurityConfiguration implements WebMvcConfigurer {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   AuthenticationManager manager
+                                                   AuthenticationManager manager,
+                                                   ObjectMapper mapper
                                                    ) throws Exception {
-        CustomLoginFilter filter = new CustomLoginFilter(manager, jwtService, refreshTokenService, deviceInfoExtractor);
+        CustomLoginFilter filter = new CustomLoginFilter(manager, jwtService, refreshTokenService,
+                deviceInfoExtractor, mapper);
         http.authorizeHttpRequests(auth ->
                     auth
                             .requestMatchers("/**").permitAll()

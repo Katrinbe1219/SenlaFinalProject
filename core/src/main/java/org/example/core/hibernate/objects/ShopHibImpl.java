@@ -29,6 +29,23 @@ public class ShopHibImpl extends HibernateAbstractDao<Shop, Long, Logger> {
     }
 
     @Transactional
+    public  Shop getReferenceById(Long id){
+        try{
+            Session session = getSessionFactory().getCurrentSession();
+            return session.getReference(Shop.class, id);
+        }
+        catch(HibernateException e){
+            logger.error("Hibenate ShopHibimpl getReferenceById: " + e.getMessage());
+            throw new CanNotMakeExecution(e.getMessage());
+        }
+        catch (Exception e){
+            logger.error("NonHibernate Exception ShopHibimpl getReferenceById: "+e.getMessage());
+            throw new NonHibernateException(e.getMessage());
+        }
+
+    }
+
+    @Transactional
     public List<Shop> findAllFullVersion(Integer count, Integer page) throws CanNotMakeExecution {
         Session session = getSessionFactory().getCurrentSession();
         try {
