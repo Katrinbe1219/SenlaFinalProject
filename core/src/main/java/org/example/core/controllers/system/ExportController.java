@@ -30,7 +30,7 @@ import org.example.core.services.dictionaries.CategoryService;
 import org.example.core.services.dictionaries.TagService;
 import org.example.core.services.documents.ModeratorRecalcService;
 import org.example.core.services.documents.RateService;
-import org.example.core.services.documents.ReviewAdvancedService;
+import org.example.core.services.documents.reviews.ReviewAdvancedService;
 import org.example.core.services.documents.prices.PriceExportService;
 import org.example.core.services.export.ExportCsvService;
 import org.example.core.services.export.ExportXlsxService;

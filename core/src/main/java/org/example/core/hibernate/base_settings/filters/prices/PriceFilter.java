@@ -1,6 +1,7 @@
 package org.example.core.hibernate.base_settings.filters.prices;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -52,7 +53,8 @@ public class PriceFilter {
     private LocalDate maxDate;
 
     @Builder.Default
-    private PriceSortTypes sortDir = PriceSortTypes.ASC;
+    @NotNull(message = "if you are undecided about the sortType, do not provide it")
+    private PriceSortTypes sortType = PriceSortTypes.ASC;
 
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")

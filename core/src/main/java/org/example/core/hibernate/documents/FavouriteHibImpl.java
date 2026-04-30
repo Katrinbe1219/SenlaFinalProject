@@ -68,7 +68,7 @@ public class FavouriteHibImpl extends HibernateAbstractDao<Favourite, Long, Logg
         try{
             Session session = getSessionFactory().getCurrentSession();
             return session.createQuery("""
-            SELECT DISTINCT new org.example.application.dto.getting.favourites.FavouriteGetForUserDto(
+            SELECT DISTINCT new org.example.core.dto.getting.favourites.FavouriteGetForUserDto(
             g.name, g.id )
             FROM Favourite f 
             LEFT JOIN f.good g 
@@ -90,7 +90,7 @@ public class FavouriteHibImpl extends HibernateAbstractDao<Favourite, Long, Logg
         try{
             Session session = getSessionFactory().getCurrentSession();
             return session.createQuery("""
-            SELECT DISTINCT  new  org.example.application.dto.getting.favourites.FavouriteGetForUserDto(
+            SELECT DISTINCT  new  org.example.core.dto.getting.favourites.FavouriteGetForUserDto(
             g.name, g.id )
             FROM Favourite  f 
             LEFT JOIN f.good g 
@@ -121,11 +121,11 @@ public class FavouriteHibImpl extends HibernateAbstractDao<Favourite, Long, Logg
                     .setParameter("goodId", goodId).setParameter("userId", userId).uniqueResultOptional().orElse(null);
         }
         catch(HibernateException e) {
-            logger.error("Hibernate Ошибка в FavouriteHibImpl findByUserIdAndGoodId " + e.getMessage());
+            logger.error("Hibernate Ошибка в FavouriteHibImpl findByUserIdAndGoodIdPureVersion " + e.getMessage());
             throw new CanNotMakeExecution(e.getMessage());
         }
         catch (Exception e){
-            logger.error("NonHibernate Exception FavouriteHibImpl findByUserIdAndGoodId: "+e.getMessage());
+            logger.error("NonHibernate Exception FavouriteHibImpl findByUserIdAndGoodIdPureVersion: "+e.getMessage());
             throw new NonHibernateException(e.getMessage());
         }
     }
@@ -136,7 +136,7 @@ public class FavouriteHibImpl extends HibernateAbstractDao<Favourite, Long, Logg
         try{
             Session session = getSessionFactory().getCurrentSession();
             return session.createQuery("""
-            SELECT DISTINCT new  org.example.application.dto.getting.favourites.FavouriteCountByGoodDto(
+            SELECT DISTINCT new  org.example.core.dto.getting.favourites.FavouriteCountByGoodDto(
             f.good.id, f.good.name, count(f.id))
             FROM Favourite f
             GROUP BY f.good.id, f.good.name
@@ -158,7 +158,7 @@ public class FavouriteHibImpl extends HibernateAbstractDao<Favourite, Long, Logg
         try{
             Session session = getSessionFactory().getCurrentSession();
             return session.createQuery("""
-            SELECT DISTINCT new  org.example.application.dto.getting.favourites.FavouriteCountByGoodDto(
+            SELECT DISTINCT new  org.example.core.dto.getting.favourites.FavouriteCountByGoodDto(
             f.good.id, f.good.name, count(f.id))
             FROM Favourite f
             WHERE f.good.id = :goodId

@@ -47,6 +47,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse(ex.getMessage()));
     }
 
+    @ExceptionHandler(CsvInvalidStructure.class)
+    public ResponseEntity<StringResponse> handlePermissionDenied(CsvInvalidStructure ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(RegistrationException.class)
     public ResponseEntity<Map<String, String>> handleRegistrationException(RegistrationException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getErrors());

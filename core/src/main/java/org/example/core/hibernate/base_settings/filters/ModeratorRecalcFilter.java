@@ -2,6 +2,7 @@ package org.example.core.hibernate.base_settings.filters;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -46,6 +47,7 @@ public class ModeratorRecalcFilter {
     private ModeratorVerdict verdict;
 
     @Builder.Default
+    @NotNull(message = "if you are undecided about the sortType, do not provide it")
     private ModeratorRecalcSortType sortType = ModeratorRecalcSortType.ASC;
 
     @Builder.Default

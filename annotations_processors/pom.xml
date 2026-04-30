@@ -33,4 +33,8 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <finalName>annotations_processors</finalName>
+    </build>
+
 </project>

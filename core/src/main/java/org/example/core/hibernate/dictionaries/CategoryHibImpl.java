@@ -62,7 +62,7 @@ public class CategoryHibImpl extends HibernateAbstractDao<Category, Long, Logger
         Session session = getSessionFactory().getCurrentSession();
         try {
             var query =  session.createQuery("""
-        SELECT new org.example.application.dto.getting.CategoryGetDto(
+        SELECT new org.example.core.dto.getting.CategoryGetDto(
             c.name,
             c.id,
             p.name

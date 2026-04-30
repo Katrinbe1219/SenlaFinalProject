@@ -1,6 +1,7 @@
 package org.example.core.hibernate.base_settings.filters.goods;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -58,7 +59,8 @@ public class GoodFilter {
 
 
     @Builder.Default
-    private String sortDir = "asc"; // by name
+    @NotNull(message = "if you are undecided about the sortType, do not provide it")
+    private String sortType = "asc"; // by name
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")
     private  Integer page = null;

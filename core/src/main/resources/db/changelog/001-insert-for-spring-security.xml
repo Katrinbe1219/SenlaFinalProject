@@ -90,6 +90,7 @@
             <column name="role_id" value="5" />
             <column name="login" value="miuser" />
             <column name="username" value="miuser123" />
+            <column name="email" value="fkatemap@gmail.com" />
             <column name="password" value="$2a$12$s7earj1V.HSlBzO92KcV1eOGn6vNNZ58ShMx1oX1SBojF4JFEg.Ea"/>
         </insert>
     </changeSet>

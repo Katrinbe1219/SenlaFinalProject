@@ -36,7 +36,7 @@ public class AsyncRecalculationService {
 
 
     @Transactional
-    @Async("asyncExecutor")
+    @Async("ratingExecutor")
     public void recalculationForAll(RatingTriggerType type, AtomicBoolean isRecalculating){
         int fetchMaxAttempt = 3;
         int fetchAttempt = 0;
@@ -123,7 +123,7 @@ public class AsyncRecalculationService {
 
 
     @Transactional
-//    @Async("asyncExecutor")
+//    @Async("ratingExecutor")
     public void recalculationForGood(Long goodId, AtomicBoolean isRecalculating
     ) throws  Exception{
         try {

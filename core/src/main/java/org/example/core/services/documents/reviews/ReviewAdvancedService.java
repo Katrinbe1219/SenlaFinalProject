@@ -1,12 +1,10 @@
-package org.example.core.services.documents;
+package org.example.core.services.documents.reviews;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.example.core.dto.getting.reviews.ReviewDto;
 import org.example.core.dto.getting.reviews.ReviewFullDto;
 import org.example.core.exceptions.CanNotMakeExecution;
 import org.example.core.exceptions.DoesNoeExist;
-import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.filters.reviews.ReviewAdvancedFilters;
 import org.example.core.hibernate.documents.ReviewHibImpl;
 import org.example.core.hibernate.objects.UserHibImpl;

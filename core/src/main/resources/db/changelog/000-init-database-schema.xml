@@ -446,12 +446,12 @@
             <column name="price" type="DECIMAL(10,2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="valid_from" type="DATE">
+            <column name="valid_from" type="TIMESTAMP">
                 <constraints nullable="false"/>
             </column>
             <!-- NULL = актуальная цена
                  = Today когда устарела  -->
-            <column name="valid_to" type="DATE">
+            <column name="valid_to" type="TIMESTAMP">
                 <constraints nullable="true"/>
             </column>
         </createTable>

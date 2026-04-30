@@ -3,6 +3,7 @@ package org.example.core.hibernate.base_settings.filters.reviews;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
@@ -47,7 +48,8 @@ public class ReviewAdvancedFilters {
 
 
     @Builder.Default
-    private ReviewSortTypes sortDir = ReviewSortTypes.ASC;
+    @NotNull(message = "if you are undecided about the sortType, do not provide it")
+    private ReviewSortTypes sortType = ReviewSortTypes.ASC;
 
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")

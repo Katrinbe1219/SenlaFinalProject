@@ -1,10 +1,7 @@
 package org.example.core.hibernate.base_settings.filters.reviews;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,7 +33,8 @@ public class ReviewForUserFilters {
     private LocalDate reviewDate;
 
     @Builder.Default
-    private String sortDir = "asc";
+    @NotNull(message = "if you are undecided about the sortType, do not provide it")
+    private String sortType = "asc";
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")
     private  Integer page = null;

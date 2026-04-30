@@ -36,3 +36,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### project###
+core/src/main/resources/database.properties
+notification_service/src/main/resources/application.properties

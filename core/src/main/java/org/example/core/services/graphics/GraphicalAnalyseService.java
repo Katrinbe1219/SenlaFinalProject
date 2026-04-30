@@ -136,7 +136,7 @@ public class GraphicalAnalyseService {
 
             LocalDate currentDate = filters.getFirstDate();
             int index = 0;
-            LocalDate lastDate = filters.getLastDate()!=null ? filters.getLastDate() : LocalDate.now();
+            LocalDate lastDate = filters.getEndDate()!=null ? filters.getEndDate() : LocalDate.now();
 
             if (currentDate.isBefore(DateTimeUtils.toLocalDate(prices.get(0).getValidFrom()))){
                 while(!currentDate.equals(DateTimeUtils.toLocalDate(prices.get(0).getValidFrom()))){

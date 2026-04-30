@@ -48,7 +48,7 @@ public class PriceAnalyseHibImpl extends HibernateAbstractDao<Price,Long, Logger
         try{
             Session session = getSessionFactory().getCurrentSession();
             return session.createQuery("""
-            SELECT  DISTINCT  new  org.example.application.dto.getting.statistics.shops.ShopStatisticDto (
+            SELECT  DISTINCT  new  org.example.core.dto.getting.statistics.shops.ShopStatisticDto (
             :shopId,
             MIN(p.price),
             MAX(p.price),
@@ -74,7 +74,7 @@ public class PriceAnalyseHibImpl extends HibernateAbstractDao<Price,Long, Logger
         try{
             Session session = getSessionFactory().getCurrentSession();
             return session.createQuery("""
-            SELECT DISTINCT  new org.example.application.dto.getting.goods.GoodAnalyseForShopDto (
+            SELECT DISTINCT  new org.example.core.dto.getting.goods.GoodAnalyseForShopDto (
                 p.good.id,
                 p.good.name,
                 p.price,
@@ -101,7 +101,7 @@ public class PriceAnalyseHibImpl extends HibernateAbstractDao<Price,Long, Logger
         try{
             Session session = getSessionFactory().getCurrentSession();
             return session.createQuery("""
-            SELECT DISTINCT  new org.example.application.dto.getting.goods.GoodAnalyseForShopDto (
+            SELECT DISTINCT  new org.example.core.dto.getting.goods.GoodAnalyseForShopDto (
                 p.good.id,
                 p.good.name,
                 p.price,
@@ -509,11 +509,11 @@ CAST(COUNT(p.id) AS BIGINT) as product_count
                     ))
             );
 
-            if (Objects.equals(filters.getLastDate(), LocalDate.now())){
+            if (Objects.equals(filters.getEndDate(), LocalDate.now())){
                 JpaPredicate first = builder.isNull(root.get("validTo"));
                 // TODO везде проверить такое
                 JpaPredicate sec = builder.lessThanOrEqualTo(root.get("validTo"),DateTimeUtils.toInstantEndDay(
-                        filters.getLastDate()
+                        filters.getEndDate()
                 ));
                 predicates.add(
                         builder.or(first,sec)
@@ -521,7 +521,7 @@ CAST(COUNT(p.id) AS BIGINT) as product_count
             }else{
                 predicates.add(
                         builder.lessThanOrEqualTo(root.get("validTo"), DateTimeUtils.toInstantEndDay(
-                                filters.getLastDate()
+                                filters.getEndDate()
                         ))
                 );
             }

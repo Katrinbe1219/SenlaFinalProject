@@ -17,14 +17,20 @@ import org.example.core.hibernate.objects.ShopHibImpl;
 import org.example.core.models.Good;
 import org.example.core.models.Price;
 import org.example.core.models.Shop;
+import org.example.core.services.documents.prices.data.GoodShopRecord;
+import org.example.core.services.documents.prices.data.OptionForUpload;
+import org.example.core.services.documents.prices.data.PriceCreateAllDto;
 import org.example.core.utils.DateTimeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -39,7 +45,7 @@ public class PriceService {
     private ApplicationEventPublisher eventPublisher;
 
     @Transactional
-    public List<PriceGetDtoForUser> getAllForUser(Long goodId, Long shopId, int count, int page){
+    public List<PriceGetDtoForUser> getAllForUser(Long goodId, Long shopId, Integer count, Integer page){
         return priceHib.getAllForUser(shopId, goodId, count, page);
     }
 
@@ -95,6 +101,10 @@ public class PriceService {
             throw new DoesNoeExist("Price does not exist with given credentials");
         }
 
+        if ( checking.getPriceId() == null){
+            throw new DoesNoeExist("Price does not exist with given credentials");
+        }
+
         Good good = goodHib.getReferenceById(dto.getGoodId());
         Shop shop = shopHib.getReferenceById(dto.getShopId());
 
@@ -108,7 +118,7 @@ public class PriceService {
         Integer num= priceHib.makeInvalidPrice(dto.getGoodId(), dto.getShopId());
         if (num != 0){
             eventPublisher.publishEvent(
-                    new PriceChangedMessage(dto.getShopId(), dto.getGoodId(), dto.getPrice())
+                    new PriceChangedMessage(dto.getGoodId(),dto.getShopId(),  dto.getPrice())
             );
         }
 
@@ -121,7 +131,7 @@ public class PriceService {
     public PriceGetResultForModerator createPrice(PriceCreateDto dto){
 
         CheckingPriceGoodShopExistence checking = priceHib.checkBeforeAddPrice(dto.getShopId(), dto.getGoodId());
-        if (checking != null){
+        if (checking != null && checking.getPriceId() != null){
             throw new NotCorrectInput("You can not create price because it  already exists");
         }
 
@@ -137,7 +147,7 @@ public class PriceService {
 
 
         eventPublisher.publishEvent(
-                    new PriceCreatedMessage(dto.getShopId(), dto.getGoodId(), dto.getPrice())
+                    new PriceCreatedMessage(dto.getGoodId(), dto.getShopId(), dto.getPrice())
         );
 
 
@@ -145,7 +155,66 @@ public class PriceService {
         return toDto(newPrice, good, shop);
 
     }
+    //TODO отдельная функция для файла: существование
 
+    @Transactional
+    public void saveAll(List<PriceCreateDto> dtos, OptionForUpload option, boolean isSend){
+//        List<PriceCreateAllDto> fullDtos = new ArrayList<PriceCreateAllDto>();
+//        for (PriceCreateDto dto : dtos){
+//            fullDtos.add(toDto(dto));
+//        }
+
+        // при неверных данные отправится пользователю ошибка
+        // option -> skip: получаем только те, которые изменились
+        // option -> stop: все новые, нет никаких проблем, можно использовать dtos ля отправки новых цен
+        // replace -> как новые могут быть, так и замены
+        Map<GoodShopRecord, BigDecimal> oldValues = null;
+        if (option == OptionForUpload.REPLACE && isSend) {
+            List<Long> goodIds = dtos.stream().map(PriceCreateDto::getGoodId).toList();
+            List<Long> shopIds = dtos.stream().map(PriceCreateDto::getShopId).toList();
+            List<Object[]> invalids = priceHib.makeInvalidManyWithReturning(goodIds, shopIds);
+
+            oldValues = invalids.stream().collect(Collectors.toMap(
+                    d-> new GoodShopRecord((Long) d[0], (Long) d[1]),
+                    d -> (BigDecimal) d[3]
+            ));
+        }
+
+        priceHib.saveAll(dtos, option);
+        if (option == OptionForUpload.STOP && isSend){
+            for (PriceCreateDto dto : dtos){
+                eventPublisher.publishEvent(
+                        new PriceCreatedMessage(dto.getGoodId(), dto.getShopId(), dto.getPrice())
+                );
+            }
+
+        }
+
+        else if (option == OptionForUpload.REPLACE && isSend){
+            for (PriceCreateDto dto : dtos){
+                BigDecimal oldPrice = oldValues.get(new GoodShopRecord(dto.getGoodId(), dto.getShopId()));
+                if (oldPrice != null){
+                    eventPublisher.publishEvent(
+                            new PriceChangedMessage(dto.getGoodId(), dto.getShopId(), dto.getPrice())
+                    );
+                }else{
+                    eventPublisher.publishEvent(
+                            new PriceCreatedMessage(dto.getGoodId(), dto.getShopId(), dto.getPrice())
+                    );
+                }
+            }
+        }
+    }
+
+    private PriceCreateAllDto toDto(PriceCreateDto dto){
+        PriceCreateAllDto result = new PriceCreateAllDto();
+        Good good = goodHib.getReferenceById(dto.getGoodId());
+        Shop shop = shopHib.getReferenceById(dto.getShopId());
+        result.setGood(good);
+        result.setShop(shop);
+        result.setPrice(dto.getPrice());
+        return result;
+    }
 
 
 

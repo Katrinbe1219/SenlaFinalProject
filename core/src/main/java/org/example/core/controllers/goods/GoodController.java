@@ -9,7 +9,7 @@ import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.filters.goods.GoodFilter;
 import org.example.core.hibernate.base_settings.filters.reviews.ReviewForUserFilters;
 import org.example.core.services.documents.FavouriteService;
-import org.example.core.services.documents.ReviewForUserService;
+import org.example.core.services.documents.reviews.ReviewForUserService;
 import org.example.core.services.objects.GoodService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;

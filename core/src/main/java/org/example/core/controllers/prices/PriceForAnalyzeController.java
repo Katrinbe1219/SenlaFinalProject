@@ -2,6 +2,7 @@ package org.example.core.controllers.prices;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.example.core.dto.getting.goods.GoodAnalyseForShopDto;
 import org.example.core.dto.getting.goods.GoodPriceInShop;
 import org.example.core.dto.getting.prices.PriceInTime;
@@ -27,17 +28,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/prices/analyst")
+@AllArgsConstructor
 //TODO Exception went to JwtFilter and causes Not authorize!!!!!!!
 public class PriceForAnalyzeController {
 
     private PriceAnalyzeService priceService;
     private GraphicalAnalyseService graphicService;
 
-    public PriceForAnalyzeController(PriceAnalyzeService priceService, GraphicalAnalyseService graphicService) {
-        this.priceService = priceService;
-        this.graphicService = graphicService;
 
-    }
 
     @GetMapping("/shops/{id}/goods")
     // получение максимальных и минимальных продуктов
@@ -277,7 +275,6 @@ public class PriceForAnalyzeController {
         response.getOutputStream().flush();
 
     }
-
 
 
 }

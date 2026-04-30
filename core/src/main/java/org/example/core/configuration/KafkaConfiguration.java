@@ -5,19 +5,20 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 @EnableKafka
+@Configuration
 public class KafkaConfiguration {
     @Bean
     public ProducerFactory<String,String> producerFactory(){
@@ -34,7 +35,7 @@ public class KafkaConfiguration {
 //        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 
-        props.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "tr-" + UUID.randomUUID());
+        //props.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "tr-" + UUID.randomUUID());
         return new DefaultKafkaProducerFactory<>(props);
 
     }
@@ -57,6 +58,14 @@ public class KafkaConfiguration {
     @Bean
     public NewTopic priceUpdatedTopic(){
         return TopicBuilder.name("price.updated")
+                .partitions(3)
+                .replicas(3)
+                .build();
+    }
+
+    @Bean
+    public NewTopic priceCreatedTopic(){
+        return TopicBuilder.name("price.created")
                 .partitions(3)
                 .replicas(3)
                 .build();

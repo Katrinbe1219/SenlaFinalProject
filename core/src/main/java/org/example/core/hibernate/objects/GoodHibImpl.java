@@ -52,6 +52,8 @@ public class GoodHibImpl extends HibernateAbstractDao<Good, Long, Logger> {
         }
     }
 
+
+
     @Transactional
     public List<RecalculationForGoodDto> getAllIds(){
 
@@ -116,7 +118,7 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
         try {
             // FETCH не нужен, STRING_ARG делает агрегацию
             return session.createQuery("""
-                SELECT new org.example.application.dto.getting.goods.GoodGetForUserDto(
+                SELECT new org.example.core.dto.getting.goods.GoodGetForUserDto(
                g.id, g.name, c.name, u.fullName, g.rate, CAST (STRING_AGG(t.name, ',') as String), g.description
    ) FROM Good g
                LEFT JOIN   g.unit u 
@@ -180,7 +182,7 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
         try{
             List<Long> ids = findIdsByFilters(filters, true);
             List<GoodGetForUserDto> res= session.createQuery("""
-            SELECT new org.example.application.dto.getting.goods.GoodGetForUserDto(
+            SELECT new org.example.core.dto.getting.goods.GoodGetForUserDto(
             g.id, g.name,  c.name, u.fullName, g.rate, CAST(STRING_AGG(t.name, ',') as String), g.description
 ) FROM Good g
             LEFT JOIN g.category c
@@ -385,7 +387,7 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
             HibernateCriteriaBuilder builder,
             JpaRoot<Good> root
     ){
-        return "asc".equalsIgnoreCase(filters.getSortDir()) ?
+        return "asc".equalsIgnoreCase(filters.getSortType()) ?
                 builder.asc(root.get("name"))
                 : builder.desc(root.get("name"));
     }

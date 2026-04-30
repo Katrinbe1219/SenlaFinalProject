@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.core.dto.kafka.PriceChangedMessage;
+import org.example.core.dto.kafka.PriceCreatedMessage;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -23,7 +24,7 @@ public class KafkaProducerService {
     private ObjectMapper mapper;
 
 
-    @Async("asyncExecutor")
+    @Async("kafkaExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onPriceUpdated(PriceChangedMessage dto){
         try{
@@ -40,7 +41,25 @@ public class KafkaProducerService {
         }
     }
 
+    @Async("kafkaExecutor")
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onPriceCreated(PriceCreatedMessage dto){
+        try{
+            String message = mapper.writeValueAsString(dto);
+            kafkaTemplate.send(
+                    "price.created", message
+            ).get(5, TimeUnit.SECONDS);
+        }
+        catch (TimeoutException e){
+            logger.error("TimeoutException KafkaProducerService onPriceCreated: "  + e.getMessage());
 
+        }
+        catch (Exception e){
+            logger.error("NotTimeoutException KafkaProducerService onPriceCreated: "  + e.getMessage());
+
+        }
+
+    }
 
 
 }

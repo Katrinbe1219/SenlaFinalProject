@@ -3,10 +3,9 @@ package org.example.core.controllers.reviews;
 import jakarta.validation.Valid;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.dto.getting.reviews.ReviewFullDto;
-import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.filters.reviews.ReviewAdvancedFilters;
 import org.example.core.models.User;
-import org.example.core.services.documents.ReviewAdvancedService;
+import org.example.core.services.documents.reviews.ReviewAdvancedService;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 

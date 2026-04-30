@@ -3,33 +3,204 @@ package org.example.core.hibernate.documents.prices;
 import jakarta.persistence.Tuple;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.core.dto.creating.PriceCreateDto;
 import org.example.core.dto.getting.prices.PriceComparisonRequest;
 import org.example.core.dto.getting.prices.PriceGetDtoForUser;
 import org.example.core.dto.getting.prices.PriceGetResultForModerator;
 import org.example.core.exceptions.CanNotMakeExecution;
+import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NonHibernateException;
+import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.HibernateAbstractDao;
 import org.example.core.hibernate.base_settings.filters.prices.PriceFilter;
 import org.example.core.hibernate.base_settings.service_dto.CheckingPriceGoodShopExistence;
 import org.example.core.models.Price;
+import org.example.core.services.documents.prices.data.OptionForUpload;
+import org.example.core.services.documents.prices.data.PriceCreateAllDto;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.query.criteria.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Repository
 public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
     private final static Logger logger = LogManager.getLogger(PriceHibImpl.class);
     protected PriceHibImpl() {
         super(Price.class);
+    }
+
+    @Value("${batchSize}")
+    private int batchSize;
+
+//    @Transactional
+//    public void saveAll(List<PriceCreateAllDto> prices){
+//        try{
+//            Session session = getSessionFactory().getCurrentSession();
+//            int count = 0;
+//            for(PriceCreateAllDto dto : prices){
+//                Price price = new Price();
+//                price.setPrice(dto.getPrice());
+//                price.setGood(dto.getGood());
+//                price.setShop(dto.getShop());
+//                price.setValidFrom(Instant.now());
+//
+//                session.persist(price);
+//
+//                count++;
+//                if (count%batchSize ==0 ){
+//                    session.flush();
+//                    session.clear();
+//                }
+//            }
+//            session.flush();
+//            session.clear();
+//        }
+//        catch(HibernateException e){
+//            logger.error("Hibernate PriceHibImpl saveAll " + e.getMessage());
+//            throw new CanNotMakeExecution(e.getMessage());
+//        }
+//        catch (Exception e){
+//            logger.error("NonHibernate Exception PriceHibImpl saveAll "+e.getMessage());
+//            throw new NonHibernateException(e.getMessage());
+//        }
+//    }
+
+    @Transactional
+    public List<Object[]> makeInvalidManyWithReturning(List<Long> goodIds, List<Long> shopIds){
+        try{
+            Session session = getSessionFactory().getCurrentSession();
+           return  session.createNativeQuery("""
+                UPDATE  prices 
+                SET valid_to = :validTo
+                WHERE (shop_id, good_id) IN 
+                      (SELECT * FROM unnest(:shopIds, :goodIds))
+                AND valid_to IS NULL
+                RETURNING  shop_id, good_id, price;
+                """)
+                    .setParameter("goodIds", goodIds)
+                    .setParameter("shopIds", shopIds)
+                    .getResultList();
+        }
+        catch(HibernateException e){
+            logger.error("Hibernate PriceHibImpl makeInvalidManyWithReturning " + e.getMessage());
+            throw new CanNotMakeExecution(e.getMessage());
+        }
+        catch (Exception e){
+            logger.error("NonHibernate Exception PriceHibImpl makeInvalidManyWithReturning "+e.getMessage());
+            throw new NonHibernateException(e.getMessage());
+        }
+
+    }
+
+    @Transactional
+    public void saveAll(List<PriceCreateDto> prices, OptionForUpload option){
+        try{
+            Session session = getSessionFactory().getCurrentSession();
+            String sql = switch (option){
+                case SKIP -> "INSERT INTO prices (good_id, shop_id, price, valid_from) VALUES(?,?,?,?)" +
+                        " ON CONFLICT (shop_id, good_id) WHERE valid_to IS NULL DO NOTHING";
+                case STOP -> "INSERT INTO prices (good_id, shop_id, price, valid_from) VALUES(?,?,?,?)";
+                default -> null;
+            };
+
+            if (sql != null){
+                session.doWork(connection -> {
+                    try (PreparedStatement ps = connection.prepareStatement(sql)){
+                        int count = 0;
+
+                        for (PriceCreateDto dto : prices){
+                            ps.setObject(1, dto.getGoodId());
+                            ps.setLong(2, dto.getShopId());
+                            ps.setBigDecimal(3, dto.getPrice());
+                            ps.setObject(4, LocalDateTime.now());
+                            ps.addBatch();
+                            count++;
+                            if(count%batchSize ==0 ){
+                                ps.executeBatch();
+                            }
+
+                        }
+
+                        ps.executeBatch();
+                    }
+                    ;
+                });
+            }else{
+                session.doWork(connection -> {
+                    try (
+                    PreparedStatement ps = connection.prepareStatement("""
+                
+                UPDATE prices
+                SET valid_to = ?
+                WHERE shop_id= ? AND good_id = ? AND valid_to IS NULL
+                """)){
+                        int count = 0;
+
+                        for (PriceCreateDto dto : prices){
+                            ps.setObject(1, LocalDateTime.now());
+                            ps.setLong(2, dto.getShopId());
+                            ps.setLong(3, dto.getGoodId());
+                            ps.addBatch();
+                            count++;
+                            if(count%batchSize ==0 ){
+                                ps.executeBatch();
+                            }
+
+                        }
+
+                        ps.executeBatch();
+                    }
+
+                    try(PreparedStatement ps = connection.prepareStatement("""
+                    INSERT INTO prices (good_id, shop_id, price, valid_from) VALUES(?,?,?,?)
+                    """)){
+
+                        int count = 0;
+
+                        for (PriceCreateDto dto : prices){
+                            ps.setObject(1, dto.getGoodId());
+                            ps.setLong(2, dto.getShopId());
+                            ps.setBigDecimal(3, dto.getPrice());
+                            ps.setObject(4, LocalDateTime.now());
+                            ps.addBatch();
+                            count++;
+                            if(count%batchSize ==0 ){
+                                ps.executeBatch();
+                            }
+
+                        }
+
+                        ps.executeBatch();
+                    }
+                });
+            }
+
+
+        }
+        catch(HibernateException e){
+            if (e.getMessage().contains("violates foreign key")){
+                throw new NotCorrectInput("Вы передали не существующие параметры")  ;         }
+            logger.error("Hibernate PriceHibImpl saveAll " + e.getMessage());
+            throw new CanNotMakeExecution(e.getMessage());
+        }
+        catch (Exception e){
+            logger.error("NonHibernate Exception PriceHibImpl saveAll "+e.getMessage());
+            if (option == OptionForUpload.STOP && e.getMessage().contains("duplicate key")) {
+                throw new NotCorrectInput("Конфликт при импорте, операция остановлена");
+            }
+            throw new NonHibernateException(e.getMessage());
+        }
     }
 
     @Transactional
@@ -81,7 +252,7 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
     }
 
     @Transactional
-    public List<PriceGetDtoForUser> getAllForUser(Long shopId, Long goodId, int count, int page) {
+    public List<PriceGetDtoForUser> getAllForUser(Long shopId, Long goodId, Integer count, Integer page) {
         Session session = getSessionFactory().getCurrentSession();
         try{
             HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
@@ -89,8 +260,13 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
             JpaRoot<Price> root = query.from(Price.class);
 
             List<JpaPredicate> predicates = new ArrayList<>();
-            predicates.add(builder.equal(root.get("shop").get("id"), shopId ));
-            predicates.add(builder.equal(root.get("good").get("id"), goodId));
+            if (shopId != null){
+                predicates.add(builder.equal(root.get("shop").get("id"), shopId ));
+            }
+            if (goodId != null){
+                predicates.add(builder.equal(root.get("good").get("id"), goodId));
+            }
+
 
             query.multiselect(
                     root.get("shop").get("name").alias("shopName"),
@@ -98,17 +274,21 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
                     root.get("good").get("name").alias("goodName"),
                     root.get("price").alias("price")
             ).where(builder.and(predicates.toArray(new JpaPredicate[0])));
-            List<Tuple> tuples = session.createQuery(query)
-                    .setFirstResult(page*count)
-                    .setMaxResults(count)
-                    .getResultList();
+
+            var squery =  session.createQuery(query);
+            if (count != null && page != null){
+                squery.setFirstResult(page*count)
+                        .setMaxResults(count);
+
+            }
+            List<Tuple> tuples =squery.getResultList();
 
             return tuples.stream().map(tuple ->
                     new PriceGetDtoForUser(
                             tuple.get("shopName", String.class),
                             tuple.get("address", String.class),
                             tuple.get("goodName", String.class),
-                            tuple.get("price", Integer.class)
+                            tuple.get("price", BigDecimal.class)
                     )).toList();
 
         }
@@ -131,8 +311,13 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
             JpaRoot<Price> root = query.from(Price.class);
 
             List<JpaPredicate> predicates = new ArrayList<>();
-            predicates.add(builder.equal(root.get("good").get("id"), request.getGoodId()));
-            predicates.add(root.get("shop").get("id").in(request.getShopIds()));
+            if (request.getGoodId()!= null){
+                predicates.add(builder.equal(root.get("good").get("id"), request.getGoodId()));
+            }
+            if (request.getShopIds() != null && !request.getShopIds().isEmpty()){
+                predicates.add(root.get("shop").get("id").in(request.getShopIds()));
+            }
+
 
 
             query.multiselect(
@@ -148,7 +333,7 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
                             tuple.get("shopName", String.class),
                             tuple.get("address", String.class),
                             tuple.get("goodName", String.class),
-                            tuple.get("price", Integer.class)
+                            tuple.get("price", BigDecimal.class)
                     )).toList();
         }
         catch(HibernateException e) {
@@ -168,9 +353,9 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
         try{
             Session session = getSessionFactory().getCurrentSession();
             return session.createNativeQuery("""
-    WITH shop_check AS (SELECT id FROM shops WHERE id = :goodId), 
-         good_check AS (SELECT id FROM goods WHERE id = :shopId),
-         price_check AS (SELECT id, price FROM prices WHERE good_id=:goodId AND shop_id=:shopId)
+    WITH shop_check AS (SELECT id FROM shops WHERE id = :shopId), 
+         good_check AS (SELECT id FROM goods WHERE id = :goodId),
+         price_check AS (SELECT id, price FROM prices WHERE good_id=:goodId AND shop_id=:shopId   AND valid_to IS NULL)
      SELECT (SELECT id FROM shop_check) AS shopId,
               (SELECT id FROM good_check) AS goodId,
               (SELECT id FROM price_check) AS priceId,
@@ -216,32 +401,32 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
 
     }
 
-    @Transactional
-    public List<Long> getIdsByFilter(PriceFilter filters, Instant minDate, Instant maxDate){
-        Session session = getSessionFactory().getCurrentSession();
-        try{
-            HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
-            JpaCriteriaQuery<Long> query = builder.createQuery(Long.class);
-            JpaRoot<Price> root = query.from(Price.class);
-
-            List<JpaPredicate> predicates = buildPredicates(filters, minDate, maxDate, builder, root);
-            JpaOrder order = buildOrder(builder, root, filters);
-            query.select(root.get("id")).where(predicates.toArray(new JpaPredicate[0])).orderBy(order);
-            return session.createQuery(query)
-                    .setFirstResult(filters.getPage()* filters.getSize())
-                    .setMaxResults(filters.getSize())
-                    .getResultList();
-        }
-        catch(HibernateException e) {
-            logger.error("Hibernate Ошибка в PriceHinImpl getIdsByFilter " + e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception PriceHinImpl getIdsByFilter: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-
-    }
+//    @Transactional
+//    public List<Long> getIdsByFilter(PriceFilter filters, Instant minDate, Instant maxDate){
+//        Session session = getSessionFactory().getCurrentSession();
+//        try{
+//            HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
+//            JpaCriteriaQuery<Long> query = builder.createQuery(Long.class);
+//            JpaRoot<Price> root = query.from(Price.class);
+//
+//            List<JpaPredicate> predicates = buildPredicates(filters, minDate, maxDate, builder, root);
+//            JpaOrder order = buildOrder(builder, root, filters);
+//            query.select(root.get("id")).where(predicates.toArray(new JpaPredicate[0])).orderBy(order);
+//            return session.createQuery(query)
+//                    .setFirstResult(filters.getPage()* filters.getSize())
+//                    .setMaxResults(filters.getSize())
+//                    .getResultList();
+//        }
+//        catch(HibernateException e) {
+//            logger.error("Hibernate Ошибка в PriceHinImpl getIdsByFilter " + e.getMessage());
+//            throw new CanNotMakeExecution(e.getMessage());
+//        }
+//        catch (Exception e){
+//            logger.error("NonHibernate Exception PriceHinImpl getIdsByFilter: "+e.getMessage());
+//            throw new NonHibernateException(e.getMessage());
+//        }
+//
+//    }
 
     @Transactional
     public List<PriceGetResultForModerator> getPricesByFilter(PriceFilter filters, Instant minDate, Instant maxDate){
@@ -251,7 +436,8 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
             JpaCriteriaQuery<PriceGetResultForModerator> query = builder.createQuery(PriceGetResultForModerator.class);
             JpaRoot<Price> root = query.from(Price.class);
 
-            List<Long> ids = getIdsByFilter(filters, minDate, maxDate);
+            List<JpaPredicate> predicates = buildPredicates(filters, minDate, maxDate, builder, root);
+            JpaOrder order = buildOrder(builder, root, filters);
             query.select(builder.construct(PriceGetResultForModerator.class,
                     root.get("id"),
                     root.get("price"),
@@ -264,12 +450,10 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
                     root.get("shop").get("address"),
                     root.get("good").get("category").get("name"),
                     root.get("good").get("category").get("id")
-                    )).where(root.get("id").in(ids));
-            List<PriceGetResultForModerator > res = session.createQuery(query).getResultList();
-            Map<Long, PriceGetResultForModerator> maps = res.stream().collect(Collectors.toMap(
-                    PriceGetResultForModerator::getId, dto -> dto
-            ));
-            return ids.stream().map(maps::get).collect(Collectors.toList()) ;
+                    )).where(predicates.toArray(new JpaPredicate[0])).orderBy(order);
+
+
+            return session.createQuery(query).getResultList() ;
         }
         catch(HibernateException e) {
             logger.error("Hibernate Ошибка в PriceHinImpl getPricesByFilter " + e.getMessage());
@@ -280,6 +464,8 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
             throw new NonHibernateException(e.getMessage());
         }
     }
+
+
     private List<JpaPredicate> buildPredicates(
             PriceFilter filters,
             Instant minDate,
@@ -361,7 +547,7 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
             PriceFilter filters
     ){
 
-       return switch (filters.getSortDir()) {
+       return switch (filters.getSortType()) {
            case ASC -> builder.asc(root.get("id"));
            case DESC -> builder.desc(root.get("id"));
            case DATE_ASC -> builder.asc(root.get("validFrom"));

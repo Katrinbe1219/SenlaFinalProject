@@ -450,7 +450,7 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
             JpaRoot<Review> root,
             ReviewForUserFilters filters
     ){
-        return "asc".equalsIgnoreCase(filters.getSortDir())
+        return "asc".equalsIgnoreCase(filters.getSortType())
                 ? builder.asc(root.get("id"))
                 : builder.desc(root.get("id"));
     }
@@ -537,7 +537,7 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
             ReviewAdvancedFilters filters
     ){
 
-        return switch (filters.getSortDir()){
+        return switch (filters.getSortType()){
             case ASC -> builder.asc(root.get("id"));
             case DESC -> builder.desc(root.get("id"));
             case GOOD_ASC -> builder.asc(root.get("good").get("id"));

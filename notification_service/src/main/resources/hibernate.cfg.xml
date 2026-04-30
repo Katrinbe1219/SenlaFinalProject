@@ -1,0 +1,21 @@
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <!--        выводит сгенериррованные sql запросы-->
+        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.jdbc.batch_size">75</property>
+        <!--        упорядочивание для батчинга, чтобы не прыгать с таблицы на таблицу-->
+        <property name="hibernate.order_inserts">true</property>
+        <property name="hibernate.order_updates">true</property>
+
+
+        <mapping class="org.example.notification_service.models.AvailabilitySubscription" />
+        <mapping class="org.example.notification_service.models.PriceSubscription" />
+        <mapping class="org.example.notification_service.models.Good" />
+        <mapping class="org.example.notification_service.models.Shop" />
+        <mapping class="org.example.notification_service.models.User" />
+
+    </session-factory>
+</hibernate-configuration>

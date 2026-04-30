@@ -26,5 +26,7 @@
             <mapping class="org.example.core.models.Tag" />
             <mapping class="org.example.core.models.RefreshToken" />
             <mapping class="org.example.core.models.Favourite" />
+            <mapping class="org.example.core.models.PriceSubscription" />
+            <mapping class="org.example.core.models.AvailabilitySubscription" />
     </session-factory>
 </hibernate-configuration>
