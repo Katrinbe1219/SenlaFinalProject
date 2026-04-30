@@ -14,15 +14,16 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/goods/analyst")
+@RequestMapping("/goods/advanced")
 public class GoodControllerAnalyst {
 
     private GoodService goodService;
     public GoodControllerAnalyst(GoodService goodService) {
         this.goodService = goodService;
     }
+
     @GetMapping
-    @PreAuthorize("hasRole('ANALYST')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ANALYST', 'MODERATOR')")
     public List<GoodGetFullDto> findAllAnalyst(
             @Valid @RequestBody GoodFilter filters
     ){

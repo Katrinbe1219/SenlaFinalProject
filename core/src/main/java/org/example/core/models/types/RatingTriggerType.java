@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum RatingTriggerType {
    SCHEDULED(1),
-    MODERATOR(2);
+    MODERATOR(2),
+   ADMIN(3);
    private int value;
    RatingTriggerType(int value) {
       this.value = value;

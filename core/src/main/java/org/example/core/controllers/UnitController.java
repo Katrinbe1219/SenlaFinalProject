@@ -6,6 +6,7 @@ import org.example.core.dto.creating.UnitCreateDto;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.services.dictionaries.UnitService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class UnitController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     public UnitDto createUnit(@Valid @RequestBody UnitCreateDto unitDto){
         if (unitDto.getFullName() == null || unitDto.getShortName() == null){
             throw new NotCorrectInput("Any name must be given");
@@ -44,12 +46,14 @@ public class UnitController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     public StringResponse deleteUnit(@PathVariable("id") Long id) {
         unitService.deleteById(id);
         return new StringResponse("Deleted unit");
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     public StringResponse patchUnit(@PathVariable("id") Long id,
                                     @RequestBody Map<String,String> params
 

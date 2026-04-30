@@ -4,6 +4,7 @@ import org.example.core.dto.getting.StringResponse;
 import org.example.core.dto.TagDto;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.services.dictionaries.TagService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class TagController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     public TagDto addTag(@RequestBody Map<String,String> nameParam){
         if (nameParam == null || nameParam.get("name") == null){
             throw new NotCorrectInput("Name must be given");
@@ -44,12 +46,14 @@ public class TagController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     public StringResponse deleteTag(@PathVariable("id") Long id){
         tagService.deleteTag(id);
         return new StringResponse("Tag deleted");
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     public StringResponse editTag(@PathVariable("id") Long id,
                                   @RequestBody Map<String, String> nameParam){
         if (nameParam == null || nameParam.get("name") == null || nameParam.get("name").isBlank()) {

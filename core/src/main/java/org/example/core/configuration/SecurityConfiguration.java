@@ -20,7 +20,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
-
 public class SecurityConfiguration implements WebMvcConfigurer {
 
     private RefreshTokenService refreshTokenService;
@@ -47,14 +46,16 @@ public class SecurityConfiguration implements WebMvcConfigurer {
         http.authorizeHttpRequests(auth ->
                     auth
                             .requestMatchers("/**").permitAll()
-                            //.requestMatchers("/analyze/**").hasAnyRole("ADMIN", "ANALYST")
-//                            .requestMatchers("/categories/**", "/districts/**",
-//                                        "/tags/**", "/units/**", "/login", "/refresh",
-//                                    "/shops/**", "/goods/**").permitAll()
-//                            .requestMatchers("/admin/**").hasRole("ADMIN")
-//                            .requestMatchers("/profile/**").hasAnyRole("ADMIN", "ANALYST", "MODERATOR", "MIN_USER", "MAX_USER")
-//                            .requestMatchers("/prices/**").hasAnyRole("ADMIN", "MODERATOR")
-//                            .requestMatchers("/reviews/**", "/rates/**").hasAnyRole("ADMIN", "ANALYST", "MODERATOR")
+                            .requestMatchers("/analyst/**").hasAnyRole("ADMIN", "ANALYST")
+                            .requestMatchers("/categories/**", "/districts/**",
+                                        "/tags/**", "/units/**", "/login", "/refresh",
+                                    "/shops/**", "/goods/**","/prices/**").permitAll()
+                            .requestMatchers("/favourites/**", "/reviews/**").hasAnyRole("MIN_USER", "MAX_USER")
+                            .requestMatchers("/moderator/**").hasAnyRole("ADMIN", "MODERATOR")
+                            .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                            .requestMatchers("/profile/**").hasAnyRole("ADMIN", "ANALYST", "MODERATOR", "MIN_USER", "MAX_USER")
+                            .requestMatchers("/rates/**", "/export/**","/subscriptions/**").hasAnyRole("ADMIN", "ANALYST", "MODERATOR")
 
         )
         .csrf(AbstractHttpConfigurer::disable)

@@ -42,7 +42,6 @@ public class ReviewModeratorController {
 
     @GetMapping
     public List<ReviewFullDto> getAllReviews(@Valid @RequestBody ReviewAdvancedFilters filters){
-
         return reviewService.getByFilters(filters);
     }
 }

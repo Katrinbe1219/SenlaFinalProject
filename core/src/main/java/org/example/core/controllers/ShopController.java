@@ -7,6 +7,7 @@ import org.example.core.dto.getting.StringResponse;
 import org.example.core.dto.patching.ShopPatchDto;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.services.objects.ShopService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,17 +42,20 @@ public class ShopController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ShopGetDto createShop(@Valid @RequestBody ShopCreateDto shopCreateDto){
         return shopService.create(shopCreateDto);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public StringResponse deleteShop(@PathVariable("id") Long id){
         shopService.delete(id);
         return new StringResponse("Shop deleted successfully");
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public StringResponse patch(
             @PathVariable("id") Long id,
             @Valid @RequestBody ShopPatchDto shopPatchDto

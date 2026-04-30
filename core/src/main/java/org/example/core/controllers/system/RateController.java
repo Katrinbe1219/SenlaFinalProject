@@ -16,6 +16,7 @@ import org.example.core.services.RecalculationService;
 import org.example.core.services.documents.RateService;
 import org.example.core.services.graphics.GraphicalAnalyseService;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -94,17 +95,20 @@ public class RateController {
 
 
     // recalculation rating--------------------------------------
-    // TODO only for admin
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/recalculation")
     public StringResponse recalculateRating(
-
     ){
-        return recalculationService.moderatorRequest(null);
+        return recalculationService.personRequest(null);
     }
 
     @GetMapping("/recalculation/{id}")
+    @PreAuthorize("hasRole('MODERATOR')")
     public StringResponse recalculateRatingById(@PathVariable("id") Long id){
-        return recalculationService.moderatorRequest(id);
+        if (id==null || id <=0){
+            throw new NotCorrectInput("id must be > 0");
+        }
+        return recalculationService.personRequest(id);
     }
 
 

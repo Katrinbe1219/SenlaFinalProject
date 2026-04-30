@@ -61,6 +61,7 @@ public class GoodController {
 
     // добвление отзыва
     @PostMapping("/{id}/review")
+    @PreAuthorize("hasAnyRole('MAX_USER', 'MIN_USER')")
     public StringResponse addReview(@PathVariable("id") Long id,
                                     @Valid @RequestBody ReviewCreateDto dto){
 
@@ -71,6 +72,7 @@ public class GoodController {
 
     // получение по goodId
     @GetMapping("/{id}/reviews")
+    @PreAuthorize("hasAnyRole('MAX_USER', 'MIN_USER')")
     public List<ReviewDto> getReviewsByGoodId(
             @PathVariable("id") Long id,
             @Valid @RequestBody ReviewForUserFilters filters
@@ -81,6 +83,7 @@ public class GoodController {
     }
 
     @PostMapping("/{id}/favourite")
+    @PreAuthorize("hasAnyRole('MAX_USER', 'MIN_USER')")
     public StringResponse favouriteGood(@PathVariable("id") Long goodId){
         UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         favouriteService.createFavourite(user.getUsername(), goodId);
@@ -88,6 +91,7 @@ public class GoodController {
     }
 
     @DeleteMapping("/{id}/favourite")
+    @PreAuthorize("hasAnyRole('MAX_USER', 'MIN_USER')")
     public StringResponse unFavouriteGood(@PathVariable("id") Long goodId){
         UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         favouriteService.removeFavourite(user.getUsername(), goodId);

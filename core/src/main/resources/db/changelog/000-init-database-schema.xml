@@ -557,7 +557,7 @@
         <sql>
             ALTER TABLE rating_recalculation_log
                 ADD CONSTRAINT chk_recalc_triggered_by
-                    CHECK (triggered_by IN ('SCHEDULED', 'MODERATOR'));
+                    CHECK (triggered_by IN ('SCHEDULED', 'MODERATOR', 'ADMIN'));
         </sql>
     </changeSet>
 

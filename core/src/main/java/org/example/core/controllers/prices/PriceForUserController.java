@@ -30,6 +30,7 @@ public class PriceForUserController {
 
     @GetMapping
     // для user это обязательно указывать какой продукт и откуда!
+    // TODO зачем page, count
     public List<PriceGetDtoForUser> getPrices(
             @RequestParam("goodId") Long goodId,
             @RequestParam("shopId") Long shopId,
@@ -49,11 +50,10 @@ public class PriceForUserController {
 
     // Compare Prices
     @GetMapping("/comparison")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ANALYST', 'MODERATOR', 'MIN_USER', 'MAX_USER')")
     public List<PriceGetDtoForUser> getComparison(
             @Valid @RequestBody PriceComparisonRequest request
     ){
-
-
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean checking = auth.getAuthorities().stream()
@@ -88,6 +88,7 @@ public class PriceForUserController {
     }
 
     @PostMapping("/subscribe/availability")
+    @PreAuthorize("hasRole('MAX_USER')")
     public AvailabilitySubGetDto createSubscriptionAvailability(
             @RequestParam("goodId") Long goodId,
             @RequestParam("shopId") Long shopId

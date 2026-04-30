@@ -9,8 +9,6 @@ import org.example.core.exceptions.UnavailableExecution;
 import org.example.core.hibernate.documents.prices.PriceForCalculationHibImpl;
 import org.example.core.hibernate.documents.RateHibImpl;
 import org.example.core.hibernate.objects.GoodHibImpl;
-import org.example.core.models.User;
-import org.example.core.models.types.ModeratorVerdict;
 import org.example.core.models.types.RatingTriggerType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -51,7 +49,7 @@ public class RecalculationService {
     }
 
     @Transactional
-    public StringResponse moderatorRequest(Long goodId){
+    public StringResponse personRequest(Long goodId){
         if (isRecalculating.get()){
             return new StringResponse("Пересчет уже выполняется, попробуйте позже");
         }
@@ -68,7 +66,7 @@ public class RecalculationService {
                     if (ChronoUnit.HOURS.between(currentTime, targetTime) < 3){
                         return new StringResponse("Время пересчета ограничено для всех продуктов, попробуйте позже");
                     }
-                    asyncRecalculationService.recalculationForAll(RatingTriggerType.MODERATOR, isRecalculating);
+                    asyncRecalculationService.recalculationForAll(RatingTriggerType.ADMIN, isRecalculating);
                 }else{
 
                     if (ChronoUnit.MINUTES.between(currentTime, targetTime) < 5){

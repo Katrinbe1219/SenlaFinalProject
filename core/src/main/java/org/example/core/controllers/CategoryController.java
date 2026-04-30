@@ -7,6 +7,7 @@ import org.example.core.dto.getting.StringResponse;
 import org.example.core.dto.patching.CategoryPatchDto;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.services.dictionaries.CategoryService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,18 +38,21 @@ public class CategoryController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public CategoryGetDto createCategory(@RequestBody CategoryCreateDto categoryDto){
         return categoryService.createCategory(categoryDto);
 
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public StringResponse deleteCategory(@PathVariable("id") Long id){
         categoryService.deleteCategory(id);
         return new StringResponse("Category deleted");
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public StringResponse editCategory(@PathVariable("id") Long id,
                                        @Valid @RequestBody CategoryPatchDto dto){
         dto.setId(id);

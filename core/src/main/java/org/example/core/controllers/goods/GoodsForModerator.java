@@ -12,11 +12,12 @@ import org.example.core.models.User;
 import org.example.core.models.types.ModeratorVerdict;
 import org.example.core.services.documents.ModeratorRecalcService;
 import org.example.core.services.objects.GoodService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/goods")
+@RequestMapping("/moderator/goods")
 @AllArgsConstructor
 public class GoodsForModerator {
 
@@ -27,8 +28,6 @@ public class GoodsForModerator {
     public GoodGetForUserDto createGood(
             @Valid @RequestBody GoodCreateDto dto){
         return goodService.createGood(dto);
-
-
     }
 
     @DeleteMapping("/{id}")

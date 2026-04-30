@@ -12,6 +12,7 @@ public class RatingTriggerTypeConverter implements AttributeConverter<RatingTrig
         return switch (ratingTriggerType){
             case MODERATOR -> "MODERATOR";
             case SCHEDULED -> "SCHEDULED";
+            case ADMIN -> "ADMIN";
 
         };
     }
@@ -21,6 +22,7 @@ public class RatingTriggerTypeConverter implements AttributeConverter<RatingTrig
         return switch (s.toUpperCase()){
             case "MODERATOR" -> RatingTriggerType.MODERATOR;
             case "SCHEDULED" -> RatingTriggerType.SCHEDULED;
+            case "ADMIN" -> RatingTriggerType.ADMIN;
 
             default -> throw new NotCorrectInput("Unexpected value: " + s.toUpperCase());
         };

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/check/moderator")
+@RequestMapping("moderator/check")
 @AllArgsConstructor
 public class ModeratorRecalculationController {
 

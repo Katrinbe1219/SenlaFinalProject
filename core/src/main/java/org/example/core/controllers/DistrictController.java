@@ -5,6 +5,7 @@ import org.example.core.dto.DistrictDto;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.services.dictionaries.DistrictService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,12 +41,14 @@ public class DistrictController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public StringResponse deleteById(@PathVariable("id") Long id){
         districtService.deleteDistrict(id);
         return new StringResponse("District deleted");
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public StringResponse updateById(
             @PathVariable("id") Long id,
             @Valid @RequestBody Map<String, String> nameParam)
@@ -60,6 +63,7 @@ public class DistrictController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public DistrictDto create(@RequestBody Map<String, String> nameParam){
         if (nameParam == null || nameParam.get("name") == null || nameParam.get("name").isBlank()) {
             throw new NotCorrectInput("Name must be given");

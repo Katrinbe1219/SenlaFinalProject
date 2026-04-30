@@ -27,7 +27,7 @@ import java.util.Comparator;
 import java.util.List;
 
 @RestController
-@RequestMapping("/prices/analyst")
+@RequestMapping("/analyst/prices")
 @AllArgsConstructor
 //TODO Exception went to JwtFilter and causes Not authorize!!!!!!!
 public class PriceForAnalyzeController {

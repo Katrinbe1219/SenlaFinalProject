@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users/moderator")
+@RequestMapping("/moderator/users")
 public class UserForModeratorController {
 
     private UserService userService;
