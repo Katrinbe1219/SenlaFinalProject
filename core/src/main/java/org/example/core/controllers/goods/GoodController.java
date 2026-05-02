@@ -21,6 +21,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/goods")
+// TODO почему если убрать raw in postman -> error invalid credentials
 public class GoodController {
     GoodService goodService;
     ReviewForUserService reviewService;

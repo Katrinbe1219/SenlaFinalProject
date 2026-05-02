@@ -16,6 +16,7 @@
         <mapping class="org.example.notification_service.models.Good" />
         <mapping class="org.example.notification_service.models.Shop" />
         <mapping class="org.example.notification_service.models.User" />
+        <mapping class="org.example.notification_service.models.Category" />
 
     </session-factory>
 </hibernate-configuration>

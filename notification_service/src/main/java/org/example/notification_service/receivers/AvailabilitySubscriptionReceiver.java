@@ -39,6 +39,7 @@ public class AvailabilitySubscriptionReceiver {
     public void handle(String dto, Acknowledgment ack) {
         try{
             PriceCreatedMessage message = mapper.readValue(dto, PriceCreatedMessage.class);
+
             processPrice(message);
             ack.acknowledge();
         }
@@ -54,7 +55,7 @@ public class AvailabilitySubscriptionReceiver {
 
     void processPrice(PriceCreatedMessage dto){
         List<AvailabilitySubscription> subscriptions = availabilitySubHib.findAll(dto.getGoodId(), dto.getShopId());
-        if (subscriptions.isEmpty())return;
+        if (subscriptions.isEmpty())  return;
 
         subscriptions.forEach(sub -> {
             if (sub.getUser().getEmail()!=null){

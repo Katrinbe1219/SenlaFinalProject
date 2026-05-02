@@ -77,7 +77,6 @@ public class AsyncRecalculationService {
                                     RatingStatus.SUCCESS, type, oldInfo);
 
                             logger.info("Заход был успешный {}-{}, попытка {}", i, end, batchAttempt );
-
                             break;
                         } catch (Exception e) {
                             batchAttempt ++;

@@ -37,7 +37,6 @@ public class PriceForModeratorController {
     @PostMapping("/updated")
     public PriceGetResultForModerator updatePriceForGoodInShop(@Valid @RequestBody PriceCreateDto dto) {
         return priceService.updatePrice(dto);
-
     }
 
     @PostMapping("/upload")

@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.core.dto.kafka.DiscountMessage;
 import org.example.core.dto.kafka.PriceChangedMessage;
 import org.example.core.dto.kafka.PriceCreatedMessage;
+import org.springframework.context.event.EventListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -56,6 +58,27 @@ public class KafkaProducerService {
         }
         catch (Exception e){
             logger.error("NotTimeoutException KafkaProducerService onPriceCreated: "  + e.getMessage());
+
+        }
+
+    }
+
+    @Async("kafkaExecutor")
+    //@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
+    public void discountMessage(DiscountMessage dto){
+        try{
+            String message = mapper.writeValueAsString(dto);
+            kafkaTemplate.send(
+                    "message.send", message
+            ).get(5, TimeUnit.SECONDS);
+        }
+        catch (TimeoutException e){
+            logger.error("TimeoutException KafkaProducerService discountMessage: "  + e.getMessage());
+
+        }
+        catch (Exception e){
+            logger.error("NotTimeoutException KafkaProducerService discountMessage: "  + e.getMessage());
 
         }
 

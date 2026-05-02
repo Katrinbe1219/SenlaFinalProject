@@ -70,4 +70,12 @@ public class KafkaConfiguration {
                 .replicas(3)
                 .build();
     }
+
+    @Bean
+    public NewTopic discountMessageTopic(){
+        return TopicBuilder.name("message.send")
+                .partitions(3)
+                .replicas(3)
+                .build();
+    }
 }

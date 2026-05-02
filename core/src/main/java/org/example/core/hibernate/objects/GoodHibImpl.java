@@ -298,13 +298,12 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
             );
         }
         if (filters.getTagIds() != null){
-            for(Long tagId: filters.getTagIds()){
-                JpaJoin<Good, Tag> tagJoin = root.join("tags", JoinType.INNER);
-                predicates.add(
+            JpaJoin<Good, Tag> tagJoin = root.join("tags", JoinType.INNER);
+            predicates.add(
                        tagJoin.get("id").in(filters.getTagIds())
                 );
 
-            }
+
 
         }
 

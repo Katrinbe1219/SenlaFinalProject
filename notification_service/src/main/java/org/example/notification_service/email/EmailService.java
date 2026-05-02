@@ -73,4 +73,23 @@ public class EmailService {
 
     }
 
+    @Async("emailExecutor")
+    public void sendDiscountASync(String toEmail, String mes, String topic){
+
+        try {SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(toEmail);
+            message.setSubject(topic);
+            message.setFrom(from);
+            message.setText(
+                    mes
+            );
+            mailSender.send(message);}
+        catch (MailException e){
+            logger.error("MailException EmailService sendDiscountASync: " + e.getMessage());
+        }
+
+
+
+    }
+
 }
