@@ -1,5 +1,6 @@
 package org.example.core.hibernate.objects;
 
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
@@ -11,6 +12,7 @@ import org.example.core.exceptions.CanNotMakeExecution;
 import org.example.core.exceptions.NonHibernateException;
 import org.example.core.hibernate.base_settings.HibernateAbstractDao;
 import org.example.core.hibernate.base_settings.filters.goods.GoodFilter;
+import org.example.core.models.Category;
 import org.example.core.models.Good;
 import org.example.core.models.Tag;
 import org.example.core.models.types.GoodStatusFromModerator;
@@ -177,32 +179,34 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
     }
 
     @Transactional
-    public List<GoodGetForUserDto> findAllForUserDto(GoodFilter filters){
+    public List<Good> findAllForUserDto(GoodFilter filters){
         Session session = getSessionFactory().getCurrentSession();
         try{
-            List<Long> ids = findIdsByFilters(filters, true);
-            List<GoodGetForUserDto> res= session.createQuery("""
-            SELECT new org.example.core.dto.getting.goods.GoodGetForUserDto(
-            g.id, g.name,  c.name, u.fullName, g.rate, CAST(STRING_AGG(t.name, ',') as String), g.description
-) FROM Good g
-            LEFT JOIN g.category c
-            LEFT JOIN g.unit u
-            LEFT JOIN g.tags t
-            WHERE g.id IN :ids
-            GROUP BY g.id, g.name,  c.name, u.fullName, g.rate, g.description
-             
-            """, GoodGetForUserDto.class)
-                    // array_position(ARRAY(SELECT unnest(:ids)), id) - POSTGRESQL спецификация, щлесь не подойдет
-                    // отсортируем в  JAVA
-                    .setParameter("ids", ids)
 
-                    .getResultList();
-            Map<Long, GoodGetForUserDto> maps = res.stream()
-                    .collect(Collectors.toMap(
-                            GoodGetForUserDto::getId, dto -> dto
-                    ));
+            HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
+            JpaCriteriaQuery<Good> query = builder.createQuery(Good.class);
+            JpaRoot<Good> root = query.from(Good.class);
+            root.fetch("tags", JoinType.LEFT);
+            root.fetch("category", JoinType.LEFT);
+            root.fetch("unit", JoinType.LEFT);
 
-            return ids.stream().map(maps::get).filter(Objects::nonNull).toList();
+            if (filters.getPage() != null && filters.getSize()!=null){
+                List<Long> ids = findIdsByFilters(filters, true);
+                if (ids.isEmpty()) return List.of();
+                query.select(root).where(root.get("id").in(ids));
+
+            }else{
+                List<JpaPredicate> predicates = buildPredicates(filters, builder, root, true);
+                JpaOrder order = buildOrder(filters, builder, root);
+                query.select(root)
+                        .where(predicates.toArray(new JpaPredicate[0]))
+                        .orderBy(order);
+            }
+
+
+            return session.createQuery(query).getResultList();
+
+
         }
         catch(HibernateException e) {
             logger.error("Hibernate Ошибка в GoodHinImpl findAllForUserDto " + e.getMessage());
@@ -386,9 +390,26 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
             HibernateCriteriaBuilder builder,
             JpaRoot<Good> root
     ){
-        return "asc".equalsIgnoreCase(filters.getSortType()) ?
-                builder.asc(root.get("name"))
-                : builder.desc(root.get("name"));
+        return switch (filters.getSortType()){
+            case ASC -> builder.asc(root.get("id"));
+            case DESC -> builder.desc(root.get("id"));
+            case CREATED_AT_ASC -> builder.asc(root.get("createdAt"));
+            case CREATED_AT_DESC -> builder.desc(root.get("createdAt"));
+            case UPDATED_AT_ASC -> builder.asc(root.get("updatedAt"));
+            case UPDATED_AT_DESC -> builder.desc(root.get("updatedAt"));
+            case NAME_ASC -> builder.asc(root.get("name"));
+            case NAME_DESC -> builder.desc(root.get("name"));
+            case CAT_ASC -> {
+                Join<Good, Category> catJoin = root.join("category", JoinType.LEFT);
+                yield builder.asc(catJoin.get("id"));
+            }
+            case CAT_DESC -> {
+                Join<Good, Category> catJoin = root.join("category", JoinType.LEFT);
+                yield builder.desc(catJoin.get("id"));
+            }
+            case RATE_ASC -> builder.asc(root.get("rate"));
+            case RATE_DESC -> builder.desc(root.get("rate"));
+        };
     }
 
 

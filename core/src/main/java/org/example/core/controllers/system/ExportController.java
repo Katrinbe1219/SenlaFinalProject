@@ -7,7 +7,7 @@ import org.example.core.dto.UnitDto;
 import org.example.core.dto.export.ModeratorDto;
 import org.example.core.dto.export.PriceHistoryByGoodAndShop;
 import org.example.core.dto.export.ShopsCurrentPricesDto;
-import org.example.core.dto.getting.CategoryGetDto;
+import org.example.core.dto.getting.categories.CategoryGetDto;
 import org.example.core.dto.getting.ModeratorRecalcDto;
 import org.example.core.dto.getting.goods.GoodIdDto;
 import org.example.core.dto.getting.users.ModeratorSmallDto;

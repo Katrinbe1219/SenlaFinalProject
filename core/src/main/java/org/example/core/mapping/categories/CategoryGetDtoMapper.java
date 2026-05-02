@@ -1,6 +1,6 @@
 package org.example.core.mapping.categories;
 
-import org.example.core.dto.getting.CategoryGetDto;
+import org.example.core.dto.getting.categories.CategoryGetDto;
 import org.example.core.models.Category;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

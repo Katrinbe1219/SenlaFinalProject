@@ -3,7 +3,7 @@ package org.example.core.services.dictionaries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.core.dto.creating.CategoryCreateDto;
-import org.example.core.dto.getting.CategoryGetDto;
+import org.example.core.dto.getting.categories.CategoryGetDto;
 import org.example.core.dto.patching.CategoryPatchDto;
 import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NotCorrectInput;

@@ -2,7 +2,7 @@ package org.example.core.controllers;
 
 import jakarta.validation.Valid;
 import org.example.core.dto.creating.CategoryCreateDto;
-import org.example.core.dto.getting.CategoryGetDto;
+import org.example.core.dto.getting.categories.CategoryGetDto;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.dto.patching.CategoryPatchDto;
 import org.example.core.exceptions.NotCorrectInput;

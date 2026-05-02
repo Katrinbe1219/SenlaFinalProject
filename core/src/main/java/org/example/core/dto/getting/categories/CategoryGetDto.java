@@ -1,10 +1,8 @@
-package org.example.core.dto.getting;
+package org.example.core.dto.getting.categories;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Optional;
 
 @Data
 @AllArgsConstructor
@@ -12,5 +10,6 @@ import java.util.Optional;
 public class CategoryGetDto {
     private String name;
     private Long id;
-    private String parent;
+    private Long parentId;
+    private String parentName;
 }

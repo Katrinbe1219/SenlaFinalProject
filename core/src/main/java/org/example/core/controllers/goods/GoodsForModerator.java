@@ -6,6 +6,7 @@ import org.example.core.dto.StringRequest;
 import org.example.core.dto.creating.GoodCreateDto;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.dto.getting.goods.GoodGetForUserDto;
+import org.example.core.dto.getting.goods.GoodIdDto;
 import org.example.core.dto.patching.GoodPatchDto;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.models.User;
@@ -25,7 +26,7 @@ public class GoodsForModerator {
     private ModeratorRecalcService logService;
 
     @PostMapping
-    public GoodGetForUserDto createGood(
+    public GoodIdDto createGood(
             @Valid @RequestBody GoodCreateDto dto){
         return goodService.createGood(dto);
     }

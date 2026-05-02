@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.annotations.MutuallyExclusiveExtended;
+import org.example.core.hibernate.base_settings.sorting_types.GoodSortType;
 import org.example.core.models.types.GoodStatusFromModerator;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -60,7 +61,7 @@ public class GoodFilter {
 
     @Builder.Default
     @NotNull(message = "if you are undecided about the sortType, do not provide it")
-    private String sortType = "asc"; // by name
+    private GoodSortType sortType = GoodSortType.ASC; // by name
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")
     private  Integer page = null;

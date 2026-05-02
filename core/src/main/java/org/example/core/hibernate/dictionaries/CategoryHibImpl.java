@@ -2,7 +2,7 @@ package org.example.core.hibernate.dictionaries;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.example.core.dto.getting.CategoryGetDto;
+import org.example.core.dto.getting.categories.CategoryGetDto;
 import org.example.core.exceptions.CanNotMakeExecution;
 import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NonHibernateException;

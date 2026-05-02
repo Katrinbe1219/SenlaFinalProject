@@ -1,10 +1,12 @@
 package org.example.core.services.objects;
 
+import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.core.dto.creating.GoodCreateDto;
 import org.example.core.dto.getting.goods.GoodGetForUserDto;
 import org.example.core.dto.getting.goods.GoodGetFullDto;
+import org.example.core.dto.getting.goods.GoodIdDto;
 import org.example.core.dto.patching.GoodPatchDto;
 import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NotCorrectInput;
@@ -13,6 +15,7 @@ import org.example.core.hibernate.dictionaries.CategoryHibImpl;
 import org.example.core.hibernate.dictionaries.TagHibImpl;
 import org.example.core.hibernate.dictionaries.UnitHibImpl;
 import org.example.core.hibernate.objects.GoodHibImpl;
+import org.example.core.mapping.goods.GoodGetForUserMapper;
 import org.example.core.mapping.goods.GoodGetFullDtoMapper;
 import org.example.core.models.Category;
 import org.example.core.models.Good;
@@ -31,6 +34,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class GoodService {
     private static final Logger logger = LogManager.getLogger(GoodService.class);
 
@@ -39,15 +43,7 @@ public class GoodService {
     private CategoryHibImpl categoryHib;
     private UnitHibImpl unitHib;
     private GoodGetFullDtoMapper goodGetFullDtoMapper;
-
-    public GoodService(GoodHibImpl goodHib, TagHibImpl tagHib, CategoryHibImpl categoryHib, UnitHibImpl unitHib,
-                       GoodGetFullDtoMapper goodGetFullDtoMapper) {
-        this.goodHib = goodHib;
-        this.tagHib = tagHib;
-        this.categoryHib = categoryHib;
-        this.unitHib = unitHib;
-        this.goodGetFullDtoMapper = goodGetFullDtoMapper;
-    }
+    private GoodGetForUserMapper goodGetForUserMapper;
 
     @Transactional
     public List<GoodGetForUserDto> findAllForUser (GoodFilter filters){
@@ -56,8 +52,16 @@ public class GoodService {
             filters.setCategoryIds(allCategories);
         }
 
+        List<Good> goods= goodHib.findAllForUserDto(filters);
+        if (goods.isEmpty()) return List.of();
 
-        return goodHib.findAllForUserDto(filters);
+        List<GoodGetForUserDto> dtos= new ArrayList<>();
+        for (Good good : goods){
+            dtos.add(goodGetForUserMapper.toDto(good));
+        }
+
+
+        return dtos;
 
     }
     @Transactional
@@ -89,7 +93,7 @@ public class GoodService {
     }
 
     @Transactional
-    public GoodGetForUserDto createGood(GoodCreateDto dto){
+    public GoodIdDto createGood(GoodCreateDto dto){
         Good good = new Good();
         if (dto.getTagsId() != null && !dto.getTagsId().isEmpty()){
             List<Tag> tags = checkTagIds(dto.getTagsId());
@@ -118,7 +122,7 @@ public class GoodService {
         good.setUnit(unit);
         Good newGood = goodHib.save(good, logger);
 
-        return toDto(newGood);
+        return new GoodIdDto(newGood.getId(), newGood.getName());
 
     }
 
@@ -185,20 +189,7 @@ public class GoodService {
         return tags;
     }
 
-    private GoodGetForUserDto toDto(Good good){
-        GoodGetForUserDto dto = new GoodGetForUserDto();
-        dto.setId(good.getId());
-        dto.setName(good.getName());
-        if (good.getCategory() !=null){
-            dto.setCategory(good.getCategory().getName());
-        }
 
-        dto.setUnit(good.getUnit().getFullName());
-        if (good.getTags() != null){
-            dto.setTags(good.getTags().stream().map(Tag::getName).collect(Collectors.joining(", ")));
-        }
-        return dto;
-    }
 
     private Boolean hasAnyLetter(String str){
         // ^[\\p{L}]+$" - любые языки мира, \\p{L} - unicode Letter

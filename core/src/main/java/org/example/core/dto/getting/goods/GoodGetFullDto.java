@@ -1,14 +1,12 @@
 package org.example.core.dto.getting.goods;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.core.dto.TagDto;
 import org.example.core.dto.UnitDto;
-import org.example.core.dto.getting.CategoryGetDto;
+import org.example.core.dto.getting.categories.CategoryGetDto;
 
-import java.time.Instant;
 import java.util.List;
 
 @Data
