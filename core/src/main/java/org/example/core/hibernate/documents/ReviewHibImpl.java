@@ -90,13 +90,13 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
     }
 
     @Transactional
-    public List<ReviewDto> getByUserSmallVersion(Long id, int page, int pageSize) throws CanNotMakeExecution {
+    public List<Review> getByUserSmallVersion(Long id, int page, int pageSize) throws CanNotMakeExecution {
         Session session = getSessionFactory().getCurrentSession();
         try {
             return session.createQuery("""
-                SELECT DISTINCT r.id ,r.good.name AS goodName,r.rate,   r.createdAt, r.review
+                SELECT DISTINCT r 
      FROM Review r WHERE r.user.id = :id
-            """, ReviewDto.class)
+            """, Review.class)
                     .setParameter("id", id)
                     .setFirstResult(page*pageSize)
                     .setMaxResults(pageSize)
@@ -113,13 +113,13 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
     }
 
     @Transactional
-    public ReviewDto getByUserAndGood(Long userId, Long goodId) throws CanNotMakeExecution {
+    public Review getByUserAndGood(Long userId, Long goodId) throws CanNotMakeExecution {
         try{
             Session session = getSessionFactory().getCurrentSession();
             return session.createQuery("""
-            SELECT DISTINCT r.id, r.good.name AS goodName, r.rate, r.createdAt, r.review FROM Review  r
+            SELECT  r  FROM Review  r
             WHERE r.user.id = :id AND r.good.id=:goodId
-            """, ReviewDto.class).setParameter("id", userId)
+            """, Review.class).setParameter("id", userId)
                     .setParameter("goodId", goodId)
                     .uniqueResultOptional().orElse(null);
         }
@@ -133,23 +133,6 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
         }
     }
 
-//    @Transactional
-//    public List<Review> getByUserAndGoodFullVersion(Long userId, Long goodId) throws CanNotMakeExecution {
-//        Session session = getSessionFactory().getCurrentSession();
-//        try{
-//            return session.createQuery("""
-//                SELECT DISTINCT r FROM Review r
-//                LEFT JOIN FETCH r.good
-//                LEFT JOIN FETCH r.user
-//                WHERE r.user.id = :userId
-//                AND r.good.id = :goodId
-//            """, Review.class).setParameter("userId", userId).setParameter("goodId", goodId).list();
-//        }
-//        catch(HibernateException e){
-//            logger.error("ReviewHibImpl getByUserAndGood: "+  e.getMessage());
-//            throw new CanNotMakeExecution(e.getMessage());
-//        }
-//    }
 
     @Transactional
     public boolean blockReview(Long id, User moderator){
@@ -212,7 +195,7 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
             return  session.createQuery(query).uniqueResultOptional().orElse(null);
         }
         catch(HibernateException e){
-            logger.error("Hibarnate ReviewHibImpl countByFilters: "+  e.getMessage());
+            logger.error("Hibernate ReviewHibImpl countByFilters: "+  e.getMessage());
             throw new CanNotMakeExecution(e.getMessage());
         }
         catch (Exception e){
@@ -221,17 +204,22 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
         }
     }
 
+
     @Transactional
-    public List<Long> getIdsByFilters(ReviewAdvancedFilters filters) throws CanNotMakeExecution{
+    public List<Review> getFullByFilters(ReviewAdvancedFilters filters) throws CanNotMakeExecution {
         Session session = getSessionFactory().getCurrentSession();
-        try {
+        try{
+
             HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
-            JpaCriteriaQuery<Long> query = builder.createQuery(Long.class);
+            JpaCriteriaQuery<Review> query = builder.createQuery(Review.class);
             JpaRoot<Review> root = query.from(Review.class);
 
+            root.fetch("user", JoinType.LEFT);
+            root.fetch("good", JoinType.LEFT);
+            root.fetch("blockedBy", JoinType.LEFT);
 
             List<JpaPredicate> predicates = buildPredicates(builder, root, filters);
-            query.select(root.get("id"))
+            query.select(root)
                     .where(builder.and(predicates.toArray(new Predicate[0]))) // java потом сама поставит размер
                     .orderBy(buildOrder(builder, root, filters));
             var squery = session.createQuery(query);
@@ -239,42 +227,8 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
                 squery.setFirstResult(filters.getPage()*filters.getSize())
                         .setMaxResults(filters.getSize());
             }
-
-
             return squery.getResultList();
-        }
-        catch(HibernateException e){
-            logger.error("Hibernate ReviewHibImpl getByFilters: "+  e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception ReviewHibImpl getByFilters: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
 
-    @Transactional
-    public List<Review> getFullByFilters(ReviewAdvancedFilters filters) throws CanNotMakeExecution {
-        Session session = getSessionFactory().getCurrentSession();
-        try{
-            List<Long> ids = getIdsByFilters(filters);
-            if (ids.isEmpty()) return List.of();
-            HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
-            JpaCriteriaQuery<Review> query = builder.createQuery(Review.class);
-            JpaRoot<Review> root = query.from(Review.class);
-
-
-            root.fetch("user", JoinType.LEFT);
-            root.fetch("good", JoinType.LEFT);
-            root.fetch("blockedBy", JoinType.LEFT);
-
-            query.select(root).distinct(true)
-                    .where(root.get("id").in(ids));
-            List<Review> result = session.createQuery(query).getResultList();
-            Map<Long, Review> map = result.stream().collect(Collectors.toMap(Review::getId, v -> v));
-
-
-            return ids.stream().map(map::get).collect(Collectors.toList());
         }
         catch (HibernateException e){
             logger.error("Hibernate ReviewHibImpl getFullByFilters: "+  e.getMessage());
@@ -292,15 +246,28 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
     public List<Review> getMinByFilters(ReviewForUserFilters filters, User user) throws CanNotMakeExecution {
         Session session = getSessionFactory().getCurrentSession();
         try{
-            List<Long> ids = getIdsByFilters(filters, user);
-            if (ids.isEmpty()) return List.of();
 
             HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
             JpaCriteriaQuery<Review> query = builder.createQuery(Review.class);
             JpaRoot<Review> root = query.from(Review.class);
 
-            query.select(root).distinct(true).where(root.get("id").in(ids));
-            return session.createQuery(query).getResultList();
+            List<JpaPredicate> predicates = buildPredicates(builder, root, filters);
+            if (user != null){
+                // если передается user, то тогда идет запрос от user для фильтрации
+                predicates.add( builder.equal(root.get("user").get("id"), user.getId()));
+                predicates.add(builder.equal(root.get("blockedBy"), false));
+            }
+
+            query.select(root)
+                    .where(builder.and(predicates.toArray(new JpaPredicate[0])))
+                    .orderBy(builderOrder(builder, root, filters));
+
+            var squery = session.createQuery(query);
+            if (filters.getPage()!= null && filters.getSize() != null){
+                squery.setFirstResult(filters.getPage()*filters.getSize())
+                        .setMaxResults(filters.getSize());
+            }
+            return squery.getResultList();
 
         }
         catch(HibernateException e){
@@ -314,38 +281,6 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
 
     }
 
-    @Transactional
-    public List<Long> getIdsByFilters(ReviewForUserFilters filters, User user) throws CanNotMakeExecution{
-        Session session = getSessionFactory().getCurrentSession();
-        try{
-            HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
-            JpaCriteriaQuery<Long> query = builder.createQuery(Long.class);
-            JpaRoot<Review> root = query.from(Review.class);
-
-            List<JpaPredicate> predicates = buildPredicates(builder, root, filters);
-            if (user != null){
-                // если передается user, то тогда идет запрос от user для фильтрации
-                predicates.add( builder.equal(root.get("user").get("id"), user.getId()));
-                predicates.add(builder.equal(root.get("blockedBy"), false));
-            }
-            query.select(root.get("id"))
-                    .where(builder.and(predicates.toArray(new JpaPredicate[0])))
-                    .orderBy(builderOrder(builder, root, filters));
-
-            return session.createQuery(query)
-                    .setFirstResult(filters.getPage()*filters.getSize())
-                    .setMaxResults(filters.getSize())
-                    .getResultList();
-        }
-        catch(HibernateException e){
-            logger.error("Hibernate ReviewHibImpl getIdsByFilters: "+  e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception ReviewHibImpl getIdsByFilters: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
 
 
     @Transactional
@@ -479,8 +414,10 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
         }
 
         if (filters.getBlockedAt() != null) {
+            firstDate = DateTimeUtils.toInstant(filters.getBlockedAt());
+            endDate = DateTimeUtils.toInstantEndDay(filters.getBlockedAt());
             predicates.add(
-                    builder.equal(root.get("blockedAt"), filters.getBlockedAt())
+                    builder.between(root.get("blockedAt"), firstDate, endDate)
             );
         }
 

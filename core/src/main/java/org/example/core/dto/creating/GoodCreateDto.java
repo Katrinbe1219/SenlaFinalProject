@@ -14,14 +14,14 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GoodCreateDto {
-    @NotBlank
+    @NotBlank(message = "name must be given")
     private String name;
     @NullOrNotBlank
     private String description;
     @Positive(message = "categoryId must be > 0")
     private Long categoryId;
     @Positive(message = "unitId must be > 0")
-    @NotNull
+    @NotNull(message = "unit Id must not be null")
     private Long unitId;
-    private List<Long> tagsId;
+    private List<Long> tagIds;
 }

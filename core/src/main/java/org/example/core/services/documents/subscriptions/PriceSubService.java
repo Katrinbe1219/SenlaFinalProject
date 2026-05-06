@@ -52,9 +52,10 @@ public class PriceSubService {
 
 
             CheckForPriceSubscription checking = priceSubHib.checking(dto.getShopId(), dto.getGoodId(), user.getId());
-            if (checking == null){
+            if (checking == null || checking.getPrice() == null){
                 throw new DoesNoeExist("Price does not exist with given credentials");
             }
+
 
             if( checking.getPrice().setScale(0, RoundingMode.DOWN).equals(dto.getPrice())){
                 throw new NotCorrectInput("Price is already presented ");

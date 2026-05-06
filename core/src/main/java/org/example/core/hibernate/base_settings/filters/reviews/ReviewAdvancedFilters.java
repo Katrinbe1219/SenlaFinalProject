@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.annotations.MutuallyExclusiveExtended;
+import org.example.annotations.ValidDateRange;
 import org.example.core.hibernate.base_settings.sorting_types.ReviewSortTypes;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @MutuallyExclusiveExtended(first="createdAt", second="startDate", third = "endDate")
+@ValidDateRange(first = "startDate", second = "endDate")
 public class ReviewAdvancedFilters {
 
     @JsonFormat(pattern = "dd.MM.yyyy")
@@ -53,7 +55,7 @@ public class ReviewAdvancedFilters {
 
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")
-    private  Integer page = null;
+    private  Integer page = 0;
     @Builder.Default
     @Positive(message = "page must be >0")
     private Integer size = null;

@@ -10,6 +10,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.annotations.MutuallyExclusiveExtended;
+import org.example.annotations.ValidDateRange;
+import org.example.annotations.ValidDifference;
 import org.example.core.hibernate.base_settings.sorting_types.PriceSubSortType;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -24,6 +26,8 @@ import java.util.List;
 @Builder
 @MutuallyExclusiveExtended(first = "curPrice", second = "minPrice", third = "maxPrice")
 @MutuallyExclusiveExtended(first="curDate", second="startDate", third="endDate")
+@ValidDateRange(first = "startDate", second = "endDate")
+@ValidDifference(first = "minPrice", second = "maxPrice")
 public class PriceSubFilter {
     @Size(min = 1, message = "userIds` length must be >0")
     private List<Long> userIds;
@@ -56,7 +60,7 @@ public class PriceSubFilter {
 
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")
-    private  Integer page = null;
+    private  Integer page = 0;
     @Builder.Default
     @Positive(message = "page must be >0")
     private Integer size = null;

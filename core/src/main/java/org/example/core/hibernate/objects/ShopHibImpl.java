@@ -6,16 +6,16 @@ import org.apache.logging.log4j.Logger;
 import org.example.core.exceptions.CanNotMakeExecution;
 import org.example.core.exceptions.NonHibernateException;
 import org.example.core.hibernate.base_settings.HibernateAbstractDao;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
 import org.example.core.models.Shop;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.query.criteria.HibernateCriteriaBuilder;
-import org.hibernate.query.criteria.JpaCriteriaQuery;
-import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.criteria.*;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -46,14 +46,33 @@ public class ShopHibImpl extends HibernateAbstractDao<Shop, Long, Logger> {
     }
 
     @Transactional
-    public List<Shop> findAllFullVersion(Integer count, Integer page) throws CanNotMakeExecution {
+    public List<Shop> findAllFullVersion(Integer count, Integer page, BaseSortTypes filters,
+                                         List<Long> ids, List<Long> districtIds) throws CanNotMakeExecution {
         Session session = getSessionFactory().getCurrentSession();
         try {
             HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
             JpaCriteriaQuery<Shop> query = builder.createQuery(Shop.class);
             JpaRoot<Shop> root = query.from(Shop.class);
             root.fetch("district", JoinType.LEFT);
-            query.select(root);
+
+            JpaOrder order = switch (filters){
+                case ASC -> builder.asc(root.get("id"));
+                case DESC -> builder.desc(root.get("id"));
+                case NAME_ASC -> builder.asc(root.get("name"));
+                case NAME_DESC -> builder.desc(root.get("name"));
+            };
+
+            List<JpaPredicate> predicates = new ArrayList<>();
+            if (ids!=null){
+                predicates.add(root.get("id").in(ids));
+            }
+
+            if (districtIds!=null){
+                predicates.add(root.get("district").get("id").in(districtIds));
+            }
+            query.select(root)
+                    .where(predicates.toArray(new JpaPredicate[0]))
+                    .orderBy(order);
             // здесь пагинация работает нормально, так как связь manyToOne
             // - не подгружается куча всего из-за чего пагинация может сбиться
             var sQuery = session.createQuery(query);
@@ -64,11 +83,11 @@ public class ShopHibImpl extends HibernateAbstractDao<Shop, Long, Logger> {
 
             return sQuery.getResultList();
         }catch(HibernateException e){
-            logger.error("Hibenate ShopHibimpl findallFullVersion: " + e.getMessage());
+            logger.error("Hibernate ShopHibImpl findAllFullVersion: " + e.getMessage());
             throw new CanNotMakeExecution(e.getMessage());
         }
         catch (Exception e){
-            logger.error("NonHibernate Exception ShopHibimpl findallFullVersion: "+e.getMessage());
+            logger.error("NonHibernate Exception ShopHibImpl findAllFullVersion: "+e.getMessage());
             throw new NonHibernateException(e.getMessage());
         }
     }

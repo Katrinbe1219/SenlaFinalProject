@@ -57,7 +57,7 @@ public class GraphicService {
             NumberAxis yAxis = (NumberAxis) plot.getRangeAxis();
             yAxis.setRange(minRange, maxRange);
             yAxis.setLowerBound(minRange);
-            yAxis.setUpperBound(maxRange);
+            yAxis.setUpperBound(maxRange+0.2);
             yAxis.setUpperMargin(1);
             yAxis.setLowerMargin(0.5);
 

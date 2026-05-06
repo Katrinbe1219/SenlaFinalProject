@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.annotations.MutuallyExclusive;
 import org.example.annotations.MutuallyExclusiveExtended;
+import org.example.annotations.ValidDateRange;
 import org.example.core.hibernate.base_settings.sorting_types.UserForModeratorSortingType;
 import org.example.core.models.types.RoleTypes;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,6 +22,8 @@ import java.time.LocalDate;
 @MutuallyExclusiveExtended(first="updatedAt", second="startUpdatedAt", third="endUpdatedAt")
 @MutuallyExclusiveExtended(first="createdAt", second="startCreatedAt", third="endCreatedAt")
 @MutuallyExclusive(fields2 = "nonLocked", fields1 = "locked")
+@ValidDateRange(first = "startUpdatedAt", second = "endUpdatedAt")
+@ValidDateRange(first = "startCreatedAt", second = "endCreatedAt")
 public class UserAdvancedFilter {
     private Boolean locked;
     private Boolean nonLocked;

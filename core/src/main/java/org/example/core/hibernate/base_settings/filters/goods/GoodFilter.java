@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.annotations.MutuallyExclusiveExtended;
+import org.example.annotations.ValidDateRange;
+import org.example.annotations.ValidDifference;
 import org.example.core.hibernate.base_settings.sorting_types.GoodSortType;
 import org.example.core.models.types.GoodStatusFromModerator;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,8 +23,11 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @MutuallyExclusiveExtended(first = "curRating", second="maxRating", third="minRating")
-@MutuallyExclusiveExtended(first = "curUpdatedAt", second="maxUpdatedAt", third="minUpdatedAt")
-@MutuallyExclusiveExtended(first = "curCreatedAt", second="maxCreatedAt", third="minCreatedAt")
+@MutuallyExclusiveExtended(first = "curUpdatedAt", second="startUpdatedAt", third="endUpdatedAt")
+@MutuallyExclusiveExtended(first = "curCreatedAt", second="startCreatedAt", third="endCreatedAt")
+@ValidDateRange(first = "startCreatedAt", second = "endCreatedAt")
+@ValidDateRange(first = "startUpdatedAt", second = "endUpdatedAt")
+@ValidDifference(first = "minRating", second = "maxRating")
 public class GoodFilter {
     private List<Long> categoryIds;
     private List<Long> tagIds;
@@ -37,10 +42,10 @@ public class GoodFilter {
     //2 vs 1
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
-    private LocalDate minUpdatedAt;
+    private LocalDate endUpdatedAt;
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
-    private LocalDate maxUpdatedAt;
+    private LocalDate startUpdatedAt;
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
     private LocalDate curUpdatedAt;
@@ -48,10 +53,10 @@ public class GoodFilter {
     //2 vs 1
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
-    private LocalDate minCreatedAt;
+    private LocalDate startCreatedAt;
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
-    private LocalDate maxCreatedAt;
+    private LocalDate endCreatedAt;
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
     private LocalDate curCreatedAt;
@@ -64,7 +69,7 @@ public class GoodFilter {
     private GoodSortType sortType = GoodSortType.ASC; // by name
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")
-    private  Integer page = null;
+    private  Integer page = 0;
     @Builder.Default
     @Positive(message = "size must be > 0")
     private Integer size = null;

@@ -2,6 +2,7 @@ package org.example.core.controllers.favourites;
 
 import org.example.core.dto.getting.favourites.FavouriteGetForUserDto;
 import org.example.core.services.documents.FavouriteService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,8 +21,9 @@ public class FavouriteForUserController {
     }
 
     @GetMapping
-    public List<FavouriteGetForUserDto> findAll(){
-        UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public List<FavouriteGetForUserDto> findAll(
+            @AuthenticationPrincipal UserDetails user
+    ){
         return favouriteService.getAllForUser(user.getUsername());
     }
 

@@ -35,6 +35,10 @@ public class TagHibImpl extends HibernateAbstractDao<Tag, Long, Logger> {
                 throw new NotCorrectInput("Такого tag не существует");
             }
 
+            if(dto.getName().equalsIgnoreCase(old.getName())){
+                throw new NotCorrectInput("Tag already has this name");
+            }
+
             if (dto.getName()!=null){
                 old.setName(dto.getName());
             }
@@ -63,11 +67,11 @@ public class TagHibImpl extends HibernateAbstractDao<Tag, Long, Logger> {
              """, Tag.class).setParameter("ids", ids).getResultList();
         }
         catch(HibernateException e){
-            logger.error("Hibernate Exception TagHibImpl update(TagDto): " + e.getMessage());
+            logger.error("Hibernate Exception TagHibImpl findAllById: " + e.getMessage());
             throw new CanNotMakeExecution(e.getMessage());
         }
         catch (Exception e){
-            logger.error("NonHibernate Exception TagHibImpl update(TagDto):: "+e.getMessage());
+            logger.error("NonHibernate Exception TagHibImpl findAllById:: "+e.getMessage());
             throw new NonHibernateException(e.getMessage());
         }
 

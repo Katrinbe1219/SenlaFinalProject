@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GoodPriceInShop {
-    private String shopName;
+    private Long shopId;
     private Double price;
 }

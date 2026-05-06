@@ -5,6 +5,8 @@ import org.example.core.exceptions.CanNotMakeExecution;
 import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NonHibernateException;
 import org.example.core.exceptions.NotCorrectInput;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
+import org.example.core.models.Unit;
 import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.exception.ConstraintViolationException;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
 import java.util.List;
+import org.example.core.models.Tag;
 
 public class HibernateAbstractDao<T, ID extends Serializable, Logger extends org.apache.logging.log4j.Logger>
         implements HibernateGenericDao<T,ID, Logger>{
@@ -75,6 +78,56 @@ public class HibernateAbstractDao<T, ID extends Serializable, Logger extends org
     }
 
     @Override
+    public List<T> findAllWithSort(Integer count, Integer page, BaseSortTypes filters, List<Long> ids, Logger logger) {
+        try {
+            String order = switch (filters){
+                case ASC -> " ORDER BY id ASC ";
+                case DESC -> " ORDER BY id DESC ";
+                case NAME_ASC -> {
+                    if (getEntityClass().equals(Unit.class)){
+                        yield " ORDER BY fullName ASC ";
+                    }
+                    yield " ORDER BY name ASC ";
+                }
+                case NAME_DESC ->{
+                    if (getEntityClass().equals(Unit.class)){
+                        yield " ORDER BY fullName DESC ";
+                    }
+                    yield " ORDER BY name DESC ";
+                }
+            };
+
+
+            StringBuilder sql = new StringBuilder("FROM " + getEntityClass().getSimpleName());
+            if (ids != null && !ids.isEmpty()) {
+                sql.append(" WHERE id IN (:ids)");
+            }
+
+            sql.append(order);
+            var query = getSessionFactory().getCurrentSession()
+                    .createQuery(sql.toString(), entityClass);
+
+            if (count != null && page != null) {
+                query.setFirstResult(count * page);
+                query.setMaxResults(count);
+            }
+
+            if(ids!=null && !ids.isEmpty()){
+                query.setParameter("ids", ids);
+            }
+
+            return query.getResultList();
+        } catch (HibernateException e) {
+            logger.error("Hibernate Проблема Abstract findAllWithSort: "+ e.getMessage());
+            throw  new CanNotMakeExecution(e.getMessage());
+        }
+        catch(Exception e){
+            logger.error("NonHibernate Проблема Abstract findAllWithSort: "+ e.getMessage());
+            throw  new  NonHibernateException(e.getMessage());
+        }
+    }
+
+    @Override
     @Transactional
     public void delete( ID id, Logger logger) {
         try {
@@ -102,6 +155,7 @@ public class HibernateAbstractDao<T, ID extends Serializable, Logger extends org
     public T  save(T entity, Logger logger) {
         try {
             getSessionFactory().getCurrentSession().persist(entity);
+            getSessionFactory().getCurrentSession().flush();
             return entity;
         }
         catch (DataIntegrityViolationException e){

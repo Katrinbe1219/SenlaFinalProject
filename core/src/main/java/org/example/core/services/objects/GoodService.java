@@ -27,9 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -52,7 +50,7 @@ public class GoodService {
             filters.setCategoryIds(allCategories);
         }
 
-        List<Good> goods= goodHib.findAllForUserDto(filters);
+        List<Good> goods= goodHib.findAllByFilters(filters, true);
         if (goods.isEmpty()) return List.of();
 
         List<GoodGetForUserDto> dtos= new ArrayList<>();
@@ -70,9 +68,18 @@ public class GoodService {
             List<Long> allCategories = categoryHib.findAllChildCategoryIds(filters.getCategoryIds());
             filters.setCategoryIds(allCategories);
         }
-        List<Good> goods = goodHib.findAllForAnalyst(filters);
+        List<Good> goods = goodHib.findAllByFilters(filters,false);
         return listToDto(goods);
 
+    }
+
+    @Transactional
+    public GoodGetFullDto getFullById(Long id){
+        Good good = goodHib.findByIdFullVersion(id);
+        if (good == null){
+            throw new DoesNoeExist("Good does not exist with given credentials");
+        }
+        return goodGetFullDtoMapper.toDto(good);
     }
 
     private List<GoodGetFullDto> listToDto(List<Good> goods){
@@ -85,18 +92,18 @@ public class GoodService {
 
     @Transactional
     public GoodGetForUserDto findForUserById(Long id){
-        GoodGetForUserDto good = goodHib.getGoodForUserById(id);
+        Good good = goodHib.findByIdFullVersion(id);
         if (good == null){
             throw new DoesNoeExist("Good do not exist with given credentials");
         }
-        return good;
+        return goodGetForUserMapper.toDto(good);
     }
 
     @Transactional
     public GoodIdDto createGood(GoodCreateDto dto){
         Good good = new Good();
-        if (dto.getTagsId() != null && !dto.getTagsId().isEmpty()){
-            List<Tag> tags = checkTagIds(dto.getTagsId());
+        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()){
+            List<Tag> tags = checkTagIds(dto.getTagIds());
             good.setTags(tags);
         }
 
@@ -138,12 +145,16 @@ public class GoodService {
             throw new NotCorrectInput("Name must contain letters");
         }
 
-        Good good = goodHib.findById(dto.getId(), logger);
+        Good good = goodHib.findByIdFullVersion(dto.getId());
         if (good == null){
             throw new DoesNoeExist("Good doe not exist with given credentials");
         }
 
         if (dto.getName()!=null){
+            if (dto.getName().equalsIgnoreCase(good.getName())){
+                throw new NotCorrectInput("Good already has this name");
+
+            }
             good.setName(dto.getName());
         }
 
@@ -152,8 +163,18 @@ public class GoodService {
             good.setDescription(dto.getDescription());
         }
 
-        if (dto.getTagIds() !=null && !dto.getTagIds().isEmpty()){
-            List<Tag> tags= checkTagIds(dto.getTagIds());
+        if (dto.getTagIds() !=null){
+            if (good.getTags()!= null && dto.getTagIds().size() == good.getTags().size()){
+                if (new HashSet<>(dto.getTagIds())
+                        .containsAll(
+                                good.getTags().stream().map(Tag::getId).toList()
+                        )){
+                    throw new NotCorrectInput("This good already has these tags");
+                }
+            }
+            List<Tag> tags= !dto.getTagIds().isEmpty()
+                    ? checkTagIds(dto.getTagIds())
+                    : Collections.emptyList();
             good.setTags(tags);
         }
 
@@ -161,6 +182,9 @@ public class GoodService {
             Category category = categoryHib.findById(dto.getCategoryId(), logger);
             if (category == null){
                 throw new DoesNoeExist("Category does not exist with given credentials");
+            }
+            if (good.getCategory()!= null && Objects.equals(good.getCategory().getId(), dto.getCategoryId())){
+                throw new NotCorrectInput("This good already has this category");
             }
             good.setCategory(category);
         }
@@ -170,8 +194,13 @@ public class GoodService {
             if (unit == null){
                 throw new DoesNoeExist("Unit does not exist with given credentials");
             }
+            if (Objects.equals(good.getUnit().getId(), dto.getUnitId())){
+                throw new NotCorrectInput("This good already has this unit");
+            }
             good.setUnit(unit);
         }
+
+        good.setUpdatedAt(Instant.now());
 
 
     }

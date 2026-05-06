@@ -18,7 +18,12 @@ import java.time.LocalDateTime;
 public class ModeratorRatingCheck {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "moderation_log_seq")
+    @SequenceGenerator(
+            name = "moderation_log_seq",
+            sequenceName = "moderator_rating_checks_id_seq",
+            allocationSize =75
+    )
     private Long id;
 
     @JoinColumn(name = "good_id")

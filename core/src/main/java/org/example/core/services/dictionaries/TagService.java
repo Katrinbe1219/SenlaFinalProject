@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.example.core.dto.TagDto;
 import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NotCorrectInput;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
 import org.example.core.hibernate.dictionaries.TagHibImpl;
 import org.example.core.mapping.TagDtoMapper;
 import org.example.core.models.Tag;
@@ -28,8 +29,8 @@ public class TagService {
     }
 
     @Transactional
-    public List<TagDto> getAllTags(Integer count, Integer page){
-        List<Tag> tags = tagHibImpl.findAll(count, page, logger);
+    public List<TagDto> getAllTags(Integer count, Integer page, BaseSortTypes filters,List<Long> ids){
+        List<Tag> tags = tagHibImpl.findAllWithSort(count, page,filters,ids, logger);
         if (tags == null || tags.isEmpty()) {
             return null;
         }
@@ -82,14 +83,6 @@ public class TagService {
 
     }
 
-
-    private Tag toEntity(TagDto old){
-        Tag tag = new Tag();
-        tag.setName(old.getName());
-        tag.setId(old.getId());
-        return tag;
-    }
-
     private List<TagDto> listToDto(List<Tag> tags){
         List<TagDto> dtos = new ArrayList<>();
         for( Tag tag : tags ){
@@ -98,10 +91,4 @@ public class TagService {
         return dtos;
     }
 
-    private TagDto toDto(Tag entity){
-        TagDto tagDto = new TagDto();
-        tagDto.setId(entity.getId());
-        tagDto.setName(entity.getName());
-        return tagDto;
-    }
 }

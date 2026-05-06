@@ -6,6 +6,7 @@ import org.example.core.dto.getting.reviews.ReviewFullDto;
 import org.example.core.hibernate.base_settings.filters.reviews.ReviewAdvancedFilters;
 import org.example.core.models.User;
 import org.example.core.services.documents.reviews.ReviewAdvancedService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,17 +26,17 @@ public class ReviewModeratorController {
         return reviewService.getReviewById(reviewId);
     }
 
-    @PatchMapping("block/{id}")
-    public StringResponse blockReviewById(@PathVariable("id") Long reviewId){
-        User moderator = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    @PatchMapping("/{id}/block")
+    public StringResponse blockReviewById(@PathVariable("id") Long reviewId,
+                                          @AuthenticationPrincipal User moderator){
+
         reviewService.blockReviewById(reviewId, moderator.getLogin());
         return new StringResponse("Review blocked");
     }
 
-    @DeleteMapping("block/{id}")
-    public StringResponse unblockReviewById(@PathVariable("id") Long reviewId){
-        User moderator = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
+    @DeleteMapping("/{id}/block")
+    public StringResponse unblockReviewById(@PathVariable("id") Long reviewId,
+                                            @AuthenticationPrincipal User moderator){
         reviewService.unblockReviewById(reviewId, moderator.getLogin());
         return new StringResponse("Review unblocked");
     }

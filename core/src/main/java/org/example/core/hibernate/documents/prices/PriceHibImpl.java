@@ -252,7 +252,7 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
     }
 
     @Transactional
-    public List<PriceGetDtoForUser> getAllForUser(Long shopId, Long goodId, Integer count, Integer page) {
+    public List<PriceGetDtoForUser> getAllForUser(Long shopId, Long goodId) {
         Session session = getSessionFactory().getCurrentSession();
         try{
             HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
@@ -266,9 +266,11 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
             if (goodId != null){
                 predicates.add(builder.equal(root.get("good").get("id"), goodId));
             }
+            predicates.add(builder.isNotNull(root.get("validTo")));
 
 
             query.multiselect(
+                    root.get("shop").get("id").alias("shopId"),
                     root.get("shop").get("name").alias("shopName"),
                     root.get("shop").get("address").alias("address"),
                     root.get("good").get("name").alias("goodName"),
@@ -276,15 +278,12 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
             ).where(builder.and(predicates.toArray(new JpaPredicate[0])));
 
             var squery =  session.createQuery(query);
-            if (count != null && page != null){
-                squery.setFirstResult(page*count)
-                        .setMaxResults(count);
 
-            }
             List<Tuple> tuples =squery.getResultList();
 
             return tuples.stream().map(tuple ->
                     new PriceGetDtoForUser(
+                            tuple.get("shopId", Long.class),
                             tuple.get("shopName", String.class),
                             tuple.get("address", String.class),
                             tuple.get("goodName", String.class),
@@ -321,6 +320,7 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
 
 
             query.multiselect(
+                    root.get("shop").get("id").alias("shopId"),
                     root.get("shop").get("name").alias("shopName"),
                     root.get("shop").get("address").alias("address"),
                     root.get("good").get("name").alias("goodName"),
@@ -330,6 +330,7 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
             List<Tuple> tuples = session.createQuery(query).getResultList();
             return tuples.stream().map(tuple ->
                     new PriceGetDtoForUser(
+                            tuple.get("shopId", Long.class),
                             tuple.get("shopName", String.class),
                             tuple.get("address", String.class),
                             tuple.get("goodName", String.class),

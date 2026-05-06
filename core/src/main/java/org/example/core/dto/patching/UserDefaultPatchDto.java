@@ -9,10 +9,10 @@ import org.example.annotations.NullOrNotBlank;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDefaultPatchDto {
-    @NullOrNotBlank
+    @NullOrNotBlank(message = "newUsername must be null or not blank")
     private String newUsername;
-    @NullOrNotBlank
+    @NullOrNotBlank(message = "newLogin must be null or not blank")
     private String newLogin;
-    @NullOrNotBlank
+    @NullOrNotBlank(message = "newEmail must be null or not blank")
     private String newEmail;
 }

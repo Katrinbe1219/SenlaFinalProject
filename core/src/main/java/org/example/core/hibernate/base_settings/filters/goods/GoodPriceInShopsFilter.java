@@ -14,8 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 public class GoodPriceInShopsFilter {
     @Size(min = 1, message = "shopIds length must be > 0")
-    @NotNull(message = "shopIds must be given")
     private List<Long> shopIds;
     @Positive(message = "goodId must be > 0")
+    @NotNull(message = "goodId must not be null")
     private Long goodId;
 }

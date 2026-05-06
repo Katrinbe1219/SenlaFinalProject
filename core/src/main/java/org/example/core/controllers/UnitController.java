@@ -5,6 +5,7 @@ import org.example.core.dto.UnitDto;
 import org.example.core.dto.creating.UnitCreateDto;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.exceptions.NotCorrectInput;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
 import org.example.core.services.dictionaries.UnitService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -23,8 +24,10 @@ public class UnitController {
 
     @GetMapping
     public List<UnitDto> getAllUnits(
-            @RequestParam(value = "count", defaultValue = "10", required = false) Integer count,
-            @RequestParam(value = "page", defaultValue = "0", required = false) Integer page
+            @RequestParam(value = "size", defaultValue = "10", required = false) Integer count,
+            @RequestParam(value = "page", defaultValue = "0", required = false) Integer page,
+            @RequestParam(value="sort", defaultValue = "1", required = false) Integer sort,
+            @RequestParam(value="ids",  required = false) List<Long> ids
     ) {
         if (count <=0){
             throw new NotCorrectInput("Count must be greater than 0");
@@ -33,7 +36,11 @@ public class UnitController {
         if (page <0) {
             throw new NotCorrectInput("Page must be >= 0");
         }
-        return unitService.getAll(count, page);
+        if (ids!=null && ids.isEmpty()) {
+            throw new NotCorrectInput("ids length must be > 0");
+        }
+        BaseSortTypes filters = BaseSortTypes.forValue(sort);
+        return unitService.getAll(count, page, filters, ids);
     }
 
     @PostMapping
@@ -59,7 +66,8 @@ public class UnitController {
 
     )   {
         if (params.get("shortName") == null && params.get("fullName") == null
-                || params.get("shortName").isBlank() || params.get("fullName").isBlank()) {
+                || (params.get("shortName") != null && params.get("shortName").isBlank()  &&
+                params.get("fullName") != null && params.get("fullName").isBlank()) ){
             throw new NotCorrectInput("Changes were not given");
         }
 

@@ -41,7 +41,7 @@ public class GraphicalAnalyseService {
 
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         for (GoodPriceInShop good : goodsWithAnalyze) {
-            dataset.addValue(good.getPrice(), yLabel, good.getShopName());
+            dataset.addValue(good.getPrice(), yLabel,  good.getShopId());
         }
         graphicService.generateBar(outputStream, title, xLabel, yLabel, dataset);
     }
@@ -61,7 +61,7 @@ public class GraphicalAnalyseService {
 
             int index = 0;
 
-            LocalDate currentDate = filters.getFirstDate();
+            LocalDate currentDate = filters.getStartDate();
             if (currentDate.isBefore(
                     DateTimeUtils.toLocalDate(rates.get(0).getCreatedAt())
             )){
@@ -73,7 +73,7 @@ public class GraphicalAnalyseService {
                 }
             }
 
-            while(!currentDate.isAfter(filters.getLastDate())){
+            while(!currentDate.isAfter(filters.getEndDate())){
                 if (index >= rates.size()){
                     series.add(new Second(Date.valueOf(currentDate)), rates.get(index-1).getRate());
                     currentDate = currentDate.plusDays(1);
@@ -92,7 +92,7 @@ public class GraphicalAnalyseService {
             graphicService.generateTimeSeries(outputStream, title, xLabel, yLabel,
                     dataset,0,5,1d);
         }catch (Exception e){
-            logger.error("GraphicalAnalyseService generateTimeSeriesForGoodRateInTime ", e.getMessage());
+            logger.error("GraphicalAnalyseService generateImeSeriesForGoodRateInTime ", e.getMessage());
             throw new CancellationException(e.getMessage());
         }
 
@@ -134,7 +134,7 @@ public class GraphicalAnalyseService {
             TimeSeries series = new TimeSeries(title);
 
 
-            LocalDate currentDate = filters.getFirstDate();
+            LocalDate currentDate = filters.getStartDate();
             int index = 0;
             LocalDate lastDate = filters.getEndDate()!=null ? filters.getEndDate() : LocalDate.now();
 

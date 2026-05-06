@@ -43,7 +43,8 @@ public class ExportXlsxService {
             header.createCell(0).setCellValue("ID");
             header.createCell(1).setCellValue("Name");
             header.createCell(2).setCellValue("Address");
-            header.createCell(3).setCellValue("District");
+            header.createCell(3).setCellValue("District_id");
+            header.createCell(3).setCellValue("District_name");
 
             for (int i =0; i< shops.size(); i++){
                 ShopGetDto shop = shops.get(i);
@@ -51,7 +52,8 @@ public class ExportXlsxService {
                 row.createCell(0).setCellValue(shop.getId());
                 row.createCell(1).setCellValue(shop.getName());
                 row.createCell(2).setCellValue(shop.getAddress());
-                row.createCell(3).setCellValue(shop.getDistrict());
+                row.createCell(3).setCellValue(shop.getDistrict().getId());
+                row.createCell(3).setCellValue(shop.getDistrict().getName());
             }
         }
         catch (Exception e){
@@ -103,6 +105,7 @@ public class ExportXlsxService {
                 header.createCell(index).setCellValue("Tags");
             }
 
+            String formula;
             for (int i=0; i< prices.size(); i++){
                 ShopsCurrentPricesDto dto = prices.get(i);
                 Row row = sheet.createRow(i+1);
@@ -113,14 +116,17 @@ public class ExportXlsxService {
                 index = 4;
 
                 if (shops != null){
+                    formula = String.format("VLOOKUP(%s%d,Shops!$A:$D,2,False)",getColumnLetter(index-1), i+2);
+                    header.createCell(index).setCellFormula(formula);
+                    index++;
+                    formula = String.format("VLOOKUP(%s%d,Shops!$A:$D,3,False)",getColumnLetter(index-1), i+2);
+                    header.createCell(index).setCellFormula(formula);
+                    index++;
 
-                    header.createCell(index).setCellValue(dto.getShopName());
-                    index++;
-                    header.createCell(index).setCellValue(dto.getAddress());
-                    index++;
                     header.createCell(index).setCellValue(dto.getDistrictId());
                     index++;
-                    header.createCell(index).setCellValue(dto.getDistrictName());
+                    formula = String.format("VLOOKUP(%s%d,Shops!$A:$D,5,False)",getColumnLetter(index-1), i+2);
+                    header.createCell(index).setCellFormula(formula);
                     index++;
                 }
 
@@ -128,9 +134,11 @@ public class ExportXlsxService {
 
                     header.createCell(index).setCellValue(dto.getCategoryId());
                     index++;
-                    header.createCell(index).setCellValue(dto.getCategoryName());
+                    formula = String.format("VLOOKUP(%s%d,Categories!$A:$D,2,False)",getColumnLetter(index-1), i+2);
+                    header.createCell(index).setCellFormula(formula);
                     index++;
-                    header.createCell(index).setCellValue(dto.getCategoryParentId());
+                    formula = String.format("VLOOKUP(%s%d,Categories!$A:$D,3,False)",getColumnLetter(index-1), i+2);
+                    header.createCell(index).setCellFormula(formula);
                     index++;
                 }
 
@@ -151,6 +159,17 @@ public class ExportXlsxService {
             throw new NonHibernateException(e.getMessage());
         }
 
+    }
+
+    public static String getColumnLetter(int index) {
+        // index - 0-based (как в POI)
+        StringBuilder sb = new StringBuilder();
+        int col = index;
+        do {
+            sb.insert(0, (char) ('A' + col % 26));
+            col = col / 26 - 1;
+        } while (col >= 0);
+        return sb.toString();
     }
 
     public byte[] getReviewsHistory(
@@ -186,12 +205,21 @@ public class ExportXlsxService {
             header.createCell(10).setCellValue("blockedBy_id");
             header.createCell(11).setCellValue("blockedBy_username");
 
+
+            String formula;
             for (int i = 0; i< info.size();i++){
                 ReviewFullDto dto = info.get(i);
                 Row row = sheet.createRow(i+1);
                 row.createCell(0).setCellValue(dto.getId());
                 row.createCell(1).setCellValue(dto.getGood().getId());
-                row.createCell(2).setCellValue(dto.getGood().getName());
+                if (goods!=null){
+                    formula = String.format("VLOOKUP(%s%d,Goods!$A:$D,2,False)",getColumnLetter(1), i+2);
+                    row.createCell(2).setCellFormula(formula);
+                }
+                else{
+                    row.createCell(2).setCellValue(dto.getGood().getName());
+                }
+
                 row.createCell(3).setCellValue(dto.getUser().getId());
                 row.createCell(4).setCellValue(dto.getUser().getUsername());
                 row.createCell(5).setCellValue(dto.getReview());
@@ -208,7 +236,13 @@ public class ExportXlsxService {
                 cell1.setCellStyle(dateStyle);
                 if (dto.getBlockedBy() != null){
                     row.createCell(10).setCellValue(dto.getBlockedBy().getId());
-                    row.createCell(11).setCellValue(dto.getBlockedBy().getUsername());
+                    if (moderator!=null){
+                        formula = String.format("VLOOKUP(%s%d,Moderators!$A:$D,2,False)",getColumnLetter(10), i+2);
+                        row.createCell(11).setCellFormula(formula);
+                    }else{
+                        row.createCell(11).setCellValue(dto.getBlockedBy().getUsername());
+                    }
+
                 }
 
             }
@@ -342,7 +376,7 @@ public class ExportXlsxService {
             }
         }
         catch (Exception e){
-            logger.error("ExportXlsxService createGoodForModeratorsRecalc: " + e.getMessage());
+            logger.error("ExportXlsxService createModeratorsForModeratorsRecalc: " + e.getMessage());
             throw new NonHibernateException(e.getMessage());
         }
 
@@ -428,7 +462,8 @@ public class ExportXlsxService {
             header.createCell(1).setCellValue("good_name");
             header.createCell(2).setCellValue("good_category_id");
             header.createCell(3).setCellValue("good_category_name");
-            header.createCell(4).setCellValue("good_category_parent");
+            header.createCell(4).setCellValue("good_category_parent_id");
+            header.createCell(4).setCellValue("good_category_parent_name");
             header.createCell(5).setCellValue("unit_id");
             header.createCell(6).setCellValue("unit_short_name");
             header.createCell(7).setCellValue("unit_full_name");
@@ -437,17 +472,38 @@ public class ExportXlsxService {
             header.createCell(10).setCellValue("createdAt");
             header.createCell(11).setCellValue("updatedAt");
 
+            String formula;
+            boolean isCategory = categories != null;
+            boolean isUnit = units != null;
             for (int i=0; i<goods.size(); i++){
                 GoodGetFullDto dto = goods.get(i);
                 Row row = sheet.createRow(i+1);
                 row.createCell(0).setCellValue(dto.getId());
                 row.createCell(1).setCellValue(dto.getName());
                 row.createCell(2).setCellValue(dto.getCategory().getId());
-                row.createCell(3).setCellValue(dto.getCategory().getName());
-                row.createCell(4).setCellValue(dto.getCategory().getParent());
+                if (isCategory){
+                    formula = String.format("VLOOKUP(C%d,Categories!A$:$B,3,FALSE)", i+2);
+                    row.createCell(3).setCellFormula(formula);
+                    formula = String.format("VLOOKUP(C%d,Categories!A$:$B,4,FALSE)",i+2);
+                    row.createCell(4).setCellFormula(formula);
+                }else{
+                    row.createCell(3).setCellValue(dto.getCategory().getName());
+                    row.createCell(4).setCellValue(dto.getCategory().getParentName());
+                }
                 row.createCell(5).setCellValue(dto.getUnit().getId());
-                row.createCell(6).setCellValue(dto.getUnit().getShortName());
-                row.createCell(7).setCellValue(dto.getUnit().getFullName());
+                if (isUnit){
+                    formula = String.format("VLOOKUP(C%d,Units!A$:$B,2,FALSE)", i+2);
+                    row.createCell(6).setCellFormula(formula);
+                    formula = String.format("VLOOKUP(C%d,Units!A$:$B,3,FALSE)", i+2);
+                    row.createCell(7).setCellFormula(formula);
+
+                }else{
+                    row.createCell(6).setCellValue(dto.getUnit().getShortName());
+                    row.createCell(7).setCellValue(dto.getUnit().getFullName());
+                }
+
+
+
                 row.createCell(8).setCellValue(dto.getRate());
                 if (dto.getTags() != null){
                     String value = String.join(",", dto.getTags().stream().map(TagDto::getName).toList());
@@ -603,13 +659,15 @@ public class ExportXlsxService {
             header.createCell(0).setCellValue("ID");
             header.createCell(1).setCellValue("Name");
             header.createCell(2).setCellValue("ParentId");
+            header.createCell(3).setCellValue("ParentName");
 
             for (int i =0; i < categories.size(); i++){
                 CategoryGetDto category = categories.get(i);
                 Row row = sheet.createRow(i + 1);
                 row.createCell(0).setCellValue(category.getId());
                 row.createCell(1).setCellValue(category.getName());
-                row.createCell(2).setCellValue(category.getParent());
+                row.createCell(2).setCellValue(category.getParentId());
+                row.createCell(3).setCellValue(category.getParentName());
             }
         }
         catch (Exception e){

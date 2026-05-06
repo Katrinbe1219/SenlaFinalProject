@@ -47,13 +47,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse(ex.getMessage()));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<StringResponse> handlePermissionDenied(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(CsvInvalidStructure.class)
     public ResponseEntity<StringResponse> handlePermissionDenied(CsvInvalidStructure ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse(ex.getMessage()));
     }
 
+    @ExceptionHandler(NoDataForContentException.class)
+    public ResponseEntity<StringResponse> handlePermissionDenied(NoDataForContentException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StringResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(RegistrationException.class)
     public ResponseEntity<Map<String, String>> handleRegistrationException(RegistrationException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getErrors());
+    }
+
+    @ExceptionHandler(ManyIncorrectInputsException.class)
+    public ResponseEntity<List< String>> handleRegistrationException(ManyIncorrectInputsException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getErrors());
     }
 
@@ -100,6 +115,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<StringResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+        logger.error("RestControllerAdvice  MethodArgumentTypeMismatchException: "+ ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
                 new StringResponse("Parameters type is not valid")
         );

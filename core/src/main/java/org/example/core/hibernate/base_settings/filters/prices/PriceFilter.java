@@ -10,6 +10,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.annotations.MutuallyExclusive;
 import org.example.annotations.MutuallyExclusiveExtended;
+import org.example.annotations.ValidDateRange;
+import org.example.annotations.ValidDifference;
 import org.example.core.hibernate.base_settings.sorting_types.PriceSortTypes;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -25,6 +27,8 @@ import java.util.List;
 @MutuallyExclusiveExtended(first = "curPrice", second = "maxPrice", third = "minPrice")
 @MutuallyExclusive(fields1 = "current", fields2 = "old")
 @MutuallyExclusive(fields2 = "shopIds", fields1 = "districtIds")
+@ValidDateRange(first = "startDate", second = "endDate")
+@ValidDifference(first = "minPrice", second = "maxPrice")
 public class PriceFilter {
     private List<Long> categoryIds;
     private List<Long> shopIds;
@@ -47,10 +51,10 @@ public class PriceFilter {
 
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
-    private LocalDate minDate;
+    private LocalDate startDate;
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
-    private LocalDate maxDate;
+    private LocalDate endDate;
 
     @Builder.Default
     @NotNull(message = "if you are undecided about the sortType, do not provide it")
@@ -58,7 +62,7 @@ public class PriceFilter {
 
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")
-    private  Integer page = null;
+    private  Integer page = 0;
     @Builder.Default
     @Positive(message = "size must be > 0")
     private Integer size = null;

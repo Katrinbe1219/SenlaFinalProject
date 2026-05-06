@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.annotations.MutuallyExclusive;
 import org.example.annotations.MutuallyExclusiveExtended;
+import org.example.annotations.ValidDateRange;
 import org.example.core.hibernate.base_settings.sorting_types.ModeratorRecalcSortType;
 import org.example.core.models.types.ModeratorVerdict;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,6 +26,7 @@ import java.util.List;
 @MutuallyExclusive(fields1 = "moderatorId", fields2 ="moderatorIds" )
 @MutuallyExclusive(fields1 = "goodIds", fields2 = "goodId")
 @MutuallyExclusiveExtended(first="curDate", second = "endDate", third = "startDate")
+@ValidDateRange(first = "startDate", second = "endDate")
 public class ModeratorRecalcFilter {
     private List<Long> moderatorIds;
     @Positive( message = "moderatorId must be > 0")
@@ -52,7 +54,7 @@ public class ModeratorRecalcFilter {
 
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")
-    private Integer page = null;
+    private Integer page = 0;
 
     @Builder.Default
     @Positive( message = "count > 0")

@@ -8,6 +8,7 @@ import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NonHibernateException;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.HibernateAbstractDao;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
 import org.example.core.models.Category;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -58,21 +59,34 @@ public class CategoryHibImpl extends HibernateAbstractDao<Category, Long, Logger
     }
 
     @Transactional
-    public List<CategoryGetDto> findAllFullVersion(Integer count, Integer page) throws CanNotMakeExecution {
+    public List<CategoryGetDto> findAllFullVersion(Integer count, Integer page,
+                                                   BaseSortTypes filters, List<Long> ids) throws CanNotMakeExecution {
         Session session = getSessionFactory().getCurrentSession();
         try {
-            var query =  session.createQuery("""
-        SELECT new org.example.core.dto.getting.CategoryGetDto(
-            c.name,
-            c.id,
-            p.name
-        )
-        FROM Category c
-        LEFT JOIN c.parent p
-        """, CategoryGetDto.class);
-            if (count != null && page != null){
+
+            StringBuilder sql = new StringBuilder(
+                    "SELECT new org.example.core.dto.getting.categories.CategoryGetDto(\n" +
+                    "            c.name,\n" +
+                    "            c.id,\n" +
+                    "            p.id,\n" +
+                    "            p.name\n" +
+                    "        )\n" +
+                    "        FROM Category c\n" +
+                    "        LEFT JOIN c.parent p");
+            if (ids!=null){
+                sql.append(" WHERE c.id IN (:ids) ");
+            }
+
+            sql.append(" Order BY c." + filters.getName() + " " + filters.getDir());
+
+            var query = session.createQuery(sql.toString(), CategoryGetDto.class);
+            if (page != null && count != null ){
                 query.setFirstResult(count * page)
                         .setMaxResults(count);
+            }
+
+            if (ids!=null){
+                query.setParameter("ids", ids);
             }
 
            return query.getResultList();
@@ -156,15 +170,17 @@ public class CategoryHibImpl extends HibernateAbstractDao<Category, Long, Logger
 
             Category category = session.get(Category.class, old.getId());
             if (category == null){
-                throw new NotCorrectInput("Категории с таким id не существует");
+                throw new DoesNoeExist("Категории с таким id не существует");
+            }
+
+            if(category.getName().equalsIgnoreCase(old.getName())){
+                throw new NotCorrectInput("Category already has this name");
             }
             if (old.getName() != null){
                 category.setName(old.getName());
             }
-            if (old.getParent() != null){
-                category.setParent(old.getParent());
-            }
-            //TODO проверить что не нужно делать session.update(category)
+            category.setParent(old.getParent());
+
             return category;
         }
         catch (HibernateException e){
@@ -172,6 +188,9 @@ public class CategoryHibImpl extends HibernateAbstractDao<Category, Long, Logger
             throw new CanNotMakeExecution(e.getMessage());
         }
         catch (NotCorrectInput e){
+            throw e;
+        }
+        catch (DoesNoeExist e){
             throw new DoesNoeExist("Category with id: " + old.getId() + " does not exist");
         }
         catch (Exception e){

@@ -7,6 +7,7 @@ import org.example.core.dto.TagDto;
 import org.example.core.dto.UnitDto;
 import org.example.core.dto.getting.categories.CategorySmallDto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -18,7 +19,7 @@ public class GoodGetForUserDto {
     private String name;
     private CategorySmallDto category;
     private UnitDto unit;
-    private Double rate;
+    private BigDecimal rate;
     private List<TagDto> tags;
     private String description;
 

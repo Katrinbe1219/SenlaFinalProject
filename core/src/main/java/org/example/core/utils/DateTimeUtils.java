@@ -12,7 +12,7 @@ public class DateTimeUtils {
     }
     public static Instant toInstantEndDay(LocalDate date){
         if (date == null) return null;
-        return date.atStartOfDay(ZoneOffset.UTC).plusDays(1).minusNanos(1).toInstant();
+        return date.atTime(23, 59, 59).toInstant(ZoneOffset.UTC);
     }
 
     public static LocalDate toLocalDate(Instant instant){

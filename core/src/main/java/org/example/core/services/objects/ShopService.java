@@ -1,5 +1,6 @@
 package org.example.core.services.objects;
 
+import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.core.dto.creating.ShopCreateDto;
@@ -7,8 +8,10 @@ import org.example.core.dto.getting.statistics.shops.ShopGetDto;
 import org.example.core.dto.patching.ShopPatchDto;
 import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NotCorrectInput;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
 import org.example.core.hibernate.dictionaries.DistrictHibImpl;
 import org.example.core.hibernate.objects.ShopHibImpl;
+import org.example.core.mapping.ShopGetMapper;
 import org.example.core.models.District;
 import org.example.core.models.Shop;
 import org.springframework.stereotype.Service;
@@ -19,21 +22,19 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 @Service
+@AllArgsConstructor
 public class ShopService {
     private static final Logger logger = LogManager.getLogger(ShopService.class);
 
     private ShopHibImpl shopHib;
     private DistrictHibImpl districtHib;
-
-    public ShopService(ShopHibImpl shopHib, DistrictHibImpl districtHib) {
-        this.shopHib = shopHib;
-        this.districtHib = districtHib;
-    }
+    private ShopGetMapper mapper;
 
 
     @Transactional
-    public List<ShopGetDto> findAll(Integer count, Integer page){
-        List<Shop> shops = shopHib.findAllFullVersion(count, page);
+    public List<ShopGetDto> findAll(Integer count, Integer page, BaseSortTypes filters,
+                                    List<Long> ids, List<Long> districtIds){
+        List<Shop> shops = shopHib.findAllFullVersion(count, page, filters, ids, districtIds);
         return listToDto(shops);
     }
 
@@ -44,7 +45,7 @@ public class ShopService {
             throw new DoesNoeExist("Shop does not exist with given credentials");
         }
 
-        return toDto(shop);
+        return mapper.toDto(shop);
     }
 
     @Transactional
@@ -59,7 +60,7 @@ public class ShopService {
         }
 
         Shop shop = toEntity(shopCreateDto, district);
-        return toDto(shopHib.save(shop, logger));
+        return mapper.toDto(shopHib.save(shop, logger));
     }
 
     @Transactional
@@ -96,19 +97,12 @@ public class ShopService {
 
     }
 
-    private ShopGetDto toDto(Shop shop) {
-        ShopGetDto shopGetDto = new ShopGetDto();
-        shopGetDto.setId(shop.getId());
-        shopGetDto.setName(shop.getName());
-        shopGetDto.setAddress(shop.getAddress());
-        shopGetDto.setDistrict(shop.getDistrict().getName());
-        return shopGetDto;
-    }
+
 
     private List<ShopGetDto> listToDto(List<Shop> shops) {
         List<ShopGetDto> shopGetDtos = new ArrayList<>();
         for (Shop shop : shops) {
-            shopGetDtos.add(toDto(shop));
+            shopGetDtos.add(mapper.toDto(shop));
         }
         return shopGetDtos;
     }

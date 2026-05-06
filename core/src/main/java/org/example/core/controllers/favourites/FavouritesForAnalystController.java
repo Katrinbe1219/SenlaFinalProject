@@ -1,12 +1,11 @@
 package org.example.core.controllers.favourites;
 
+import jakarta.validation.Valid;
 import org.example.core.dto.getting.favourites.FavouriteCountByGoodDto;
 import org.example.core.dto.getting.favourites.FavouriteFullDto;
+import org.example.core.hibernate.base_settings.filters.FavouritesAnalystFilters;
 import org.example.core.services.documents.FavouriteService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -20,13 +19,15 @@ public class FavouritesForAnalystController {
     }
 
     @GetMapping
-    public List<FavouriteFullDto> findAll(){
-        return favouriteService.findAllForAnalyst();
+    public List<FavouriteFullDto> findAll( @Valid @RequestBody FavouritesAnalystFilters filters){
+        return favouriteService.findAllForAnalyst(filters);
     }
 
     @GetMapping("/count")
-    public List<FavouriteCountByGoodDto> getCountByAllGoods(){
-        return favouriteService.countAllByGoodId();
+    public List<FavouriteCountByGoodDto> getCountByAllGoods(
+            @Valid @RequestBody FavouritesAnalystFilters filters
+    ){
+        return favouriteService.countAllByGoodId(filters);
     }
 
     @GetMapping("/count/{id}")

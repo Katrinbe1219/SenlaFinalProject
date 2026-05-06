@@ -13,6 +13,7 @@ import org.example.core.dto.getting.statistics.shops.ShopCartDto;
 import org.example.core.dto.getting.statistics.shops.ShopStatByCategoryDto;
 import org.example.core.dto.getting.statistics.shops.ShopStatisticDto;
 import org.example.core.exceptions.DoesNoeExist;
+import org.example.core.exceptions.NoDataForContentException;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.filters.goods.GoodPriceInShopsFilter;
 import org.example.core.hibernate.base_settings.filters.prices.DistrictStatisticFilter;
@@ -44,6 +45,11 @@ public class PriceForAnalyzeController {
             @RequestParam(value = "type", defaultValue = "max", required = false) String type,
             @RequestParam(value = "count", defaultValue = "4", required = false) int count
     ) {
+
+        if (id <=0){
+            throw new NotCorrectInput("path variable id must be > 0");
+
+        }
         if (count <=0){
             throw new NotCorrectInput("Count must be greater than 0");
         }
@@ -55,15 +61,17 @@ public class PriceForAnalyzeController {
 
     }
 
-    @GetMapping(value = "/shop/goods/{id}/graph", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/shops/good/graph", produces = MediaType.IMAGE_PNG_VALUE)
     public void getGoodPricesInShops(
             HttpServletResponse response,
-            @PathVariable("id") Long goodId,
             @Valid @RequestBody GoodPriceInShopsFilter filters
     ) throws Exception {
 
-        filters.setGoodId(goodId);
         List<GoodPriceInShop> prices = priceService.getGoodPricesInShops(filters);
+
+        if (prices.isEmpty()){
+            throw  new NoDataForContentException("No prices were found to generate graph");
+        }
 
         response.setContentType("image/png");
         response.setHeader("Content-Disposition", "attachment; filename=\"goods_rates.png\"");
@@ -77,23 +85,16 @@ public class PriceForAnalyzeController {
 
     }
 
-    @GetMapping(value = "/shops/{shopId}/goods/{id}/graph", produces = MediaType.IMAGE_PNG_VALUE)
-    // получение максимальных и минимальных продуктов
+    @GetMapping(value = "/shops/good-in-time", produces = MediaType.IMAGE_PNG_VALUE)
     public void getGoodsByShopId(
             HttpServletResponse response,
-            @Valid @RequestBody PriceInTimeFilter filters,
-            @PathVariable("id") Long goodId,
-            @PathVariable("shopId") Long shopId
+            @Valid @RequestBody PriceInTimeFilter filters
     ) throws Exception {
-
-        filters.setShopId(shopId);
-
-        filters.setGoodId(goodId);
 
 
         List<PriceInTime> prices =  priceService.getGoodPriceInTime(filters);
         if (prices.isEmpty()){
-            throw new DoesNoeExist("Nothing was found");
+            throw new NoDataForContentException("No prices were found to generate graph");
         }
         response.setContentType("image/png");
         response.setHeader("Content-Disposition", "attachment; filename=\"goods_rates.png\"");
@@ -115,18 +116,20 @@ public class PriceForAnalyzeController {
         return priceService.getShopsStatByMainCategories(filters);
     }
 
-    @GetMapping(value = "/categories/main/shops/{id}/graph", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/categories/main/shop/graph", produces = MediaType.IMAGE_PNG_VALUE)
     public void getShopsStatsByMainShopIdGraph(
             HttpServletResponse response,
-            @PathVariable("id") Long shopId,
             @Valid @RequestBody ShopStatByCategoryFilter filters
     ) throws Exception {
-        filters.setShopIds(List.of(shopId));
+
+        if (filters.getShopIds() == null || filters.getShopIds().size() !=1){
+            throw  new NotCorrectInput("categoryIds length must be 1");
+        }
 
 
         List<ShopStatByCategoryDto> categories = priceService.getShopsStatByMainCategories(filters);
         if (categories.isEmpty()){
-            throw new DoesNoeExist("Nothing was found with given credentials");
+            throw new NoDataForContentException("Nothing was found with given credentials");
         }
 
         List<CategoryStatDto> stats = categories.get(0).getCategories().stream()
@@ -152,23 +155,26 @@ public class PriceForAnalyzeController {
         return priceService.getShopsStatBySubCategories(filters);
     }
 
-    @GetMapping(value = "/categories/sub/shops/{id}/graph", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/categories/sub/shop/graph", produces = MediaType.IMAGE_PNG_VALUE)
     public void getShopsStatsBySubCategoriesInShopGraph(
             HttpServletResponse response,
-            @PathVariable("id") Long shopId,
+
             @Valid @RequestBody ShopStatByCategoryFilter filters
     ) throws Exception {
 
-        filters.setShopIds(List.of(shopId));
+        if (filters.getShopIds() == null || filters.getShopIds().size() != 1){
+            throw new NotCorrectInput("ShopIds length must be 1");
+        }
 
-
-        response.setContentType("image/png");
-        response.setHeader("Content-Disposition", "attachment; filename=\"goods_rates.png\"");
         List<ShopStatByCategoryDto> prices = priceService.getShopsStatBySubCategories(filters);
 
         if (prices.isEmpty()){
-            throw new DoesNoeExist("Nothing was found with given credentials");
+            throw  new NoDataForContentException("No prices were found to generate graph");
         }
+
+        response.setContentType("image/png");
+        response.setHeader("Content-Disposition", "attachment; filename=\"goods_rates.png\"");
+
         List<CategoryStatDto> stats = prices.get(0).getCategories().stream()
                 .sorted(Comparator.comparing(CategoryStatDto::getCategoryId)).toList();
 
@@ -188,48 +194,59 @@ public class PriceForAnalyzeController {
 
     }
 
-    @GetMapping(value = "/shops/districts/{id}/graph", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/shops/district/graph", produces = MediaType.IMAGE_PNG_VALUE)
+    // либо теги, либо категории, но с тегами будут самые обширные категории
     public void getCategoriesStatsByDistrictGraph(
             HttpServletResponse response,
-            @PathVariable("id") Long districtId,
            @Valid @RequestBody DistrictStatisticFilter filters
+            // если в фильтрах не стоит data range, о получают current prices
     ) throws Exception {
-        filters.setDistrictsId(List.of(districtId));
-        response.setContentType("image/png");
-        response.setHeader("Content-Disposition", "attachment; filename=\"goods_rates.png\"");
+
+        if (filters.getDistrictIds() == null || filters.getDistrictIds().size() !=1){
+            throw  new NotCorrectInput("categoryIds length must be 1");
+        }
+
 
         List<DistrictStatisticDto> prices =  priceService.getShopsStatByDistricts(filters);
         if (prices.isEmpty()){
-            throw new DoesNoeExist("Nothing was found with given credentials");
+            throw  new NoDataForContentException("No prices were found to generate graph");
         }
 
+        response.setContentType("image/png");
+        response.setHeader("Content-Disposition", "attachment; filename=\"goods_rates.png\"");
+
         graphicService.generateBarForAverageCategoriesInDistrict(
-                response.getOutputStream(), "Categories' Average Prices in District " + districtId,
+                response.getOutputStream(), "Categories' Average Prices in District " + filters.getDistrictIds().get(0),
                 "categories", "prices", prices
         );
         response.getOutputStream().flush();
 
     }
 
-    @GetMapping(value = "/shops/districts/categories/{id}/graph", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/shops/districts/category/graph", produces = MediaType.IMAGE_PNG_VALUE)
+    // либо теги, либо категории, но с тегами будут самые обширные категории
     public void getCategoryStatsByDistrictsGraph(
             HttpServletResponse response,
-            @PathVariable("id") Long categoryId,
             @Valid @RequestBody DistrictStatisticFilter filters
     ) throws Exception {
-        filters.setCategoriesId(List.of(categoryId));
 
-        response.setContentType("image/png");
-        response.setHeader("Content-Disposition", "attachment; filename=\"goods_rates.png\"");
+        if (filters.getCategoryIds() == null || filters.getCategoryIds().size() !=1){
+            throw  new NotCorrectInput("categoryIds length must be 1");
+        }
+
+
 
         List<DistrictStatisticDto> prices =  priceService.getShopsStatByDistricts(filters);
         if (prices.isEmpty()){
-            throw new DoesNoeExist("Nothing was found with given credentials");
+            throw  new NoDataForContentException("No prices were found to generate graph");
         }
+
+        response.setContentType("image/png");
+        response.setHeader("Content-Disposition", "attachment; filename=\"goods_rates.png\"");
         prices = prices.stream().sorted(Comparator.comparing(DistrictStatisticDto::getDistrictId)).toList();
 
         graphicService.generateBarForAverageCategoryInDistricts(
-                response.getOutputStream(), "Category`s " + categoryId + "  Average Prices in District ",
+                response.getOutputStream(), "Category`s " + filters.getCategoryIds().get(0) + "  Average Prices in District ",
                 "districts", "prices", prices
         );
         response.getOutputStream().flush();
@@ -238,6 +255,10 @@ public class PriceForAnalyzeController {
 
     @GetMapping("/shops/{id}/statistics")
     public ShopStatisticDto getShopStatistics(@PathVariable("id") Long shopId){
+
+        if (shopId <=0){
+            throw new NotCorrectInput("path variable shop id  must be > 0");
+        }
         return priceService.getShopStatistics(shopId);
     }
 
@@ -259,7 +280,7 @@ public class PriceForAnalyzeController {
         List<ShopCartDto> shops = priceService.compareCartByShops(request);
 
         if (shops.isEmpty()){
-            throw new DoesNoeExist("Nothing was found");
+            throw  new NoDataForContentException("No prices were found to generate graph");
         }
 
         shops = shops.stream().sorted(Comparator.comparing(ShopCartDto::getShopId)).toList();

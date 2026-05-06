@@ -1,3 +1,5 @@
 org.example.annotations_processors.MutuallyExclusiveValidator
 org.example.annotations_processors.MutuallyExtendedValidator
 org.example.annotations_processors.NullOrNotBlankValidator
+org.example.annotations_processors.ValidDateRangeValidator
+org.example.annotations_processors.ValidDifferenceValidator

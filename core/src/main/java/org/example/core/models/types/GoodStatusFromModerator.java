@@ -5,7 +5,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum GoodStatusFromModerator {
-    SUSPICIOUS, APPROVED;
+    SUSPICIOUS(1), APPROVED(2);
+    private final int value;
+    private GoodStatusFromModerator(int value) {
+        this.value = value;
+    }
 
 
     @JsonValue
@@ -14,9 +18,9 @@ public enum GoodStatusFromModerator {
     }
 
     @JsonCreator
-    public static GoodStatusFromModerator fromValue(String value) {
+    public static GoodStatusFromModerator fromValue(int value) {
         for (GoodStatusFromModerator type : values()) {
-            if (type.name().equals( value.toUpperCase())) {
+            if (type.value == value) {
                 return type;
             }
         }

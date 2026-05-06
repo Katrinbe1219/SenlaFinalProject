@@ -6,6 +6,7 @@ import org.example.core.dto.UnitDto;
 import org.example.core.dto.creating.UnitCreateDto;
 import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NotCorrectInput;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
 import org.example.core.hibernate.dictionaries.UnitHibImpl;
 import org.example.core.mapping.unit.UnitCreateDtoMapper;
 import org.example.core.mapping.unit.UnitDtoMapper;
@@ -34,8 +35,8 @@ public class UnitService {
     }
 
     @Transactional
-    public List<UnitDto> getAll(int count, int page){
-        List<Unit> units = unitHib.findAll(count, page, logger);
+    public List<UnitDto> getAll(int count, int page, BaseSortTypes filters,List<Long> ids){
+        List<Unit> units = unitHib.findAllWithSort(count, page,filters, ids, logger);
         if (units == null || units.isEmpty()) {
             return null;
         }
@@ -82,14 +83,23 @@ public class UnitService {
             throw new NotCorrectInput("Any name must contain only letters");
         }
 
-        if (unitDto.getFullName() == null){
-            unitDto.setFullName(unit.getFullName());
+
+        if(unitDto.getFullName() != null && unitDto.getFullName().equalsIgnoreCase(unit.getFullName())){
+            throw new NotCorrectInput("Unit already has this fullName");
         }
 
-        if (unitDto.getShortName() == null){
-            unitDto.setShortName(unit.getShortName());
+        if (unitDto.getShortName() != null && unitDto.getShortName().equalsIgnoreCase(unit.getShortName())){
+            throw new NotCorrectInput("Unit already has this shortName");
         }
-        unitHib.update(mapper.toUnit(unitDto), logger);
+
+        if (unitDto.getFullName() != null){
+            unit.setFullName(unitDto.getFullName());
+        }
+
+        if (unitDto.getShortName() != null){
+            unit.setShortName(unitDto.getShortName());
+        }
+
     }
 
     private List<UnitDto> listToDto(List<Unit> units) {

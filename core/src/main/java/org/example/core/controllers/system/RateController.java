@@ -36,6 +36,10 @@ public class RateController {
     public List<RateWithGoodNameDto> getTopRatesAmongAll(
             @RequestParam(value = "num", defaultValue = "10", required = false) int count,
             @RequestParam(value="withSuspicious", defaultValue = "true", required = false) boolean withSuspicious){
+
+        if (count <=0){
+            throw new NotCorrectInput("num request param must be  > 0");
+        }
         return rateService.getTopRatesAmongAll(count, withSuspicious);
     }
 
@@ -45,30 +49,46 @@ public class RateController {
             @RequestParam(value = "count", defaultValue = "10") int count
     ){
         if (count <=0){
-            throw new NotCorrectInput("Count must be greater than 0");
+            throw new NotCorrectInput("Count must be > 0");
+        }
+        if (id <=0){
+            throw new NotCorrectInput("id must be > 0");
         }
         return rateService.getTopRatesAmongProduct(count, id);
     }
 
-    @GetMapping("/goods/{id}")
-    public List<RateFullDto> getGoodRatesByFilter(@PathVariable("id") Long id,
-                                                  @Valid @RequestBody RatingRecalcFilter filters
+    @GetMapping("/good")
+    public List<RateFullDto> getGoodRatesByFilter(
+            @Valid @RequestBody RatingRecalcFilter filters
   ){
 
-        if (filters.getGoodId() != null && !filters.getGoodId().equals(id)){
-            throw new  NotCorrectInput("Продукт не может указываться в body");
+        if (filters.getGoodId() == null){
+            throw new  NotCorrectInput("goodId must be given");
         }
 
-        filters.setGoodId(id);
+
+        if (filters.getCategoryId()!= null || filters.getCategoryIds()!= null){
+            throw new NotCorrectInput("category can not be given");
+        }
+
+        if (filters.getTagIds()!= null || filters.getTagId()!= null){
+            throw new NotCorrectInput("tag can not be given");
+        }
+
+        if (filters.getGoodIds() != null) {
+            throw new NotCorrectInput("Goods ids can not be given");
+        }
+
+
+
         return rateService.getGoodRatesByFilter(filters);
     }
 
-    @GetMapping(value = "/goods/{id}/graph", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/good/graph", produces = MediaType.IMAGE_PNG_VALUE)
     public void getGoodRatesInTime(HttpServletResponse response,
-                                   @Valid @RequestBody RatesFilter filters,
-                                   @PathVariable("id") Long id) throws Exception{
+                                   @Valid @RequestBody RatesFilter filters) throws Exception{
 
-        filters.setGoodId(id);
+
         List<RateInTimeDto> rates = rateService.getGoodRateInTime(filters);
         if (rates.isEmpty()){
             throw new DoesNoeExist("Rates are empty, no image can be generated");
@@ -77,7 +97,7 @@ public class RateController {
         response.setHeader("Content-Disposition", "attachment; filename=\"goods_rates.png\"");
 
         graphicalService.generateImeSeriesForGoodRateInTime(
-                response.getOutputStream(), "Good " + id + " Rate", "Date", "Rate", rates,
+                response.getOutputStream(), "Good " + filters.getGoodId() + " Rate", "Date", "Rate", rates,
                 filters
         );
         response.getOutputStream().flush();

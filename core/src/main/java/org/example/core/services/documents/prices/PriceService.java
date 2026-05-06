@@ -11,6 +11,7 @@ import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.filters.prices.PriceFilter;
 import org.example.core.hibernate.base_settings.service_dto.CheckingPriceGoodShopExistence;
+import org.example.core.hibernate.dictionaries.CategoryHibImpl;
 import org.example.core.hibernate.documents.prices.PriceHibImpl;
 import org.example.core.hibernate.objects.GoodHibImpl;
 import org.example.core.hibernate.objects.ShopHibImpl;
@@ -43,10 +44,12 @@ public class PriceService {
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+    @Autowired
+    private CategoryHibImpl categoryHibImpl;
 
     @Transactional
-    public List<PriceGetDtoForUser> getAllForUser(Long goodId, Long shopId, Integer count, Integer page){
-        return priceHib.getAllForUser(shopId, goodId, count, page);
+    public List<PriceGetDtoForUser> getAllForUser(Long goodId, Long shopId){
+        return priceHib.getAllForUser(shopId, goodId);
     }
 
     @Transactional
@@ -79,12 +82,17 @@ public class PriceService {
         Instant start = null;
         Instant end = null;
 
-        if (filters.getMinDate() != null){
-            start = DateTimeUtils.toInstant(filters.getMinDate());
+        if (filters.getStartDate() != null){
+            start = DateTimeUtils.toInstant(filters.getStartDate());
         }
 
-        if (filters.getMaxDate() != null){
-            end = DateTimeUtils.toInstant(filters.getMaxDate());
+        if (filters.getEndDate() != null){
+            end = DateTimeUtils.toInstant(filters.getEndDate());
+        }
+
+        if (filters.getCategoryIds()!= null){
+            List<Long> allCat =  categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
+            filters.setCategoryIds(allCat);
         }
         return priceHib.getPricesByFilter(filters, start, end);
 
@@ -220,6 +228,7 @@ public class PriceService {
 
     private PriceGetResultForModerator toDto(Price old, Good good, Shop shop){
         PriceGetResultForModerator dto = new PriceGetResultForModerator();
+        dto.setId(old.getId());
         dto.setPrice(old.getPrice());
         dto.setValidFrom(old.getValidFrom());
         //if(dto.setValidFrom() !)

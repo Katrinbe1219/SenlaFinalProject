@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Constraint(validatedBy = {})
 public @interface NullOrNotBlank {
-    String message() default "{field} must  be null or not blank";
+    String message() default "field must  be null or not blank";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

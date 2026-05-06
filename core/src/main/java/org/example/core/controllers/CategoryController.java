@@ -6,6 +6,7 @@ import org.example.core.dto.getting.categories.CategoryGetDto;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.dto.patching.CategoryPatchDto;
 import org.example.core.exceptions.NotCorrectInput;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
 import org.example.core.services.dictionaries.CategoryService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +25,10 @@ public class CategoryController {
 
     @GetMapping
     public List<CategoryGetDto> getAll(
-            @RequestParam(value = "count", defaultValue = "10", required = false) Integer count,
-            @RequestParam(value = "page", defaultValue = "0", required = false) Integer page
+            @RequestParam(value = "size", defaultValue = "10", required = false) Integer count,
+            @RequestParam(value = "page", defaultValue = "0", required = false) Integer page,
+            @RequestParam(value="sort", defaultValue = "1", required = false) Integer sort,
+            @RequestParam(value="ids", required = false) List<Long> ids
     ){
         if (count <=0){
             throw new NotCorrectInput("Count must be greater than 0");
@@ -34,7 +37,12 @@ public class CategoryController {
         if (page <0) {
             throw new NotCorrectInput("Page must be >= 0");
         }
-        return categoryService.getAllCategories(count, page);
+        if (ids!=null && ids.isEmpty()) {
+            throw new NotCorrectInput("ids length must be > 0");
+        }
+
+        BaseSortTypes filters = BaseSortTypes.forValue(sort);
+        return categoryService.getAllCategories(count, page, filters, ids);
     }
 
     @PostMapping
@@ -51,11 +59,10 @@ public class CategoryController {
         return new StringResponse("Category deleted");
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
-    public StringResponse editCategory(@PathVariable("id") Long id,
+    public StringResponse editCategory(
                                        @Valid @RequestBody CategoryPatchDto dto){
-        dto.setId(id);
         categoryService.patchCategory(dto);
         return new StringResponse("Category updated");
     }

@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import org.example.core.dto.getting.reviews.ReviewDto;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.exceptions.NotCorrectInput;
+import org.example.core.models.User;
 import org.example.core.services.documents.reviews.ReviewForUserService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +25,8 @@ public class ReviewController {
     @GetMapping
     public List<ReviewDto> getReviewsByUser(
             @RequestParam(value = "count", defaultValue = "10", required = false) Integer count,
-            @RequestParam(value = "page", defaultValue = "0", required = false) Integer page
+            @RequestParam(value = "page", defaultValue = "0", required = false) Integer page,
+            @AuthenticationPrincipal User user
     ){
         if (count <=0){
             throw new NotCorrectInput("Count must be greater than 0");
@@ -32,15 +35,14 @@ public class ReviewController {
         if (page <0) {
             throw new NotCorrectInput("Page must be >= 0");
         }
-        UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return reviewService.getByUserId(user.getUsername(), page, count);
     }
 
     @GetMapping("/{id}")
     public ReviewDto getReviewByUserAndGood(
-        @PathVariable("id") Long id
+        @PathVariable("id") Long id,
+        @AuthenticationPrincipal User user
     ){
-        UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return reviewService.getByUserAndGood(user.getUsername(), id);
 
     }
@@ -48,8 +50,8 @@ public class ReviewController {
 
     // delete by userId and goodId
     @DeleteMapping("/{id}")
-    public StringResponse deleteReview(@PathVariable("id") Long id) {
-        UserDetails user = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public StringResponse deleteReview(@PathVariable("id") Long id,
+                                       @AuthenticationPrincipal User user) {
         reviewService.deleteReview(id, user.getUsername());
         return new StringResponse("Review was deleted");
     }

@@ -18,6 +18,7 @@ import java.time.LocalDate;
 @MutuallyExclusiveExtended(first = "reviewDate", second="lastDate", third="firstDate")
 public class ReviewForUserFilters {
     @Positive(message = "goodId must be  > 0")
+    @NotNull(message = "goodId can not be null")
     private Long goodId;
     @Min(value = 0, message = "rate must be >=0")
     @Max(value =5, message = "rate must be  <=5")
@@ -37,7 +38,7 @@ public class ReviewForUserFilters {
     private String sortType = "asc";
     @Builder.Default
     @PositiveOrZero(message = "page must be >=0")
-    private  Integer page = null;
+    private  Integer page = 0;
     @Builder.Default
     @Positive(message = "size must be >0")
     private Integer size = null;

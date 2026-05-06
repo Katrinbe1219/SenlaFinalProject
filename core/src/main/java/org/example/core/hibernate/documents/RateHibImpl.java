@@ -1,6 +1,7 @@
 package org.example.core.hibernate.documents;
 
 
+import jakarta.persistence.criteria.JoinType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.core.dto.getting.rates.RateFullDto;
@@ -15,6 +16,7 @@ import org.example.core.hibernate.base_settings.service_dto.RateExportDto;
 import org.example.core.models.Good;
 import org.example.core.models.RatingRecalculationLog;
 import org.example.core.models.Review;
+import org.example.core.models.Tag;
 import org.example.core.models.types.RatingStatus;
 import org.example.core.models.types.RatingTriggerType;
 import org.example.core.utils.DateTimeUtils;
@@ -180,7 +182,7 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
                     root.get("newRate"),
                     root.get("triggeredBy")
                     )).where(builder.and(predicates.toArray(new JpaPredicate[0])))
-                    .orderBy(builder.asc(root.get("newRate")));
+                    .orderBy(builder.asc(root.get("newRate")), builder.desc(root.get("recalculatedAt")));
 
             return session.createQuery(query)
                     .setMaxResults(count)
@@ -196,28 +198,7 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
         }
     }
 
-    @Transactional
-    public List<Long> getIdsByFilter(RatingRecalcFilter filters){
-        Session session = getSessionFactory().getCurrentSession();
-        try{
-            HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
-            JpaCriteriaQuery<Long> query = builder.createQuery(Long.class);
-            JpaRoot<RatingRecalculationLog> root = query.from(RatingRecalculationLog.class);
 
-            List<JpaPredicate> predicates = buildPredicates(builder, root, filters);
-            query.select(root.get("id"))
-                    .where(predicates.toArray(new JpaPredicate[0]));
-            return session.createQuery(query).getResultList();
-        }
-        catch(HibernateException e){
-            logger.error("Hibernate RateHinImpl getIdsByFilter " + e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception RateHinImpl getIdsByFilter "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
 
     @Transactional
     public List<RateFullDto> getRatesByFilter(RatingRecalcFilter filters){
@@ -227,7 +208,8 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
             JpaCriteriaQuery<RateFullDto> query = builder.createQuery(RateFullDto.class);
             JpaRoot<RatingRecalculationLog> root = query.from(RatingRecalculationLog.class);
 
-            List<Long> ids = getIdsByFilter(filters);
+            List<JpaPredicate> predicates = buildPredicates(builder, root, filters);
+
             query.select(builder.construct(
                     RateFullDto.class,
                     root.get("id"),
@@ -238,7 +220,7 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
                     root.get("ratingStatus"),
                     root.get("errorMessage"),
                     root.get("newRate")
-            )).where(builder.and(root.get("id").in(ids)));
+            )).where(predicates.toArray(new JpaPredicate[0])).orderBy(builder.desc(root.get("recalculatedAt")));
             return session.createQuery(query).getResultList();
         }
         catch (HibernateException e){
@@ -258,8 +240,9 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
             HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
             JpaCriteriaQuery<RateExportDto> query = builder.createQuery(RateExportDto.class);
             JpaRoot<RatingRecalculationLog> root = query.from(RatingRecalculationLog.class);
+            List<JpaPredicate> predicates = buildPredicates(builder, root, filters);
 
-            List<Long> ids = getIdsByFilter(filters);
+
             query.select(builder.construct(
                     RateExportDto.class,
                     root.get("id"),
@@ -272,7 +255,7 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
                     root.get("ratingStatus"),
                     root.get("errorMessage"),
                     root.get("newRate")
-            )).where(builder.and(root.get("id").in(ids)));
+            )).where(predicates.toArray(new JpaPredicate[0]));
             return session.createQuery(query).getResultList();
         }
         catch (HibernateException e){
@@ -318,14 +301,14 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
             );
         }
 
-        if (filters.getMinDate() != null){
-            start = DateTimeUtils.toInstant(filters.getMinDate());
+        if (filters.getStartDate() != null){
+            start = DateTimeUtils.toInstant(filters.getStartDate());
             predicates.add(
                     builder.greaterThanOrEqualTo(root.get("recalculatedAt"), start)
             );
         }
-        if (filters.getMaxDate() != null){
-            end = DateTimeUtils.toInstantEndDay(filters.getMaxDate());
+        if (filters.getEndDate() != null){
+            end = DateTimeUtils.toInstantEndDay(filters.getEndDate());
             predicates.add(
                     builder.lessThanOrEqualTo(root.get("recalculatedAt"), end)
             );
@@ -376,6 +359,20 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
             );
         }
 
+        if (filters.getTagId()!= null){
+            JpaJoin< Good,Tag> tagJoin = root.join("good", JoinType.LEFT).join("tags", JoinType.LEFT);
+            predicates.add(
+                    tagJoin.get("id").equalTo(filters.getTagId())
+            );
+        }
+
+        if (filters.getTagIds() != null){
+            JpaJoin< Good,Tag> tagJoin = root.join("good", JoinType.LEFT).join("tags", JoinType.LEFT);
+            predicates.add(
+                    tagJoin.get("id").in(filters.getTagIds())
+            );
+
+        }
         return predicates;
     }
 
@@ -391,11 +388,11 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
             predicates.add(builder.equal(root.get("good").get("id"), filters.getGoodId()));
             predicates.add(builder.
                     lessThanOrEqualTo(
-                            root.get("recalculatedAt"),DateTimeUtils.toInstantEndDay(filters.getLastDate())
+                            root.get("recalculatedAt"),DateTimeUtils.toInstantEndDay(filters.getEndDate())
                     ));
             predicates.add(
                     builder.greaterThanOrEqualTo(
-                            root.get("recalculatedAt"),DateTimeUtils.toInstant(filters.getFirstDate())
+                            root.get("recalculatedAt"),DateTimeUtils.toInstant(filters.getStartDate())
                     )
             );
 

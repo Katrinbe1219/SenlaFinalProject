@@ -8,6 +8,5 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface ReviewForUserDtoMapper {
 
-    @Mapping(source = "good.name", target = "goodName")
     ReviewDto toDto(Review review);
 }

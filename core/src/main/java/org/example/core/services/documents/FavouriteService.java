@@ -1,5 +1,7 @@
 package org.example.core.services.documents;
 
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.core.dto.getting.favourites.FavouriteCountByGoodDto;
@@ -7,22 +9,28 @@ import org.example.core.dto.getting.favourites.FavouriteFullDto;
 import org.example.core.dto.getting.favourites.FavouriteGetForUserDto;
 import org.example.core.exceptions.CanNotMakeExecution;
 import org.example.core.exceptions.DoesNoeExist;
+import org.example.core.hibernate.base_settings.filters.FavouritesAnalystFilters;
+import org.example.core.hibernate.dictionaries.CategoryHibImpl;
 import org.example.core.hibernate.documents.FavouriteHibImpl;
 import org.example.core.hibernate.objects.GoodHibImpl;
 import org.example.core.hibernate.objects.UserHibImpl;
+import org.example.core.models.Category;
 import org.example.core.models.Favourite;
 import org.example.core.models.Good;
 import org.example.core.models.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class FavouriteService {
     private static final Logger logger = LogManager.getLogger(FavouriteService.class);
+    private final CategoryHibImpl categoryHibImpl;
 
     private GoodHibImpl goodHib;
     private FavouriteHibImpl favouriteHib;
@@ -30,15 +38,16 @@ public class FavouriteService {
     // для авторизованных пользователей, если будет ошибка с поиском user по логину
     // какая-то проблема
 
-    public FavouriteService(FavouriteHibImpl favouriteHib, UserHibImpl userHib, GoodHibImpl goodHib) {
-        this.favouriteHib = favouriteHib;
-        this.userHib = userHib;
-        this.goodHib = goodHib;
-    }
 
     @Transactional
-    public List<FavouriteFullDto> findAllForAnalyst(){
-        List<Favourite> favs = favouriteHib.findAllFullVersion();
+    public List<FavouriteFullDto> findAllForAnalyst(  FavouritesAnalystFilters filters){
+
+        if (filters.getCategoryIds()!=null ){
+            List<Long> allCat = categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
+            filters.setCategoryIds(allCat);
+        }
+
+        List<Favourite> favs = favouriteHib.findAllFullVersion(filters);
         return listToDto(favs);
     }
 
@@ -64,8 +73,12 @@ public class FavouriteService {
 
 
     @Transactional
-    public List<FavouriteCountByGoodDto> countAllByGoodId(){
-        return favouriteHib.countAllByGoodId();
+    public List<FavouriteCountByGoodDto> countAllByGoodId(FavouritesAnalystFilters filters){
+        if (filters.getCategoryIds()!=null ){
+            List<Long> allCat = categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
+            filters.setCategoryIds(allCat);
+        }
+        return favouriteHib.countAllByGoodId(filters);
     }
 
     @Transactional

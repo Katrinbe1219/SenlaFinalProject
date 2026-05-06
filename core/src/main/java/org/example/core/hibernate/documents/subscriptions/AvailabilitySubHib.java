@@ -1,5 +1,7 @@
 package org.example.core.hibernate.documents.subscriptions;
 
+import jakarta.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.JoinType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.core.exceptions.CanNotMakeExecution;
@@ -7,6 +9,8 @@ import org.example.core.exceptions.NonHibernateException;
 import org.example.core.hibernate.base_settings.HibernateAbstractDao;
 import org.example.core.hibernate.base_settings.filters.subscriptions.AvailabilitySubFilter;
 import org.example.core.models.AvailabilitySubscription;
+import org.example.core.models.PriceSubscription;
+import org.example.core.models.Shop;
 import org.example.core.utils.DateTimeUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -32,6 +36,11 @@ public class AvailabilitySubHib extends HibernateAbstractDao<AvailabilitySubscri
             JpaCriteriaQuery<AvailabilitySubscription> query = builder.createQuery(AvailabilitySubscription.class);
             JpaRoot<AvailabilitySubscription> root = query.from(AvailabilitySubscription.class);
 
+            root.fetch("user", JoinType.LEFT);
+            root.fetch("good", JoinType.LEFT);
+            Fetch<PriceSubscription, Shop> shopFetch=root.fetch("shop", JoinType.LEFT);
+            shopFetch.fetch("district", JoinType.LEFT);
+
             List<JpaPredicate> predicates = buildPredicates(filters,builder,root);
             JpaOrder order= buildOrder(filters,builder,root);
 
@@ -40,7 +49,7 @@ public class AvailabilitySubHib extends HibernateAbstractDao<AvailabilitySubscri
                     .orderBy(order);
 
             var squery = session.createQuery(query);
-            if (filters.getPage() !=null && filters.getSize()!=0){
+            if (filters.getPage() !=null && filters.getSize()!=null ){
                 squery
                         .setFirstResult(filters.getPage() * filters.getSize())
                         .setMaxResults(filters.getSize());
@@ -91,6 +100,7 @@ public class AvailabilitySubHib extends HibernateAbstractDao<AvailabilitySubscri
             );
 
         }
+
 
         if (filters.getGoodIds() != null){
             predicates.add(

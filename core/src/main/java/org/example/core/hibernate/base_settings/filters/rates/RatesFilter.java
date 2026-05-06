@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.annotations.MutuallyExclusiveExtended;
+import org.example.annotations.ValidDateRange;
 import org.example.core.models.types.GoodStatusFromModerator;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -17,17 +18,21 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@ValidDateRange(first = "startDate", second = "endDate")
 public class RatesFilter {
     @Positive(message = "goodId must be  > 0")
+    @NotNull(message = "goodId must not be null")
     private Long goodId;
 
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
-    @NotNull
-    private LocalDate firstDate;
+    @NotNull(message = "startDate must not be null")
+    private LocalDate startDate;
+
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
-    @NotNull
-    private LocalDate lastDate;
+    @NotNull(message = "endDate must not be null")
+    private LocalDate endDate;
+
     private GoodStatusFromModerator goodStatus;
 }

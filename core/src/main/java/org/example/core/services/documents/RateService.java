@@ -9,6 +9,7 @@ import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.filters.rates.RatesFilter;
 import org.example.core.hibernate.base_settings.filters.rates.RatingRecalcFilter;
 import org.example.core.hibernate.base_settings.service_dto.RateExportDto;
+import org.example.core.hibernate.dictionaries.CategoryHibImpl;
 import org.example.core.hibernate.documents.RateHibImpl;
 import org.example.core.hibernate.objects.GoodHibImpl;
 import org.example.core.models.Good;
@@ -19,12 +20,14 @@ import java.util.List;
 
 @Service
 public class RateService {
+    private final CategoryHibImpl categoryHibImpl;
     GoodHibImpl goodHib;
     RateHibImpl rateHib;
 
-    public RateService(GoodHibImpl goodHib, RateHibImpl rateHib) {
+    public RateService(GoodHibImpl goodHib, RateHibImpl rateHib, CategoryHibImpl categoryHibImpl) {
         this.goodHib = goodHib;
         this.rateHib = rateHib;
+        this.categoryHibImpl = categoryHibImpl;
     }
 
     @Transactional
@@ -39,16 +42,15 @@ public class RateService {
 
     @Transactional
     public List<RateFullDto> getGoodRatesByFilter(RatingRecalcFilter filters){
-        if ((filters.getCurDate() != null && filters.getMinDate()!= null ) ||
-                ( filters.getCurDate() != null && filters.getMaxDate() != null)
-        ){
-            throw new NotCorrectInput("Должна быть либо точная дата, либо диапазон");
-        }
 
-        if (   (filters.getCurRate() != null && filters.getMinRate() != null) ||
-                ( filters.getCurRate() != null && filters.getMaxRate() != null)
-            ){
-            throw new NotCorrectInput("Должна быть либо точная рейтинг, либо диапазон");
+        if(filters.getCategoryIds()!= null){
+            List<Long> allCategories = categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
+            filters.setCategoryIds(allCategories);
+        }else if(filters.getCategoryId()!= null){
+            List<Long> allCategories = categoryHibImpl.findAllChildCategoryIds(List.of(filters.getCategoryId()));
+            filters.setCategoryIds(allCategories);
+            filters.setCategoryId(null);
+            //TODO удалить взм тогда проверку в buildPredicates
         }
 
         return rateHib.getRatesByFilter(filters);
@@ -56,8 +58,8 @@ public class RateService {
 
     @Transactional
     public List<RateExportDto> getRatesExportByFilter(RatingRecalcFilter filters){
-        if ((filters.getCurDate() != null && filters.getMinDate()!= null ) ||
-                ( filters.getCurDate() != null && filters.getMaxDate() != null)
+        if ((filters.getCurDate() != null && filters.getStartDate()!= null ) ||
+                ( filters.getCurDate() != null && filters.getEndDate() != null)
         ){
             throw new NotCorrectInput("Должна быть либо точная дата, либо диапазон");
         }

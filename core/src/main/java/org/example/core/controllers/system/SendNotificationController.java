@@ -22,7 +22,6 @@ public class SendNotificationController {
             @Valid @RequestBody DiscountMessage dto
     ){
         // TODO or better make service for sending
-        // TODO do i need transitional, some transition conditions
         eventPublisher.publishEvent(dto);
         return new StringResponse("Message was send");
     }

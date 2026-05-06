@@ -45,7 +45,7 @@ public class SecurityConfiguration implements WebMvcConfigurer {
                 deviceInfoExtractor, mapper);
         http.authorizeHttpRequests(auth ->
                     auth
-                            .requestMatchers("/**").permitAll()
+
                             .requestMatchers("/analyst/**").hasAnyRole("ADMIN", "ANALYST")
                             .requestMatchers("/categories/**", "/districts/**",
                                         "/tags/**", "/units/**", "/login", "/refresh",
@@ -56,6 +56,7 @@ public class SecurityConfiguration implements WebMvcConfigurer {
 
                             .requestMatchers("/profile/**").hasAnyRole("ADMIN", "ANALYST", "MODERATOR", "MIN_USER", "MAX_USER")
                             .requestMatchers("/rates/**", "/export/**","/subscriptions/**").hasAnyRole("ADMIN", "ANALYST", "MODERATOR")
+                            .requestMatchers("/**").permitAll()
 
         )
         .csrf(AbstractHttpConfigurer::disable)

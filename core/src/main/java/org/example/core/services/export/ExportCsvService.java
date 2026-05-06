@@ -248,7 +248,7 @@ public class ExportCsvService {
         try{
             StringWriter sw = new StringWriter();
             PrintWriter pw = new PrintWriter(sw);
-            pw.println("id;good_name;category_id;category_name;category_parent_name;unit_id;unit_short_name;unit_full_name;description;tags;updated_at;created_at");
+            pw.println("id;good_name;category_id;category_name;category_parent_id;category_parent_name;unit_id;unit_short_name;unit_full_name;description;tags;updated_at;created_at");
 
             for (GoodGetFullDto item : info){
                 List<String> fields = new ArrayList<>();
@@ -256,7 +256,8 @@ public class ExportCsvService {
                 fields.add(String.valueOf(item.getName()));
                 fields.add(String.valueOf(item.getCategory().getId()));
                 fields.add(String.valueOf(item.getCategory().getName()));
-                fields.add(String.valueOf(item.getCategory().getParent()));
+                fields.add(String.valueOf(item.getCategory().getParentId()));
+                fields.add(String.valueOf(item.getCategory().getParentName()));
                 fields.add(String.valueOf(item.getUnit().getId()));
                 fields.add(String.valueOf(item.getUnit().getShortName()));
                 fields.add(String.valueOf(item.getUnit().getFullName()));

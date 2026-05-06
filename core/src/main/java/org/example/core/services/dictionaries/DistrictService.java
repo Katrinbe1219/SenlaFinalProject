@@ -3,9 +3,9 @@ package org.example.core.services.dictionaries;
 import org.example.core.dto.DistrictDto;
 import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NotCorrectInput;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
 import org.example.core.hibernate.dictionaries.DistrictHibImpl;
 import org.example.core.models.District;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,8 +62,9 @@ public class DistrictService {
     }
 
     @Transactional
-    public List<DistrictDto> getAll(int count, int page){
-        List<District> dists = districtHib.findAll(count, page, logger);
+    public List<DistrictDto> getAll(int count, int page, BaseSortTypes filters, List<Long> ids){
+
+        List<District> dists = districtHib.findAllWithSort(count, page,filters, ids, logger);
         if (dists == null || dists.isEmpty()){
             return null;
         }

@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PriceGetDtoForUser {
+    private Long shopId;
     private String shopName;
     private String address;
 

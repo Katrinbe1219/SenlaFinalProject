@@ -20,6 +20,7 @@ import org.example.core.dto.getting.statistics.shops.ShopGetDto;
 import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.exportEnum.*;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
 import org.example.core.hibernate.base_settings.filters.ModeratorRecalcFilter;
 import org.example.core.hibernate.base_settings.filters.goods.GoodFilter;
 import org.example.core.hibernate.base_settings.filters.exporting.ExportShopsCurrentPricesFilter;
@@ -124,13 +125,13 @@ public class ExportController {
                 List<ShopGetDto> shops = null;
                 List<CategoryGetDto> categories = null;
                 if (tagsAreIncluded){
-                    tags = tagService.getAllTags(null, null);
+                    tags = tagService.getAllTags(null, null, BaseSortTypes.ASC, null);
                 }
                 if (shopsAreIncluded){
-                    shops = shopService.findAll(null, null);
+                    shops = shopService.findAll(null, null, BaseSortTypes.ASC,null,null);
                 }
                 if (categoriesAreIncluded){
-                    categories = categoryService.getAllCategories(null, null);
+                    categories = categoryService.getAllCategories(null, null, BaseSortTypes.ASC, null);
                 }
 
                 headers.setContentType(MediaType.parseMediaType(
@@ -188,8 +189,6 @@ public class ExportController {
             throw new NotCorrectInput("Csv can not be applied with include");
         }
 
-        filters.setPage(null);
-        filters.setSize(null);
         List<ReviewFullDto> reviews = reviewService.getByFilters(filters);
 
         if (reviews.isEmpty()){
@@ -253,16 +252,18 @@ public class ExportController {
         return new ResponseEntity<>(exportBytes, headers, HttpStatus.OK);
     }
 
-    @GetMapping("/reviews/history/{id}")
+    @GetMapping("/reviews/history/good")
     public ResponseEntity<byte[]> getReviewsHistoryByGoodId(
-            @PathVariable("id") Long goodId,
+
             @Valid @RequestBody ReviewAdvancedFilters filters
 
     ){
 
-        filters.setPage(null);
-        filters.setSize(null);
-        filters.setGoodId(goodId);
+
+        if (filters.getGoodId() == null){
+            throw new NotCorrectInput("Good id must be given");
+        }
+
         List<ReviewFullDto> reviews = reviewService.getByFilters(filters);
 
         if (reviews.isEmpty()){
@@ -373,8 +374,7 @@ public class ExportController {
             @Valid @RequestBody GoodFilter filters,
             @RequestParam(value = "include", required = false)List<String> include
     ){
-        filters.setPage(null);
-        filters.setSize(null);
+
 
         Set<AllGoodsInclude> includes = include == null
                 ? Set.of()

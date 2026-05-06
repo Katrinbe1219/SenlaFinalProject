@@ -1,5 +1,6 @@
 package org.example.core.services.documents.reviews;
 
+import lombok.AllArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.core.dto.creating.ReviewCreateDto;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class ReviewForUserService {
     private static final Logger logger = LogManager.getLogger(ReviewForUserService.class);
 
@@ -31,12 +33,6 @@ public class ReviewForUserService {
     GoodHibImpl goodHib;
     ReviewForUserDtoMapper mapper;
 
-    public ReviewForUserService(ReviewHibImpl reviewHib, UserHibImpl userHib, GoodHibImpl goodHib, ReviewForUserDtoMapper mapper) {
-        this.reviewHib = reviewHib;
-        this.userHib = userHib;
-        this.goodHib = goodHib;
-        this.mapper = mapper;
-    }
 
     @Transactional
     public List<ReviewDto> getByUserId(String username, int page, int size){
@@ -44,7 +40,9 @@ public class ReviewForUserService {
         if (userId == null){
             throw new NotCorrectInput("Пользователь был не найден");
         }
-        return reviewHib.getByUserSmallVersion(userId, page, size);
+        List<Review> reviews=  reviewHib.getByUserSmallVersion(userId, page, size);
+        if (reviews.isEmpty()) return List.of();
+        return listToDto(reviews);
     }
 
     @Transactional
@@ -53,11 +51,11 @@ public class ReviewForUserService {
         if (userId == null){
             throw new NotCorrectInput("Пользователь был не найден");
         }
-        ReviewDto answer =  reviewHib.getByUserAndGood(userId, good);
+        Review answer =  reviewHib.getByUserAndGood(userId, good);
         if (answer == null){
             throw new DoesNoeExist("Does not exist");
         }
-        return answer;
+        return mapper.toDto(answer);
     }
 
     @Transactional

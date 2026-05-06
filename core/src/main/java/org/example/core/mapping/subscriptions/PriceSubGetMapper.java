@@ -8,6 +8,5 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PriceSubGetMapper {
 
-    @Mapping(source = "shop.district.name", target = "shop.district")
     PriceSubGetDto toDto(PriceSubscription old);
 }

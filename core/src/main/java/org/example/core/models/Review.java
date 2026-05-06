@@ -16,9 +16,10 @@ import java.time.LocalDate;
 public class Review {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "reviews_seq")
-    @SequenceGenerator(name="reviews_seq", sequenceName = "reviews_id_seq",
-            allocationSize = 75)
+//    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "reviews_seq")
+//    @SequenceGenerator(name="reviews_seq", sequenceName = "reviews_id_seq",
+//            allocationSize = 75)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @JoinColumn(name="good_id")

@@ -1,6 +1,7 @@
 package org.example.core.dto.getting;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ModeratorRecalcDto {
+    @Positive(message = "id must be > 0")
     private Long id;
     private ModeratorSmallDto moderator;
     private GoodIdDto good;

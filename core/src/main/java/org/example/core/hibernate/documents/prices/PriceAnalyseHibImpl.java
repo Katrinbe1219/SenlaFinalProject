@@ -210,9 +210,11 @@ public class PriceAnalyseHibImpl extends HibernateAbstractDao<Price,Long, Logger
         if (filters.getStartDate() != null && filters.getEndDate() != null){
             Instant start = DateTimeUtils.toInstant(filters.getStartDate());
             Instant end = DateTimeUtils.toInstantEndDay(filters.getEndDate());
-            sql.append("""
-                    WHERE valid_from >= :validFrom AND (valid_to <= :validTo OR valid_to IS NULL)
-                    """);
+            sql.append(
+                    " WHERE p.valid_from <= :validTo" +
+                            "   AND (p.valid_to IS NULL OR p.valid_to >= :validFrom)"
+            );
+
             params.put("validFrom", start);
             params.put("validTo", end);
         }else{
@@ -297,25 +299,38 @@ CAST(COUNT(p.id) AS BIGINT) as product_count
            Map<String,Object> params){
 
         if (filters.getStartDate() != null && filters.getEndDate() != null) {
+
             Instant start = DateTimeUtils.toInstant(filters.getStartDate());
             Instant end = DateTimeUtils.toInstantEndDay(filters.getEndDate());
 
-            builder.append(" WHERE ( p.valid_to IS NULL OR  p.valid_to <= :validTo) AND p.valid_from >= :validFrom ");
+
+            builder.append(
+                    " AND  p.valid_from <= :validTo" +
+                            "   AND (p.valid_to IS NULL OR p.valid_to >= :validFrom)"
+            );
             params.put("validTo", end);
             params.put("validFrom", start);
         }else{
-            builder.append(" WHERE p.valid_to IS NULL ");
+            builder.append(" AND p.valid_to IS NULL ");
         }
 
+        builder.append(" WHERE ");
+        boolean prev = false;
+
         if (filters.getShopIds()!= null && !filters.getShopIds().isEmpty()){
-            builder.append(" AND p.shop_id IN (:shopIds) ");
+            builder.append("  p.shop_id IN (:shopIds) ");
             params.put("shopIds", filters.getShopIds());
+            prev = true;
         }
 
         if (filters.getCategoryIds()!= null && !filters.getCategoryIds().isEmpty()){
-            builder.append(" AND ct.root_id IN (:categoryIds) ");
+            if (prev) builder.append(" AND  ");
+            builder.append("  ct.root_id IN (:categoryIds) ");
             params.put("categoryIds", filters.getCategoryIds());
+            prev = true;
         }
+
+        if (!prev) builder.append(" 1=1 ");
 
         builder.append("""
                 GROUP BY s.id, s.name, ct.root_id, ct.root_name
@@ -330,7 +345,7 @@ CAST(COUNT(p.id) AS BIGINT) as product_count
             Session session = getSessionFactory().getCurrentSession();
             StringBuilder builder = new StringBuilder();
 
-            if (filters.getCategoriesId() != null){
+            if (filters.getCategoryIds() != null){
                 builder.append("""
             WITH RECURSIVE cate AS (
             SELECT id, id as root_id, name as root_name, name , parent_id  FROM categories 
@@ -339,14 +354,14 @@ CAST(COUNT(p.id) AS BIGINT) as product_count
             UNION ALL SELECT c.id, ct.root_id,
          ct.root_name, c.name, c.parent_id  
          FROM categories AS c 
-         INNER JOIN cate AS ct ON ct.id = c.parent_id AND ct.parent_id is NULL) 
+         INNER JOIN cate AS ct ON ct.id = c.parent_id ) 
                         
                         """);
             }else{
                 builder.append("""
                         WITH RECURSIVE cate AS (
              SELECT id, id as root_id, name AS root_name
-            FROM categories WHERE parent_id is NULL
+            FROM categories 
                             
              UNION ALL
              
@@ -375,8 +390,8 @@ CAST(COUNT(p.id) AS BIGINT) as product_count
 
 
 
-        if (filters.getTagsIds() != null && !filters.getTagsIds().isEmpty()){
-            builder.append(" JOIN tags as t ON t.id = g.tag_id ");
+        if (filters.getTagIds() != null && !filters.getTagIds().isEmpty()){
+            builder.append(" JOIN goods_tags AS gt ON g.id = gt.good_id  JOIN tags as t ON t.id = gt.tag_id ");
         }
 
             Map<String, Object> params = new LinkedHashMap<>();
@@ -404,37 +419,38 @@ CAST(COUNT(p.id) AS BIGINT) as product_count
     ){
         if (filters.getStartDate() != null && filters.getEndDate() !=null){
             Instant start = DateTimeUtils.toInstant(filters.getStartDate());
-            Instant end = DateTimeUtils.toInstant(filters.getEndDate());
-            builder.append("""
-                      WHERE ( p.valid_to IS  NULL OR   p.valid_to <= :validTo)  AND p.valid_from >= :validFrom
-                    """);
+            Instant end = DateTimeUtils.toInstantEndDay(filters.getEndDate());
+            builder.append(
+                    " WHERE p.valid_from <= :validTo" +
+                            "   AND (p.valid_to IS NULL OR p.valid_to >= :validFrom)"
+            );
             params.put("validFrom", start);
             params.put("validTo", end);
         }else{
             builder.append(" WHERE p.valid_to IS NULL ");
         }
 
-        if (filters.getDistrictsId()!= null && !filters.getDistrictsId().isEmpty()){
+        if (filters.getDistrictIds()!= null && !filters.getDistrictIds().isEmpty()){
             builder.append((" AND d.id IN (:districtsId) "));
-            params.put("districtsId", filters.getDistrictsId());
+            params.put("districtsId", filters.getDistrictIds());
         }
 
-        if (filters.getGoodsId()!= null && !filters.getGoodsId().isEmpty()){
+        if (filters.getGoodIds()!= null && !filters.getGoodIds().isEmpty()){
             builder.append((" AND g.id IN (:goodsId) "));
-            params.put("goodsId", filters.getGoodsId());
+            params.put("goodsId", filters.getGoodIds());
         }
 
-        if (filters.getTagsIds()!= null && !filters.getTagsIds().isEmpty()){
+        if (filters.getTagIds()!= null && !filters.getTagIds().isEmpty()){
             builder.append((" AND t.id IN (:tagsIds) "));
-            params.put("tagsIds", filters.getTagsIds());
+            params.put("tagsIds", filters.getTagIds());
         }
 
-        if (filters.getCategoriesId()!= null && !filters.getCategoriesId().isEmpty()){
+        if (filters.getCategoryIds()!= null && !filters.getCategoryIds().isEmpty()){
             //builder.append((" AND c.id IN (:categoriesId) "));
-            params.put("categoriesId", filters.getCategoriesId());
+            params.put("categoriesId", filters.getCategoryIds());
         }
 
-        builder.append(" GROUP BY d.id, d.name,  ct.root_id, ct.root_name");
+        builder.append(" GROUP BY d.id, d.name,  ct.root_id, ct.root_name ORDER BY d.id");
     }
 
     @Transactional
@@ -503,28 +519,24 @@ CAST(COUNT(p.id) AS BIGINT) as product_count
             predicates.add(
                     builder.equal(root.get("good").get("id"), filters.getGoodId())
             );
+
             predicates.add(
-                    builder.greaterThanOrEqualTo(root.get("validFrom"), DateTimeUtils.toInstant(
-                            filters.getFirstDate()
-                    ))
+                    builder.lessThanOrEqualTo(
+                            root.get("validFrom"),
+                            DateTimeUtils.toInstantEndDay(filters.getEndDate())
+                    )
             );
 
-            if (Objects.equals(filters.getEndDate(), LocalDate.now())){
-                JpaPredicate first = builder.isNull(root.get("validTo"));
-                // TODO везде проверить такое
-                JpaPredicate sec = builder.lessThanOrEqualTo(root.get("validTo"),DateTimeUtils.toInstantEndDay(
-                        filters.getEndDate()
-                ));
-                predicates.add(
-                        builder.or(first,sec)
-                );
-            }else{
-                predicates.add(
-                        builder.lessThanOrEqualTo(root.get("validTo"), DateTimeUtils.toInstantEndDay(
-                                filters.getEndDate()
-                        ))
-                );
-            }
+            JpaPredicate validToNull = builder.isNull(root.get("validTo"));
+            JpaPredicate validToAfterStart = builder.greaterThanOrEqualTo(
+                    root.get("validTo"),
+                    DateTimeUtils.toInstant(filters.getStartDate())
+            );
+            predicates.add(builder.or(validToNull, validToAfterStart));
+            predicates.add(
+                    builder.or(validToNull,validToAfterStart)
+            );
+
 
             query.select(builder.construct(PriceInTime.class,
                     root.get("price").as(Double.class),
@@ -569,7 +581,7 @@ CAST(COUNT(p.id) AS BIGINT) as product_count
             );
 
             query.select(builder.construct(GoodPriceInShop.class,
-                    root.get("shop").get("name"),
+                    root.get("shop").get("id"),
                     root.get("price").as(Double.class))).where(predicates.toArray(new JpaPredicate[0]));
 
             return session.createQuery(query).getResultList();

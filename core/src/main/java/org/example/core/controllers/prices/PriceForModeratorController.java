@@ -34,7 +34,7 @@ public class PriceForModeratorController {
         return priceService.createPrice(dto);
     }
 
-    @PostMapping("/updated")
+    @PatchMapping("/update")
     public PriceGetResultForModerator updatePriceForGoodInShop(@Valid @RequestBody PriceCreateDto dto) {
         return priceService.updatePrice(dto);
     }
@@ -90,18 +90,30 @@ public class PriceForModeratorController {
         if (goodId == null || shopId == null) {
             throw new NotCorrectInput("Not all credentials were given");
         }
+        if (goodId <=0){
+            throw new NotCorrectInput("goodId must be >0 ");
+        }
+        if (shopId <=0){
+            throw new NotCorrectInput("shopId must be >0 ");
+        }
         priceService.deletePriceByGoodAndShop(goodId, shopId);
         return new StringResponse("Price was deleted successfully");
     }
 
     @DeleteMapping("/{id}")
     public StringResponse deletePrice(@PathVariable("id") Long id){
+        if (id <=0){
+            throw new NotCorrectInput("id must be >0 ");
+        }
         priceService.deletePriceById(id);
         return new StringResponse("Price was deleted successfully");
     }
 
     @GetMapping("/{id}")
     public PriceGetResultForModerator getPrice(@PathVariable("id") Long id){
+        if (id <=0){
+            throw new NotCorrectInput("id must be >0 ");
+        }
         return priceService.getByIdForModerator(id);
     }
 

@@ -3,20 +3,26 @@ package org.example.core.hibernate.documents;
 import jakarta.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.example.core.dto.creating.ManyModeratorLogCreateDto;
 import org.example.core.exceptions.CanNotMakeExecution;
 import org.example.core.exceptions.NonHibernateException;
 import org.example.core.hibernate.base_settings.HibernateAbstractDao;
 import org.example.core.hibernate.base_settings.filters.ModeratorRecalcFilter;
+import org.example.core.models.Good;
 import org.example.core.models.ModeratorRatingCheck;
+import org.example.core.models.User;
 import org.example.core.utils.DateTimeUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.query.criteria.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Repository
@@ -27,38 +33,68 @@ public class ModeratorRecalcHib extends HibernateAbstractDao<ModeratorRatingChec
         super(ModeratorRatingCheck.class);
     }
 
+    @Value("${batchSize}")
+    private Integer batchSize;
 
     @Transactional
-    public  List<Long> getIdsByFilter(ModeratorRecalcFilter filters){
+    public void  createManyLogs(ManyModeratorLogCreateDto dto, User user){
         try{
             Session session = getSessionFactory().getCurrentSession();
-            HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
-            JpaCriteriaQuery<Long> query = builder.createQuery(Long.class);
-            JpaRoot<ModeratorRatingCheck> root = query.from(ModeratorRatingCheck.class);
+            for (int i = 0; i< dto.getVerdicts().size(); i++){
+                Good good = session.getReference(Good.class, dto.getVerdicts().get(i).getGoodId());
 
-            List<JpaPredicate> predicates = buildPredicates(filters, builder, root);
-            JpaOrder order = buildOrder(filters, builder, root);
+                ModeratorRatingCheck log  = new ModeratorRatingCheck();
+                log.setCheckAt(Instant.now());
+                log.setModerator(user);
+                log.setGood(good);
+                log.setComment(dto.getVerdicts().get(i).getComment());
+                log.setVerdict(dto.getVerdicts().get(i).getVerdict());
 
-            query.select(root.get("id")).where(predicates.toArray(new JpaPredicate[0])).orderBy(order);
-            var squery = session.createQuery(query);
-            if (filters.getPage() != null && filters.getCount() != null){
-                squery.setFirstResult(filters.getPage()*filters.getCount())
-                        .setMaxResults(filters.getCount());
+                session.persist(log);
+                if (i%batchSize ==0){
+                    session.flush();
+                    session.clear();
+                }
+
             }
-
-
-            return squery.getResultList();
+            session.flush();
+            session.clear();
         }
         catch(HibernateException e) {
-            logger.error("Hibernate Ошибка в ModeratorRecalcHib getIdsByFilter " + e.getMessage());
+            logger.error("Hibernate Ошибка в ModeratorRecalcHib createManyLogs " + e.getMessage());
             throw new CanNotMakeExecution(e.getMessage());
         }
         catch (Exception e){
-            logger.error("NonHibernate Exception ModeratorRecalcHib getIdsByFilter: "+e.getMessage());
+            logger.error("NonHibernate Exception ModeratorRecalcHib createManyLogs: "+e.getMessage());
+            throw new NonHibernateException(e.getMessage());
+        }
+
+    }
+
+    @Transactional
+    public List<ModeratorRatingCheck> getModeratorRatingChecksByGoodIds(Set<Long> goodIds){
+        try{
+            Session session = getSessionFactory().getCurrentSession();
+            return session.createQuery(
+                            "SELECT m FROM ModeratorRatingCheck m " +
+                                    "WHERE m.good.id IN (:ids) " +
+                                    "AND m.checkAt = (" +
+                                    "SELECT MAX(m2.checkAt) FROM ModeratorRatingCheck m2 " +
+                                    "WHERE m2.good.id = m.good.id" +
+                                    ")",
+                            ModeratorRatingCheck.class
+                    )
+                    .setParameter("ids", goodIds)
+                    .getResultList();
+        }catch(HibernateException e) {
+            logger.error("Hibernate Ошибка в ModeratorRecalcHib getModeratorRatingChecksByGoodIds " + e.getMessage());
+            throw new CanNotMakeExecution(e.getMessage());
+        }
+        catch (Exception e){
+            logger.error("NonHibernate Exception ModeratorRecalcHib getModeratorRatingChecksByGoodIds: "+e.getMessage());
             throw new NonHibernateException(e.getMessage());
         }
     }
-
     @Transactional
     public List<ModeratorRatingCheck> findAllFullVersion(ModeratorRecalcFilter filters){
         try{
@@ -67,20 +103,17 @@ public class ModeratorRecalcHib extends HibernateAbstractDao<ModeratorRatingChec
             JpaCriteriaQuery<ModeratorRatingCheck> query = builder.createQuery(ModeratorRatingCheck.class);
             JpaRoot<ModeratorRatingCheck> root = query.from(ModeratorRatingCheck.class);
 
-            List<Long> ids = getIdsByFilter(filters);
+            List<JpaPredicate> predicates = buildPredicates(filters, builder, root);
+            JpaOrder order = buildOrder(filters, builder, root);
 
-            if (ids.isEmpty()){
-                return List.of();
+            query.select(root).where(predicates.toArray(new JpaPredicate[0])).orderBy(order);
+            var squery = session.createQuery(query);
+            if (filters.getPage() != null && filters.getCount() != null){
+                squery.setFirstResult(filters.getPage()*filters.getCount())
+                        .setMaxResults(filters.getCount());
             }
 
-            query.select(root).where(root.get("id").in(ids));
-            List<ModeratorRatingCheck> list = session.createQuery(query).getResultList();
-            Map<Long, ModeratorRatingCheck> maps = list.stream().collect(Collectors.toMap(
-                    ModeratorRatingCheck::getId,
-                    dto -> dto
-            ));
-
-            return ids.stream().map(maps::get).toList();
+            return squery.getResultList() ;
         }
         catch(HibernateException e) {
             logger.error("Hibernate Ошибка в ModeratorRecalcHib findAllFullVersion " + e.getMessage());

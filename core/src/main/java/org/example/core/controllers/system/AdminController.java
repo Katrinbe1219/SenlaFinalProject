@@ -63,7 +63,7 @@ public class AdminController {
     @GetMapping("/users/{id}")
     public UserFullDto getUserById(@PathVariable("id") Long id){
         if (id <=0){
-            throw new NotCorrectInput("Id can not be less than 0");
+            throw new NotCorrectInput("Id must be > 0");
         }
         return userService.getUserById(id);
     }
@@ -71,7 +71,7 @@ public class AdminController {
     @DeleteMapping("/users/{id}")
     public StringResponse deleteUserById(@PathVariable("id") Long id){
         if (id <=0){
-            throw new NotCorrectInput("Id can not be less than 0");
+            throw new NotCorrectInput("Id must be > 0");
         }
         userService.deleteUser(id);
         return  new StringResponse("User is successfully deleted");
@@ -81,7 +81,7 @@ public class AdminController {
     public StringResponse patchRole(@PathVariable("id") Long id,
                           @RequestParam("role") String role){
         if (id <=0){
-            throw new NotCorrectInput("Id can not be less than 0");
+            throw new NotCorrectInput("Id must be > 0");
         }
         RoleTypes roleType = RoleTypes.getFromString(role);
         userService.updateRole(id, roleType, false);
@@ -96,7 +96,7 @@ public class AdminController {
     @GetMapping("/sessions/{id}")
     public List<RefreshTokenDto> getSessionsByUserId(@PathVariable("id") Long userId){
         if (userId <=0){
-            throw new NotCorrectInput("Id can not be less than 0");
+            throw new NotCorrectInput("Id must be > 0");
         }
         return refreshTokenService.getTokensByUserId(userId);
     }
@@ -104,7 +104,7 @@ public class AdminController {
     @DeleteMapping("/sessions/{userid}")
     public StringResponse deleteSessionsByUserId(@PathVariable("userid") Long userId){
         if (userId <=0){
-            throw new NotCorrectInput("Id can not be less than 0");
+            throw new NotCorrectInput("Id must be > 0");
         }
         refreshTokenService.revokeByUserId(userId);
         return new StringResponse("Sessions has been deleted successfully");

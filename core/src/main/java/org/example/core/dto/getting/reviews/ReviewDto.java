@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.core.dto.getting.goods.GoodIdDto;
 
 import java.time.Instant;
 
@@ -12,7 +13,7 @@ import java.time.Instant;
 @NoArgsConstructor
 public class ReviewDto {
     private Long id;
-    private String goodName;
+    private GoodIdDto good;
     private Integer rate;
     @JsonFormat(pattern = "dd.MM.yyyy HH:mm:ss", timezone = "Europe/Moscow")
     private Instant createdAt;

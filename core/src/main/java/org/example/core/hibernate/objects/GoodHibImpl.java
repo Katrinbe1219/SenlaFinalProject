@@ -1,11 +1,13 @@
 package org.example.core.hibernate.objects;
 
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.example.core.dto.getting.goods.GoodGetForUserDto;
 import org.example.core.dto.getting.rates.RateWithGoodNameDto;
 import org.example.core.dto.getting.statistics.RecalculationForGoodDto;
 import org.example.core.exceptions.CanNotMakeExecution;
@@ -16,6 +18,7 @@ import org.example.core.models.Category;
 import org.example.core.models.Good;
 import org.example.core.models.Tag;
 import org.example.core.models.types.GoodStatusFromModerator;
+import org.example.core.models.types.ModeratorVerdict;
 import org.example.core.utils.DateTimeUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -24,10 +27,7 @@ import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -113,38 +113,34 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
     }
 
 
-
     @Transactional
-    public GoodGetForUserDto getGoodForUserById(Long id) throws CanNotMakeExecution {
-        Session session = getSessionFactory().getCurrentSession();
-        try {
-            // FETCH не нужен, STRING_ARG делает агрегацию
-            return session.createQuery("""
-                SELECT new org.example.core.dto.getting.goods.GoodGetForUserDto(
-               g.id, g.name, c.name, u.fullName, g.rate, CAST (STRING_AGG(t.name, ',') as String), g.description
-   ) FROM Good g
-               LEFT JOIN   g.unit u 
-              LEFT JOIN  g.category c 
-             LEFT JOIN  g.tags t
-          WHERE g.id = :id
-          GROUP BY g.id, g.name, c.name, u.fullName, g.rate, g.description
-       ORDER BY g.id
-    
-             
-             """,
-            GoodGetForUserDto.class).setParameter("id", id).uniqueResultOptional().orElse(null);
+    public Good findByIdFullVersion(Long id){
+        try{
+            Session session = getSessionFactory().getCurrentSession();
+            HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
+            JpaCriteriaQuery<Good> query = builder.createQuery(Good.class);
+            Root<Good> root = query.from(Good.class);
+            root.fetch("unit", JoinType.LEFT);
+            Fetch<Object, Object> catFetch =  root.fetch("category", JoinType.LEFT);
+            catFetch.fetch("parent", JoinType.LEFT);
+            root.fetch("tags", JoinType.LEFT);
+
+
+            query.select(root).where(builder.equal(root.get("id"), id));
+
+            return session.createQuery(query).uniqueResultOptional().orElse(null);
         }
         catch(HibernateException e) {
-            logger.error("Hibernate Ошибка в GoodHinImpl getGoodByIdFullVersion " + e.getMessage());
+            logger.error("Hibernate Ошибка в GoodHinImpl findByIdFullVersion " + e.getMessage());
             throw new CanNotMakeExecution(e.getMessage());
         }
         catch (Exception e){
-            logger.error("NonHibernate Exception GoodHinImpl getGoodByIdFullVersion: "+e.getMessage());
+            logger.error("NonHibernate Exception GoodHinImpl findByIdFullVersion: "+e.getMessage());
             throw new NonHibernateException(e.getMessage());
         }
 
-    }
 
+    }
     @Transactional
     public List<Long> findIdsByFilters(GoodFilter filters, boolean isUser){
         try{
@@ -153,7 +149,7 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
             JpaCriteriaQuery<Long> query = builder.createQuery(Long.class);
             JpaRoot<Good> root = query.from(Good.class);
 
-            List<JpaPredicate> predicates = buildPredicates(filters, builder, root, true);
+            List<JpaPredicate> predicates = buildPredicates(filters, builder, root, isUser);
             JpaOrder order = buildOrder(filters, builder, root);
             query.select(root.get("id"))
                     .where(predicates.toArray(new JpaPredicate[0]))
@@ -179,7 +175,7 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
     }
 
     @Transactional
-    public List<Good> findAllForUserDto(GoodFilter filters){
+    public List<Good> findAllByFilters(GoodFilter filters, boolean isUser){
         Session session = getSessionFactory().getCurrentSession();
         try{
 
@@ -188,15 +184,16 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
             JpaRoot<Good> root = query.from(Good.class);
             root.fetch("tags", JoinType.LEFT);
             root.fetch("category", JoinType.LEFT);
+
             root.fetch("unit", JoinType.LEFT);
 
             if (filters.getPage() != null && filters.getSize()!=null){
-                List<Long> ids = findIdsByFilters(filters, true);
+                List<Long> ids = findIdsByFilters(filters, isUser);
                 if (ids.isEmpty()) return List.of();
                 query.select(root).where(root.get("id").in(ids));
 
             }else{
-                List<JpaPredicate> predicates = buildPredicates(filters, builder, root, true);
+                List<JpaPredicate> predicates = buildPredicates(filters, builder, root, isUser);
                 JpaOrder order = buildOrder(filters, builder, root);
                 query.select(root)
                         .where(predicates.toArray(new JpaPredicate[0]))
@@ -218,41 +215,52 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
         }
     }
 
-    //TODO tags replace?
     @Transactional
-    public List<Good> findAllForAnalyst(GoodFilter filters){
-        Session session = getSessionFactory().getCurrentSession();
+    public List<Object[]> getStatusByIds(Set<Long> ids){
         try{
-            List<Long> ids = findIdsByFilters(filters, false);
-            if (ids.isEmpty()) return List.of();
-
-            List<Good> res= session.createQuery("""
-            SELECT DISTINCT  g FROM Good g
-            LEFT JOIN FETCH g.category c
-            LEFT JOIN FETCH g.unit u
-            LEFT JOIN FETCH g.tags t
-            WHERE g.id IN :ids
-             
-            """, Good.class)
-                    // array_position(ARRAY(SELECT unnest(:ids)), id) - POSTGRESQL спецификация, щлесь не подойдет
-                    // отсортируем в  JAVA
-                    .setParameter("ids", ids)
-                    .getResultList();
-            Map<Long, Good> maps = res.stream()
-                    .collect(Collectors.toMap(
-                            Good::getId, dto -> dto
-                    ));
-
-            return ids.stream().map(maps::get).filter(Objects::nonNull).toList();
+            Session session = getSessionFactory().getCurrentSession();
+            return session.createQuery("SELECT g.id, g.moderatorStatus FROm Good  g WHERE g.id IN (:ids)", Object[].class)
+                    .setParameter("ids", ids).getResultList();
         }
         catch(HibernateException e) {
-            logger.error("Hibernate Ошибка в GoodHinImpl findAllForAnalyst " + e.getMessage());
+            logger.error("Hibernate Ошибка в GoodHinImpl getStatusByIds " + e.getMessage());
             throw new CanNotMakeExecution(e.getMessage());
         }
         catch (Exception e){
-            logger.error("NonHibernate Exception GoodHinImpl findAllForAnalyst: "+e.getMessage());
+            logger.error("NonHibernate Exception GoodHinImpl getStatusByIds: "+e.getMessage());
             throw new NonHibernateException(e.getMessage());
         }
+    }
+
+    private GoodStatusFromModerator getStatus(ModeratorVerdict ver){
+        return switch (ver){
+            case SUSPICIOUS -> GoodStatusFromModerator.SUSPICIOUS;
+            default -> GoodStatusFromModerator.APPROVED;
+        };
+    }
+    @Transactional
+    public void updateStatusForMany(Map<Long, ModeratorVerdict> dto){
+        try{
+            Session session = getSessionFactory().getCurrentSession();
+            StringBuilder cases = new StringBuilder("CASE id ");
+            dto.forEach((id, status) ->
+                    cases.append(" WHEN ").append(id).append(" THEN '")
+                            .append(getStatus(status).getValue()).append("' "));
+            cases.append(" END ");
+            String sql = "UPDATE goods SET moderator_status = " + cases +
+                    " WHERE id IN (:ids)";
+            session.createNativeQuery(sql)
+                    .setParameter("ids", dto.keySet()).executeUpdate();
+        }
+        catch(HibernateException e) {
+            logger.error("Hibernate Ошибка в GoodHinImpl updateStatusForMany " + e.getMessage());
+            throw new CanNotMakeExecution(e.getMessage());
+        }
+        catch (Exception e){
+            logger.error("NonHibernate Exception GoodHinImpl updateStatusForMany: "+e.getMessage());
+            throw new NonHibernateException(e.getMessage());
+        }
+
     }
 
     // Rate-part finding
@@ -263,8 +271,8 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
             HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
             JpaCriteriaQuery<RateWithGoodNameDto> query = builder.createQuery(RateWithGoodNameDto.class);
             JpaRoot<Good> root = query.from(Good.class);
-//            query.select(root)
             query.select(builder.construct(RateWithGoodNameDto.class,
+                    root.get("id"),
                     root.get("name"),
                     root.get("rate")
                             ))
@@ -306,9 +314,6 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
             predicates.add(
                        tagJoin.get("id").in(filters.getTagIds())
                 );
-
-
-
         }
 
         if (filters.getCurRating() != null){
@@ -327,22 +332,15 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
             );
         }
 
-        if ((filters.getCurRating()!= null || filters.getMaxRating() != null || filters.getMinRating()!=null)
-        && isUser){
 
-            predicates.add(
-                    builder.equal(root.get("moderatorStatus"), GoodStatusFromModerator.APPROVED)
-            );
-        }
-
-        if (filters.getMinUpdatedAt()!= null){
-            timeConvert = DateTimeUtils.toInstant(filters.getMinUpdatedAt());
+        if (filters.getStartUpdatedAt()!= null){
+            timeConvert = DateTimeUtils.toInstant(filters.getStartUpdatedAt());
             predicates.add(
                     builder.greaterThanOrEqualTo(root.get("updatedAt"), timeConvert)
             );
         }
-        if (filters.getMaxUpdatedAt()!= null){
-            timeConvert = DateTimeUtils.toInstant(filters.getMaxUpdatedAt().plusDays(1));
+        if (filters.getEndUpdatedAt()!= null){
+            timeConvert = DateTimeUtils.toInstant(filters.getEndUpdatedAt().plusDays(1));
             predicates.add(
                     builder.lessThanOrEqualTo(root.get("updatedAt"), timeConvert)
             );
@@ -356,14 +354,14 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
             );
         }
 
-        if (filters.getMaxCreatedAt() != null){
-            timeConvert = DateTimeUtils.toInstant(filters.getMaxCreatedAt().plusDays(1));
+        if (filters.getEndCreatedAt() != null){
+            timeConvert = DateTimeUtils.toInstant(filters.getEndCreatedAt().plusDays(1));
             predicates.add(
                     builder.lessThanOrEqualTo(root.get("createdAt"), timeConvert)
             );
         }
-        if (filters.getMinCreatedAt() != null){
-            timeConvert = DateTimeUtils.toInstant(filters.getMinUpdatedAt());
+        if (filters.getStartCreatedAt() != null){
+            timeConvert = DateTimeUtils.toInstant(filters.getStartCreatedAt());
             predicates.add(
                     builder.greaterThanOrEqualTo(root.get("createdAt"), timeConvert)
             );
@@ -382,6 +380,12 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
             );
         }
 
+        if (isUser){
+            predicates.add(
+                    builder.equal(root.get("moderatorStatus"), GoodStatusFromModerator.APPROVED)
+            );
+
+        }
         return predicates;
     }
 

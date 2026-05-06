@@ -24,8 +24,8 @@ public class UserForModeratorController {
     @PatchMapping("/upgrade/{id}")
     // min_user -> max_user
     public StringResponse upgrade(@PathVariable("id") Long userId) {
-        if (userId < 0){
-            throw new NotCorrectInput("User Id must be more than 0");
+        if (userId <= 0){
+            throw new NotCorrectInput("User Id must be > 0");
         }
 
         userService.updateRole(userId, RoleTypes.MAX_USER, true);
@@ -35,8 +35,8 @@ public class UserForModeratorController {
     @DeleteMapping("/upgrade/{id}")
     // max-user -> min_user
     public StringResponse deUpgrade(@PathVariable("id") Long userId) {
-        if (userId < 0){
-            throw new NotCorrectInput("User Id must be more than 0");
+        if (userId <= 0){
+            throw new NotCorrectInput("User Id must be > 0");
         }
 
         userService.updateRole(userId, RoleTypes.MIN_USER, true);
@@ -47,8 +47,8 @@ public class UserForModeratorController {
     public StringResponse lockUser(
             @PathVariable("id") Long userId
     ){
-        if (userId < 0){
-            throw new NotCorrectInput("User Id must be more than 0");
+        if (userId <= 0){
+            throw new NotCorrectInput("User Id must be > 0");
         }
 
         // передается nonLocked значение, заблокирован = !nonLocked
@@ -60,8 +60,8 @@ public class UserForModeratorController {
     public StringResponse unlockUser(
             @PathVariable("id") Long userId
     ){
-        if (userId < 0){
-            throw new NotCorrectInput("User Id must be more than 0");
+        if (userId <= 0){
+            throw new NotCorrectInput("User Id must be > 0");
         }
         userService.updateLockedState(userId, true);
         return new StringResponse("Unlocked successfully");

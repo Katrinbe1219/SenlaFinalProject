@@ -9,7 +9,7 @@
 
 
         <createSequence
-                sequenceName="reviews_id_seq"
+                sequenceName="moderator_rating_checks_id_seq"
                 startValue="1"
                 incrementBy="75"/>
 
@@ -25,6 +25,7 @@
 
     </changeSet>
 
+<!--    units-->
     <changeSet id="1" author="katrinbe1219">
         <createTable tableName="units">
             <column name="id" type="bigint" autoIncrement="true">
@@ -352,7 +353,7 @@
     <!--  REVIEWS  -->
     <changeSet id="24" author="katrinbe1219">
         <createTable tableName="reviews">
-            <column name="id" type="BIGINT" defaultValueComputed="nextval('reviews_id_seq')">
+            <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="good_id" type="BIGINT">
@@ -381,9 +382,6 @@
                 <constraints nullable="true"/>
             </column>
         </createTable>
-        <sql>
-            ALTER SEQUENCE reviews_id_seq OWNED BY reviews.id;
-        </sql>
     </changeSet>
 
     <!-- Один пользователь — один отзыв на один товар -->
@@ -569,10 +567,10 @@
         </sql>
     </changeSet>
 
-    <!-- ==================== MODERATOR_RATING_CHECKS ==================== -->
+    <!--  MODERATOR_RATING_CHECKS-->
     <changeSet id="39" author="katrinbe1219">
         <createTable tableName="moderator_rating_checks">
-            <column name="id" type="BIGINT" autoIncrement="true">
+            <column name="id" type="BIGINT" defaultValueComputed="nextval('moderator_rating_checks_id_seq')">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="good_id" type="BIGINT">
@@ -591,6 +589,9 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+        <sql>
+            ALTER SEQUENCE moderator_rating_checks_id_seq OWNED BY moderator_rating_checks.id;
+        </sql>
     </changeSet>
 
     <changeSet id="40" author="katrinbe1219">

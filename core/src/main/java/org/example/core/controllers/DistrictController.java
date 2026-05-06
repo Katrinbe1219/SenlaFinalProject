@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.example.core.dto.DistrictDto;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.exceptions.NotCorrectInput;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
 import org.example.core.services.dictionaries.DistrictService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +23,10 @@ public class DistrictController {
 
     @GetMapping
     public List<DistrictDto> getAll(
-            @RequestParam(value = "count", defaultValue = "10", required = false) Integer count,
-            @RequestParam(value = "page", defaultValue = "0", required = false) Integer page
+            @RequestParam(value = "size", defaultValue = "10", required = false) Integer count,
+            @RequestParam(value = "page", defaultValue = "0", required = false) Integer page,
+            @RequestParam(value="sort", defaultValue = "1", required = false) Integer sort,
+            @RequestParam(value="ids",  required = false) List<Long> ids
     ){
         if (count <=0){
             throw new NotCorrectInput("Count must be greater than 0");
@@ -32,7 +35,13 @@ public class DistrictController {
         if (page <0) {
             throw new NotCorrectInput("Page must be >= 0");
         }
-        return districtService.getAll(count, page);
+
+        if (ids!=null && ids.isEmpty()) {
+            throw new NotCorrectInput("ids length must be > 0");
+        }
+
+        BaseSortTypes filters = BaseSortTypes.forValue(sort);
+        return districtService.getAll(count, page, filters, ids);
     }
 
     @GetMapping("/{id}")

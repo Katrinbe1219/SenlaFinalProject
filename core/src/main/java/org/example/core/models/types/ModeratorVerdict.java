@@ -1,6 +1,7 @@
 package org.example.core.models.types;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ModeratorVerdict {
@@ -20,7 +21,7 @@ public enum ModeratorVerdict {
     private int getCode(){return this.value;}
 
     @JsonCreator
-    public static ModeratorVerdict forValue(int value) {
+    public static ModeratorVerdict forValue( int value) {
         for (ModeratorVerdict item : ModeratorVerdict.values()) {
             if (item.getCode() == value) {
                 return item;

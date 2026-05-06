@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RateWithGoodNameDto {
+    private Long goodId;
     private String goodName;
     private Double rate;
 }

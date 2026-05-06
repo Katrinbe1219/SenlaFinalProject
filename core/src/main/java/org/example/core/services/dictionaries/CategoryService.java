@@ -7,6 +7,7 @@ import org.example.core.dto.getting.categories.CategoryGetDto;
 import org.example.core.dto.patching.CategoryPatchDto;
 import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NotCorrectInput;
+import org.example.core.hibernate.base_settings.sorting_types.BaseSortTypes;
 import org.example.core.hibernate.dictionaries.CategoryHibImpl;
 import org.example.core.mapping.categories.CategoryGetDtoMapper;
 import org.example.core.models.Category;
@@ -30,15 +31,13 @@ public class CategoryService {
     }
 
     @Transactional
-    public List<CategoryGetDto> getAllCategories(Integer count, Integer page) {
-        return  categoryHib.findAllFullVersion(count, page);
+    public List<CategoryGetDto> getAllCategories(Integer count, Integer page, BaseSortTypes filters, List<Long> ids) {
+        return  categoryHib.findAllFullVersion(count, page, filters, ids);
     }
 
     @Transactional
-    public CategoryGetDto createCategory( @RequestBody CategoryCreateDto categoryCreateDto) {
-        if (categoryCreateDto.getName() == null){
-            throw new NotCorrectInput("Name must be given");
-        }
+    public CategoryGetDto createCategory( CategoryCreateDto categoryCreateDto) {
+
         Category parentCheck = null;
         if (categoryCreateDto.getParentId() != null){
             parentCheck = categoryHib.findById(categoryCreateDto.getParentId(), logger);
@@ -50,13 +49,24 @@ public class CategoryService {
             throw new NotCorrectInput("Name must contain only letters");
         }
 
-        Category newCategory = toEntity(categoryCreateDto, parentCheck);
-        return categoryGetDtoMapper.toCategoryGetDto(categoryHib.save(newCategory, logger));
+        try{
+            Category newCategory = toEntity(categoryCreateDto, parentCheck);
+            return categoryGetDtoMapper.toCategoryGetDto(categoryHib.save(newCategory, logger));
+        }catch (Exception e){
+            logger.error("CategoryService  createCategory: "+e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
     public void deleteCategory(Long id){
-        categoryHib.delete(id, logger);
+        try{
+            categoryHib.delete(id, logger);
+        }catch (Exception e){
+            logger.error("CategoryService  deleteCategory: "+e.getMessage());
+        }
+
     }
 
     @Transactional
@@ -69,9 +79,11 @@ public class CategoryService {
             }
         }
 
-        if (!isAlpha(dto.getName())){
+        if (dto.getName()!= null && !isAlpha(dto.getName())){
             throw new NotCorrectInput("Name must contain only letters");
         }
+
+
 
         Category cat = toEntity(dto, parentCheck);
         categoryHib.update(cat);

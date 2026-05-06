@@ -18,6 +18,7 @@ import org.example.core.models.User;
 import org.example.core.security.DeviceInfoExtractor;
 import org.example.core.security.TokenPair;
 import org.example.core.services.objects.UserService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,9 +38,10 @@ public class ProfileController {
 
 
     @GetMapping
-    public ProfileDto getProfile(){
+    public ProfileDto getProfile(
+            @AuthenticationPrincipal User user
+    ){
         try{
-            User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             return mapper.toDto(user);
         } catch (Exception e) {
             throw new NonHibernateException("ProfileController getProfile: " + e.getMessage());
@@ -50,8 +52,9 @@ public class ProfileController {
     // without password
     public Map<String,String> updateProfile(
             HttpServletRequest request,
-           @Valid @RequestBody UserDefaultPatchDto dto)  {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+           @Valid @RequestBody UserDefaultPatchDto dto,
+            @AuthenticationPrincipal User user)  {
+
 
         if (Duration.between(user.getUpdatedAt(), Instant.now()).toDays() < 3){
             throw new PermissionDenied("You can not update profile, 3 days did not past from last update");
@@ -81,14 +84,15 @@ public class ProfileController {
     }
 
     @PatchMapping("/password")
-    public StringResponse updatePassword( @Valid @RequestBody UpdateUserPasswordDto dto){
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    public StringResponse updatePassword(@Valid @RequestBody UpdateUserPasswordDto dto,
+                                         @AuthenticationPrincipal User  user){
+
         if (Duration.between(user.getUpdatedAt(), Instant.now()).toDays() < 3){
             throw new PermissionDenied("You can not update profile, 3 days did not past from last update");
         }
 
 
-        if (dto.getOldPassword()== null || dto.getOldPassword().equals(dto.getNewPassword())){
+        if ( dto.getOldPassword().equals(dto.getNewPassword())){
             throw new NotCorrectInput("Given passwords can not be the same");
         }
         service.patchPassword(dto, user);

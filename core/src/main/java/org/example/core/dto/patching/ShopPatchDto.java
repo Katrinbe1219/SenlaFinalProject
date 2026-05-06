@@ -1,6 +1,7 @@
 package org.example.core.dto.patching;
 
 import jakarta.annotation.security.DenyAll;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,6 +12,8 @@ import org.example.annotations.NullOrNotBlank;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ShopPatchDto {
+    @NotNull(message = "id can not be null")
+    @Positive(message = "id must be > 0")
     private Long id;
     @NullOrNotBlank
     private String name;

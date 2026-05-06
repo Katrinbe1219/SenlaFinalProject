@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.core.dto.DistrictDto;
 
 @Data
 @AllArgsConstructor
@@ -13,5 +14,5 @@ public class ShopGetDto {
     private Long id;
     private String name;
     private String address;
-    private String district;
+    private DistrictDto district;
 }

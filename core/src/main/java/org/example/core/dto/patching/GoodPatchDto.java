@@ -1,6 +1,7 @@
 package org.example.core.dto.patching;
 
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,6 +19,7 @@ public class GoodPatchDto {
     private String name;
     @NullOrNotBlank
     private String description;
+
     private List<Long> tagIds;
     @Positive(message = "categoryId must be >0")
     private Long categoryId;
