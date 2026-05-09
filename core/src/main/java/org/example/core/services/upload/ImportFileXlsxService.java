@@ -24,7 +24,7 @@ public class ImportFileXlsxService {
 
 
     @Transactional
-    public List<PriceCreateDto> importPrices(InputStream  inputStream) throws IOException {
+    public List<PriceCreateDto> importPrices(InputStream  inputStream) throws Exception {
         try(Workbook wb = new XSSFWorkbook(inputStream)){
 
             Sheet sheet = wb.getSheetAt(0);
@@ -57,8 +57,18 @@ public class ImportFileXlsxService {
                 throw new CsvInvalidStructure("Exception in validation: " + String.join("\n", errors), -1);
             }
             return prices;
-        }catch (Exception e){
-            logger.error("ImportFileXlsxService importPrices:" + e.getMessage());
+        }catch (IllegalArgumentException e){
+            if (e.getMessage().contains("(no sheets)")){
+                throw new CsvInvalidStructure("File has no sheets",0);
+            }else if (e.getMessage().contains("no rows")){
+                throw new CsvInvalidStructure("File has no rows",0);
+            }
+            logger.error("IllegalArgumentException ImportFileXlsxService importPrices: " + e.getMessage());
+            throw new Exception(e.getMessage());
+
+        }
+        catch (Exception e){
+            logger.error("Exception ImportFileXlsxService importPrices:" + e.getMessage());
             throw e;
         }
     }
@@ -108,7 +118,7 @@ public class ImportFileXlsxService {
             return new BigDecimal(value);
         }
         catch (NumberFormatException e){
-            throw new CsvInvalidStructure("Field " + fieldName + " is an incorrect number",rowNum);
+            throw new CsvInvalidStructure("Field " + fieldName + " is an incorrect bigDecimal",rowNum);
         }
     }
 
@@ -127,7 +137,7 @@ public class ImportFileXlsxService {
             return Long.parseLong(value);
         }
         catch (NumberFormatException e){
-            throw new CsvInvalidStructure("Field " + fieldName + " is an incorrect number",rowNum);
+            throw new CsvInvalidStructure("Field " + fieldName + " is an incorrect long",rowNum);
         }
     }
 

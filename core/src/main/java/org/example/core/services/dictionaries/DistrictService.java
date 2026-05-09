@@ -24,6 +24,7 @@ public class DistrictService {
     public DistrictService(DistrictHibImpl districtHib) {
         this.districtHib = districtHib;
     }
+
     @Transactional
     public DistrictDto createDistrict(String name){
         District district = new District();

@@ -1,5 +1,7 @@
 package org.example.core.services.documents.prices;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.example.core.dto.export.PriceHistoryByGoodAndShop;
 import org.example.core.dto.export.ShopsCurrentPricesDto;
 import org.example.core.hibernate.base_settings.filters.exporting.ExportShopsCurrentPricesFilter;
@@ -11,7 +13,7 @@ import java.util.List;
 
 @Service
 public class PriceExportService {
-
+    private static final Logger logger = LogManager.getLogger(PriceExportService.class);
     private PriceHibForExport priceHib;
     public PriceExportService(PriceHibForExport priceHib) {
         this.priceHib = priceHib;
@@ -19,11 +21,23 @@ public class PriceExportService {
 
     @Transactional
     public List<ShopsCurrentPricesDto> getShopsCurrentPrices (ExportShopsCurrentPricesFilter filters){
-        return priceHib.getShopsCurrentPrices(filters);
+        try{
+            return priceHib.getShopsCurrentPrices(filters);
+        }catch(Exception e){
+            logger.error("PriceExportService getShopsCurrentPrices:" + e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
     public List<PriceHistoryByGoodAndShop> getPriceHistoryByGoodId (Long goodId, Long shopId){
-        return priceHib.getPriceHistoryByGoodId(goodId, shopId);
+        try{
+            return priceHib.getPriceHistoryByGoodId(goodId, shopId);
+        }catch (Exception e){
+            logger.error("PriceExportService getPriceHistoryByGoodId:" + e.getMessage());
+            throw e;
+        }
+
     }
 }

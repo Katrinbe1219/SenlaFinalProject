@@ -50,7 +50,7 @@ public class PriceHibForExport extends HibernateAbstractDao<Price, Long, Logger>
                         """);
             }
             var query = session.createNativeQuery(sql.toString(), Tuple.class);
-            if (!filters.getShopsIds().isEmpty()){
+            if (filters.getShopsIds() != null && !filters.getShopsIds().isEmpty()){
                 query.setParameterList("shopsIds", filters.getShopsIds());
             }
 

@@ -33,48 +33,80 @@ public class ReviewAdvancedService {
 
     @Transactional
     public ReviewFullDto getReviewById(Long reviewId){
-         Review review= reviewHib.getByIdFullVersion(reviewId);
-         if (review == null){
-             throw new DoesNoeExist("Review does not exist with given credentials");
+         try{
+             Review review= reviewHib.getByIdFullVersion(reviewId);
+             if (review == null){
+                 throw new DoesNoeExist("Review does not exist with given credentials");
+             }
+             return mapper.toDto(review);
+         }catch (DoesNoeExist e){
+             throw e;
          }
-         return mapper.toDto(review);
+         catch(Exception e){
+             logger.error("ReviewAdvancedService getReviewById: " + e.getMessage());
+             throw e;
+         }
+
     }
 
 
     @Transactional
     public void blockReviewById(Long reviewId, String login){
-        User moderator = userHib.getByLoginSmallVersion(login);
-        if (moderator == null){
-            logger.error("Moderator does not exist with login " + login);
-            throw new CanNotMakeExecution("Moderator does not exist with login " + login);
-        }
-        boolean operation = reviewHib.blockReview(reviewId, moderator);
-         if (!operation) throw new DoesNoeExist("Review does not exist with given credentials");
+         try{
+
+             User moderator = userHib.getByLoginSmallVersion(login);
+             if (moderator == null){
+                 logger.error("Moderator does not exist with login " + login);
+                 throw new CanNotMakeExecution("Moderator does not exist with login " + login);
+             }
+             boolean operation = reviewHib.blockReview(reviewId, moderator);
+             if (!operation) throw new DoesNoeExist("Review does not exist with given credentials");
+
+         }catch (DoesNoeExist | CanNotMakeExecution e){
+             throw e;
+         }catch(Exception e){
+             logger.error("ReviewAdvancedService blockReviewById: " + e.getMessage());
+             throw e;
+
+         }
     }
 
     @Transactional
     public void unblockReviewById(Long reviewId, String login){
-        reviewHib.unblockReview(reviewId, login);
+         try{
+             reviewHib.unblockReview(reviewId, login);
+         }catch (Exception e){
+             logger.error("ReviewAdvancedService unblockReviewById: " + e.getMessage());
+             throw e;
+         }
+
     }
 
     @Transactional
     public List<ReviewFullDto> getByFilters(ReviewAdvancedFilters filters){
-         List<Review> reviews = reviewHib.getFullByFilters(filters);
-         return listToDto(reviews);
+         try{
+             List<Review> reviews = reviewHib.getFullByFilters(filters);
+             return listToDto(reviews);
+         }catch (Exception e){
+             logger.error("ReviewAdvancedService getByFilters: " + e.getMessage());
+             throw e;
+         }
+
     }
 
-    @Transactional
-    public List<ReviewFullDto> getAll(){
-         List<Review> reviews = reviewHib.findAllFullVersion();
-         return listToDto(reviews);
-    }
 
     private List<ReviewFullDto> listToDto(List<Review> reviews){
-         List<ReviewFullDto> dtos = new ArrayList<>();
-         for (Review review : reviews){
-             dtos.add(mapper.toDto(review));
+         try{
+             List<ReviewFullDto> dtos = new ArrayList<>();
+             for (Review review : reviews){
+                 dtos.add(mapper.toDto(review));
+             }
+             return dtos;
+         }catch (Exception e){
+             logger.error("ReviewAdvancedService listToDto: " + e.getMessage());
+             throw e;
          }
-         return dtos;
+
     }
 
 

@@ -66,7 +66,7 @@ public class PriceForModeratorController {
                 dtos = importFileXlsxService.importPrices(file.getInputStream());
                 priceService.saveAll(dtos, optionForUpload, isSend);
             }
-        }catch (IOException e){
+        }catch (Exception e){
             throw new NonHibernateException("PriceForModeratorController uploadFile: File can not be open: " + e.getMessage());
         }
 

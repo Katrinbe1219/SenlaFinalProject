@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.AllArgsConstructor;
 import org.example.core.exceptions.NonHibernateException;
 import org.example.core.exceptions.PermissionDenied;
 import org.example.core.models.User;
@@ -23,13 +24,14 @@ import java.io.IOException;
 import java.util.Map;
 
 @Component
+@AllArgsConstructor
 public class JwtCheckFilter extends OncePerRequestFilter {
 
-    @Autowired
-    JwtService jwtService;
 
-    @Autowired
+    private JwtService jwtService;
     private UserDetailsService userDetailsService;
+    private ObjectMapper mapper;
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -57,10 +59,10 @@ public class JwtCheckFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         }catch (Exception e){
             if (e instanceof JwtException || e instanceof  IllegalArgumentException){
-                sendError(e.getMessage(), response);
+                sendError(e.getMessage(), response, true);
                 logger.error("Проблема JwtCheckFilter doFilterInternal: " + e.getMessage());
             } else if (e instanceof NonHibernateException){
-                sendError(e.getMessage(), response);
+                sendError(e.getMessage(), response, false);
             }
             else throw e;
 
@@ -83,11 +85,16 @@ public class JwtCheckFilter extends OncePerRequestFilter {
         return null;
     }
 
-    private void sendError(String message, HttpServletResponse response) throws IOException {
+    private void sendError(String message, HttpServletResponse response, boolean isUnauthorized) throws IOException {
         response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        if (isUnauthorized) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        }else{
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+        }
+
         response.getWriter().write(
-                new ObjectMapper().writeValueAsString(Map.of("error", message))
+                mapper.writeValueAsString(Map.of("error", message))
         );
         response.getWriter().flush();
         response.getWriter().close();

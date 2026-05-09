@@ -38,35 +38,45 @@ public class ModeratorRecalcService {
 
     @Transactional
     public void addLog(User user, Long goodId, ModeratorVerdict verdict, String comment){
-        Good good = goodHib.findById(goodId, logger);
-        if (good == null){
-            throw new DoesNoeExist("Good does not exist with given credentials");
+        try{
+            Good good = goodHib.findById(goodId, logger);
+            if (good == null){
+                throw new DoesNoeExist("Good does not exist with given credentials");
+            }
+
+            if (Objects.requireNonNull(verdict) == ModeratorVerdict.SUSPICIOUS && good.getModeratorStatus() ==GoodStatusFromModerator.SUSPICIOUS) {
+                throw new NotCorrectInput("It is already blocked");
+            }
+
+            if ((verdict == ModeratorVerdict.APPROVED || verdict == ModeratorVerdict.RECALCULATED) &&
+                    good.getModeratorStatus() == GoodStatusFromModerator.APPROVED) {
+                throw new NotCorrectInput("It is already unblocked");
+            }
+
+
+            ModeratorRatingCheck log = new ModeratorRatingCheck();
+            log.setModerator(user);
+            log.setGood(good);
+            log.setVerdict(verdict);
+            log.setComment(comment);
+            log.setCheckAt(Instant.now());
+
+            recalcHib.save(log, logger);
+
+            if (Objects.requireNonNull(verdict) == ModeratorVerdict.SUSPICIOUS) {
+                good.setModeratorStatus(GoodStatusFromModerator.SUSPICIOUS);
+            } else {
+                good.setModeratorStatus(GoodStatusFromModerator.APPROVED);
+            }
+        }
+        catch (DoesNoeExist | NotCorrectInput e){
+            throw e;
+        }
+        catch (Exception e) {
+            logger.error("ModeratorRecalcService addLog: " + e.getMessage());
+            throw e;
         }
 
-        if (Objects.requireNonNull(verdict) == ModeratorVerdict.SUSPICIOUS && good.getModeratorStatus() ==GoodStatusFromModerator.SUSPICIOUS) {
-            throw new NotCorrectInput("It is already blocked");
-        }
-
-        if ((verdict == ModeratorVerdict.APPROVED || verdict == ModeratorVerdict.RECALCULATED) &&
-        good.getModeratorStatus() == GoodStatusFromModerator.APPROVED) {
-            throw new NotCorrectInput("It is already unblocked");
-        }
-
-
-        ModeratorRatingCheck log = new ModeratorRatingCheck();
-        log.setModerator(user);
-        log.setGood(good);
-        log.setVerdict(verdict);
-        log.setComment(comment);
-        log.setCheckAt(Instant.now());
-
-        recalcHib.save(log, logger);
-
-        if (Objects.requireNonNull(verdict) == ModeratorVerdict.SUSPICIOUS) {
-            good.setModeratorStatus(GoodStatusFromModerator.SUSPICIOUS);
-        } else {
-            good.setModeratorStatus(GoodStatusFromModerator.APPROVED);
-        }
 
 
     }
@@ -127,11 +137,17 @@ public class ModeratorRecalcService {
     }
     @Transactional
     public List<ModeratorRecalcDto> findAllFullVersion(ModeratorRecalcFilter filters){
-        List<ModeratorRatingCheck> ratings = recalcHib.findAllFullVersion(filters);
-        if (ratings.isEmpty()){
-            return List.of();
+        try{
+            List<ModeratorRatingCheck> ratings = recalcHib.findAllFullVersion(filters);
+            if (ratings.isEmpty()){
+                return List.of();
+            }
+
+            return ratings.stream().map(mapper::toDto).toList();
+        }catch(Exception e){
+            logger.error("ModeratorRecalcService findAllFullVersion:" + e.getMessage());
+            throw e;
         }
 
-        return ratings.stream().map(mapper::toDto).toList();
     }
 }

@@ -86,6 +86,9 @@ public class AvailabilitySubService {
             return mapper.toDto(availabilitySubHib.save(sub, logger));
 
         }
+        catch (NotCorrectInput | DoesNoeExist e){
+            throw e;
+        }
         catch(Exception e){
             logger.error("AvailabilitySubService  createSubscription:" + e.getMessage());
             throw e;

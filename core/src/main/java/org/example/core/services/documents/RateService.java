@@ -1,6 +1,8 @@
 package org.example.core.services.documents;
 
 import jakarta.transaction.Transactional;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.example.core.dto.getting.rates.RateFullDto;
 import org.example.core.dto.getting.rates.RateInTimeDto;
 import org.example.core.dto.getting.rates.RateValidGoodDto;
@@ -20,11 +22,13 @@ import java.util.List;
 
 @Service
 public class RateService {
+    private final static Logger logger= LogManager.getLogger(RateService.class);
     private final CategoryHibImpl categoryHibImpl;
-    GoodHibImpl goodHib;
-    RateHibImpl rateHib;
+    private GoodHibImpl goodHib;
+    private RateHibImpl rateHib;
 
-    public RateService(GoodHibImpl goodHib, RateHibImpl rateHib, CategoryHibImpl categoryHibImpl) {
+    public RateService(GoodHibImpl goodHib, RateHibImpl rateHib,
+                       CategoryHibImpl categoryHibImpl) {
         this.goodHib = goodHib;
         this.rateHib = rateHib;
         this.categoryHibImpl = categoryHibImpl;
@@ -32,65 +36,68 @@ public class RateService {
 
     @Transactional
     public List<RateWithGoodNameDto> getTopRatesAmongAll(int count, boolean withSuspicious){
-        return goodHib.findMaxRatesAmongAll(count, withSuspicious);
+        try{
+            return goodHib.findMaxRatesAmongAll(count, withSuspicious);
+        }catch (Exception e){
+            logger.error("RateService getTopRatesAmongAll: " + e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
     public List<RateValidGoodDto> getTopRatesAmongProduct(int count, Long productId){
-        return rateHib.findValidMaxRatesAmongProduct(count, productId);
+        try{
+            return rateHib.findValidMaxRatesAmongProduct(count, productId);
+        }catch (Exception e){
+            logger.error("RateService getTopRatesAmongProduct: " + e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
     public List<RateFullDto> getGoodRatesByFilter(RatingRecalcFilter filters){
+        try{
+            if(filters.getCategoryIds()!= null){
+                List<Long> allCategories = categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
+                filters.setCategoryIds(allCategories);
+            }else if(filters.getCategoryId()!= null){
+                List<Long> allCategories = categoryHibImpl.findAllChildCategoryIds(List.of(filters.getCategoryId()));
+                filters.setCategoryIds(allCategories);
+                filters.setCategoryId(null);
+                //TODO удалить взм тогда проверку в buildPredicates
+            }
 
-        if(filters.getCategoryIds()!= null){
-            List<Long> allCategories = categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
-            filters.setCategoryIds(allCategories);
-        }else if(filters.getCategoryId()!= null){
-            List<Long> allCategories = categoryHibImpl.findAllChildCategoryIds(List.of(filters.getCategoryId()));
-            filters.setCategoryIds(allCategories);
-            filters.setCategoryId(null);
-            //TODO удалить взм тогда проверку в buildPredicates
+            return rateHib.getRatesByFilter(filters);
+        }catch (Exception e){
+            logger.error("RateService getGoodRatesByFilter: " + e.getMessage());
+            throw e;
         }
 
-        return rateHib.getRatesByFilter(filters);
     }
 
     @Transactional
     public List<RateExportDto> getRatesExportByFilter(RatingRecalcFilter filters){
-        if ((filters.getCurDate() != null && filters.getStartDate()!= null ) ||
-                ( filters.getCurDate() != null && filters.getEndDate() != null)
-        ){
-            throw new NotCorrectInput("Должна быть либо точная дата, либо диапазон");
+        try{
+            return rateHib.getRatesForExport(filters);
+        }catch (Exception e){
+            logger.error("RateService getRatesExportByFilter: " + e.getMessage());
+            throw e;
         }
 
-        if (   (filters.getCurRate() != null && filters.getMinRate() != null) ||
-                ( filters.getCurRate() != null && filters.getMaxRate() != null)
-        ){
-            throw new NotCorrectInput("Должна быть либо точная рейтинг, либо диапазон");
-        }
-
-        return rateHib.getRatesForExport(filters);
     }
 
     @Transactional
     public List<RateInTimeDto> getGoodRateInTime(RatesFilter filters){
-        return rateHib.getGoodRateInTime(filters);
-    }
-
-    private RateWithGoodNameDto toDto(Good good){
-        RateWithGoodNameDto dto = new RateWithGoodNameDto();
-        dto.setRate(good.getRate());
-        dto.setGoodName(good.getName());
-        return dto;
-    }
-
-    private List<RateWithGoodNameDto> listToDto(List<Good> goods){
-        List<RateWithGoodNameDto> dtos = new ArrayList<RateWithGoodNameDto>();
-        for (Good good : goods) {
-            dtos.add(toDto(good));
+        try{
+            return rateHib.getGoodRateInTime(filters);
+        }catch (Exception e){
+            logger.error("RateService getGoodRateInTime: " + e.getMessage());
+            throw e;
         }
 
-        return dtos;
     }
+
+
 }

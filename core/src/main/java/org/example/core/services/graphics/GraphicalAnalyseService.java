@@ -43,6 +43,8 @@ public class GraphicalAnalyseService {
         for (GoodPriceInShop good : goodsWithAnalyze) {
             dataset.addValue(good.getPrice(), yLabel,  good.getShopId());
         }
+
+
         graphicService.generateBar(outputStream, title, xLabel, yLabel, dataset);
     }
 
@@ -163,7 +165,8 @@ public class GraphicalAnalyseService {
 
             dataset.addSeries(series);
             graphicService.generateTimeSeries(
-                    outputStream, title, xLabel, yLabel, dataset, null,null,null
+                    outputStream, title, xLabel, yLabel, dataset,
+                    null,null,null
             );
         }catch (Exception e){
             logger.error("GraphicalAnalyseService generateTimeSeriesForGoodPriceInShopTime ", e.getMessage());

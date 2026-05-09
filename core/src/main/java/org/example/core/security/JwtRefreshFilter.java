@@ -13,15 +13,18 @@ import java.io.IOException;
 public class JwtRefreshFilter extends OncePerRequestFilter {
     private RefreshTokenService refreshTokenService;
     private DeviceInfoExtractor deviceInfoExtractor;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper;
 
-    public JwtRefreshFilter(RefreshTokenService refreshTokenService, DeviceInfoExtractor deviceInfoExtractor) {
+    public JwtRefreshFilter(RefreshTokenService refreshTokenService, DeviceInfoExtractor deviceInfoExtractor, ObjectMapper mapper) {
         this.refreshTokenService = refreshTokenService;
         this.deviceInfoExtractor = deviceInfoExtractor;
+        this.mapper = mapper;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
         if (!request.getRequestURI().equals("/refresh")
                 || !request.getMethod().equals("POST")) {
             chain.doFilter(request, response);

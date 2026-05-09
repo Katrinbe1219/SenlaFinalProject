@@ -1,5 +1,6 @@
 package org.example.core.dto.patching;
 
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -16,6 +17,8 @@ import java.util.List;
 public class GoodPatchDto {
     private Long id;
     @NullOrNotBlank
+    //// ^[\\p{L}]+$" - любые языки мира, \\p{L} - unicode Letter
+    @Pattern(regexp = ".*\\p{L}.*", message = "Name must contain letters")
     private String name;
     @NullOrNotBlank
     private String description;

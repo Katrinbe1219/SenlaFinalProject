@@ -29,7 +29,7 @@ public class ImportFileCsvService {
         )){
             String headline = reader.readLine();
             if (headline.isBlank()){
-                throw new CsvInvalidStructure("Header is invalid", 0);
+                throw new CsvInvalidStructure("Header can not be blank", 0);
             }
             checkHeadline(headline);
 

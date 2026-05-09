@@ -45,116 +45,148 @@ public class UserService {
 
     @Transactional
     public TokenPair patchDefault(UserDefaultPatchDto dto, User user, String deviceInfo){
-        User conflict = null;
-        if (dto.getNewUsername()!=null){
-            conflict = userHib.getByUsernameSmallVersion(dto.getNewUsername());
-            if (conflict!= null){
-                throw new EntityAlreadyExist("User with given username already exists");
-            }
-            user.setUsername(dto.getNewUsername());
-        }
-
-        if (dto.getNewLogin() != null){
-            conflict = userHib.getByLoginSmallVersion(dto.getNewLogin());
-            if (conflict!= null){
-                throw new EntityAlreadyExist("User with given login already exists");
-            }
-            user.setLogin(dto.getNewLogin());
-        }
-
-        if (dto.getNewEmail() != null){
-            conflict= userHib.getByEmailSmallVersion(dto.getNewEmail());
-            if (conflict!=null){
-                throw new EntityAlreadyExist("User with given email already exists");
+        try{
+            User conflict = null;
+            if (dto.getNewUsername()!=null){
+                conflict = userHib.getByUsernameSmallVersion(dto.getNewUsername());
+                if (conflict!= null){
+                    throw new EntityAlreadyExist("User with given username already exists");
+                }
+                user.setUsername(dto.getNewUsername());
             }
 
-            user.setEmail(dto.getNewEmail());
-        }
-        user.setUpdatedAt(Instant.now());
-        userHib.update(user, logger);
+            if (dto.getNewLogin() != null){
+                conflict = userHib.getByLoginSmallVersion(dto.getNewLogin());
+                if (conflict!= null){
+                    throw new EntityAlreadyExist("User with given login already exists");
+                }
+                user.setLogin(dto.getNewLogin());
+            }
 
-        if (dto.getNewLogin() != null){
-            String newToken = jwtService.generateToken(user);
-            String refreshToken = refreshTokenService.createToken(user, deviceInfo);
+            if (dto.getNewEmail() != null){
+                conflict= userHib.getByEmailSmallVersion(dto.getNewEmail());
+                if (conflict!=null){
+                    throw new EntityAlreadyExist("User with given email already exists");
+                }
 
-            return new TokenPair(newToken, refreshToken);
+                user.setEmail(dto.getNewEmail());
+            }
+            user.setUpdatedAt(Instant.now());
+            userHib.update(user, logger);
+
+            if (dto.getNewLogin() != null){
+                String newToken = jwtService.generateToken(user);
+                String refreshToken = refreshTokenService.createToken(user, deviceInfo);
+
+                return new TokenPair(newToken, refreshToken);
+            }
+            return null;
+        } catch (Exception e) {
+            logger.error("UserService patchDefault: " + e.getMessage());
+            throw e;
         }
-        return null;
+
 
     }
 
     @Transactional
     public void patchPassword(UpdateUserPasswordDto dto, User user){
-        String oldPassword = passwordEncoder.encode(dto.getOldPassword());
-        String newPassword = passwordEncoder.encode(dto.getNewPassword());
-        if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())){
-            throw new NotCorrectInput("Old password is not valid");
+        try{
+            String oldPassword = passwordEncoder.encode(dto.getOldPassword());
+            String newPassword = passwordEncoder.encode(dto.getNewPassword());
+
+            if (user.getPassword().equals(newPassword)){
+                throw new NotCorrectInput("Password can not be the same");
+            }
+
+            if (!passwordEncoder.matches(oldPassword, user.getPassword())){
+                throw new NotCorrectInput("Old password is not valid");
+            }
+
+
+            user.setPassword(newPassword);
+            user.setUpdatedAt(Instant.now());
+            userHib.update(user, logger);
+            refreshHib.deleteAllByUser(user.getId());
+        }catch (Exception e){
+            logger.error("UserService patchPassword: " + e.getMessage());
+            throw e;
         }
 
-
-        if (user.getPassword().equals(oldPassword)){
-            throw new NotCorrectInput("Password can not be the same");
-        }
-
-        user.setPassword(newPassword);
-        user.setUpdatedAt(Instant.now());
-        userHib.update(user, logger);
-        refreshHib.deleteAllByUser(user.getId());
 
 
     }
 
     @Transactional
-    public void updateRole(Long userId, RoleTypes type, Boolean isNotAdmin){
-        User user = userHib.gtByIdFullVersion(userId);
-        if (user == null){
-            throw new DoesNoeExist("user does not exist with given credentials");
-        }
-        if (user.getRole().getName() == type){
-            throw new NotCorrectInput("User already had this role");
+    public void updateRole(Long userId, RoleTypes type, boolean isNotAdmin){
+        try{
+            User user = userHib.gtByIdFullVersion(userId);
+            if (user == null){
+                throw new DoesNoeExist("user does not exist with given credentials");
+            }
+            if (user.getRole().getName() == type){
+                throw new NotCorrectInput("User already had this role");
+            }
+
+            if (user.getRole().getName() != RoleTypes.MIN_USER
+                    && user.getRole().getName() != RoleTypes.MAX_USER && isNotAdmin){
+
+                throw new PermissionDenied("You have no authorities to change role for current user");
+            }
+
+            Role role = userHib.getRoleByName(type);
+            if (role == null){
+                throw new NonHibernateException("Unexpected - Role does not exist " + type.name());
+            }
+            user.setRole(role);
+            userHib.update(user, logger);
+        }catch (Exception e){
+            logger.error("UserService updateRole: " + e.getMessage());
+            throw e;
         }
 
-        if (user.getRole().getName() != RoleTypes.MIN_USER
-                && user.getRole().getName() != RoleTypes.MAX_USER && isNotAdmin){
 
-            throw new PermissionDenied("You have no authorities to change role for current user");
-        }
-
-        Role role = userHib.getRoleByName(type);
-        if (role == null){
-            throw new NonHibernateException("Unexpected - Role does not exist " + type.name());
-        }
-        user.setRole(role);
-        userHib.update(user, logger);
 
     }
 
     @Transactional
     public void updateLockedState(Long userId, boolean nonLocked){
-        User user = userHib.gtByIdFullVersion(userId);
-        if (user == null){
-            throw new DoesNoeExist("user does not exist with given credentials");
-        }
-        if (user.getNonLocked() == nonLocked){
-            throw new NotCorrectInput("User already had this locked state");
-        }
-        if (user.getRole().getName() != RoleTypes.MIN_USER
-                && user.getRole().getName() != RoleTypes.MAX_USER){
+        try{
+            User user = userHib.gtByIdFullVersion(userId);
+            if (user == null){
+                throw new DoesNoeExist("user does not exist with given credentials");
+            }
+            if (user.getNonLocked() == nonLocked){
+                throw new NotCorrectInput("User already had this locked state");
+            }
+            if (user.getRole().getName() != RoleTypes.MIN_USER
+                    && user.getRole().getName() != RoleTypes.MAX_USER){
 
-            throw new PermissionDenied("You have no authorities to change role for current user");
+                throw new PermissionDenied("You have no authorities to change role for current user");
+            }
+
+            user.setNonLocked(nonLocked);
+            userHib.update(user, logger);
+        }catch (Exception e){
+            logger.error("UserService updateLockedState: " + e.getMessage());
+            throw e;
         }
 
-        user.setNonLocked(nonLocked);
-        userHib.update(user, logger);
     }
 
     @Transactional
     public List<UserFullDto> getAllUsers(UserAdvancedFilter filters){
-        List<User> users = userHib.getUsersByFilter(filters);
-        if (users == null){
-            return List.of();
+        try{
+            List<User> users = userHib.getUsersByFilter(filters);
+            if (users == null){
+                return List.of();
+            }
+            return toList(users);
+        }catch (Exception e){
+            logger.error("UserService getAllUsers: " + e.getMessage());
+            throw e;
         }
-        return toList(users);
+
 
     }
 
@@ -190,7 +222,7 @@ public class UserService {
             User newUser = userHib.save(user, logger);
             return mapper.toDto(newUser);
         }
-        catch(RegistrationException e){
+        catch(RegistrationException| DoesNoeExist e){
             throw e;
         }
         catch(Exception e){
@@ -201,13 +233,25 @@ public class UserService {
 
     @Transactional
     public UserFullDto getUserById(Long id){
-        User user = userHib.gtByIdFullVersion(id);
-        return mapper.toDto(user);
+        try{
+            User user = userHib.gtByIdFullVersion(id);
+            return mapper.toDto(user);
+        }catch (Exception e){
+            logger.error("UserService getUserById: " + e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
     public void deleteUser(Long id){
-        userHib.delete(id, logger);
+        try{
+            userHib.delete(id, logger);
+        }catch (Exception e){
+            logger.error("UserService deleteUser: " + e.getMessage());
+            throw e;
+        }
+
     }
 
     private List<UserFullDto> toList(List<User> users){

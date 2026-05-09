@@ -13,6 +13,7 @@ import org.example.core.models.types.RatingTriggerType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -24,19 +25,15 @@ public class RecalculationService {
 
 
     private static final Logger logger = LogManager.getLogger(RecalculationService.class);
-    private GoodHibImpl goodHib;
-    private PriceForCalculationHibImpl priceHib;
-    private RateHibImpl rateHib;
-    private AsyncRecalculationService asyncRecalculationService;
 
+    private Clock clock;
+    private AsyncRecalculationService asyncRecalculationService;
     private final AtomicBoolean isRecalculating = new AtomicBoolean(false);
 
-    public RecalculationService(GoodHibImpl goodHib, PriceForCalculationHibImpl priceHib, RateHibImpl rateHib,
-                                AsyncRecalculationService asyncRecalculationService) {
-        this.goodHib = goodHib;
-        this.priceHib = priceHib;
-        this.rateHib = rateHib;
+    public RecalculationService(
+            AsyncRecalculationService asyncRecalculationService, Clock clock) {
         this.asyncRecalculationService = asyncRecalculationService;
+        this.clock = clock;
     }
 
     //@Scheduled(cron = "0 * * * * *")
@@ -59,8 +56,11 @@ public class RecalculationService {
 
         }else{
 
-                LocalDateTime targetTime = LocalDate.now().plusDays(1).atStartOfDay().plusHours(3);
-                LocalDateTime currentTime = LocalDateTime.now();
+                LocalDateTime targetTime = LocalDate.now(clock).atStartOfDay().plusHours(3);
+                LocalDateTime currentTime = LocalDateTime.now(clock);
+                if (targetTime.isBefore(currentTime)) {
+                    targetTime = targetTime.plusDays(1);
+                }
                 //TODO switch to admin
                 if (goodId == null ){
                     if (ChronoUnit.HOURS.between(currentTime, targetTime) < 3){
@@ -69,7 +69,7 @@ public class RecalculationService {
                     asyncRecalculationService.recalculationForAll(RatingTriggerType.ADMIN, isRecalculating);
                 }else{
 
-                    if (ChronoUnit.MINUTES.between(currentTime, targetTime) < 5){
+                    if (ChronoUnit.MINUTES.between(currentTime, targetTime) < 6){
                         return new StringResponse("Время пересчета ограничено для всех продуктов, попробуйте позже");
                     }
                     try{

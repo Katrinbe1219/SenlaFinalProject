@@ -90,7 +90,7 @@ public class ExportController {
             filters.setShops(true);
         }
 
-        if (shopIds == null || !shopIds.isEmpty()){
+        if (shopIds != null && shopIds.isEmpty()){
             filters.setShopsIds(shopIds);
         }
 

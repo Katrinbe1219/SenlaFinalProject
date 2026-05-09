@@ -36,14 +36,20 @@ public class PriceSubService {
 
     @Transactional
     public List<PriceSubGetDto> findAll(PriceSubFilter filters){
-        List<PriceSubscription> prices = priceSubHib.findAll(filters);
-        if (prices.isEmpty()) return List.of();
+        try{
+            List<PriceSubscription> prices = priceSubHib.findAll(filters);
+            if (prices.isEmpty()) return List.of();
 
-        List<PriceSubGetDto> dtos = new ArrayList<>();
-        for(PriceSubscription price : prices){
-            dtos.add(mapper.toDto(price));
+            List<PriceSubGetDto> dtos = new ArrayList<>();
+            for(PriceSubscription price : prices){
+                dtos.add(mapper.toDto(price));
+            }
+            return dtos;
+        }catch (Exception e){
+            logger.error("PriceSubService findAll: " + e.getMessage());
+            throw e;
         }
-        return dtos;
+
     }
 
     @Transactional
@@ -77,6 +83,9 @@ public class PriceSubService {
             subscription.setTargetPrice(dto.getPrice());
 
             return mapper.toDto(priceSubHib.save(subscription, logger));
+        }
+        catch (NotCorrectInput | DoesNoeExist e){
+            throw e;
         }
         catch(Exception e){
             logger.error("PriceSubService  createSubscription:" + e.getMessage());

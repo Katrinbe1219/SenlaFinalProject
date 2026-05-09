@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 @Mapper(componentModel = "spring", uses = {CategoryGetDtoMapper.class,
         UnitDtoMapper.class, TagDtoMapper.class})
 public interface GoodGetFullDtoMapper {
-
+//TODO why String?
 
     @Mapping(source = "createdAt",
             target = "createdAt",

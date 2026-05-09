@@ -62,7 +62,7 @@ public class SecurityConfiguration implements WebMvcConfigurer {
         .csrf(AbstractHttpConfigurer::disable)
         .addFilterBefore(jwtCheckFilter, UsernamePasswordAuthenticationFilter.class)
         .addFilterAt(filter, UsernamePasswordAuthenticationFilter.class)
-        .addFilterAfter(new JwtRefreshFilter(refreshTokenService, deviceInfoExtractor), UsernamePasswordAuthenticationFilter.class)
+        .addFilterAfter(new JwtRefreshFilter(refreshTokenService, deviceInfoExtractor, mapper), UsernamePasswordAuthenticationFilter.class)
                 .formLogin(AbstractHttpConfigurer::disable)  // явно убираем ненужное
                 .httpBasic(AbstractHttpConfigurer::disable);
 

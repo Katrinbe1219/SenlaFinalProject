@@ -378,10 +378,10 @@ public class PriceHibImpl extends HibernateAbstractDao<Price, Long, Logger> {
 
     }
     @Transactional
-    public Integer makeInvalidPrice(Long goodId, Long shopId) {
+    public int makeInvalidPrice(Long goodId, Long shopId) {
         Session session = getSessionFactory().getCurrentSession();
         try{
-            Integer num = session.createMutationQuery("""
+            int num = session.createMutationQuery("""
               UPDATE Price p SET p.validTo = :newValidTo 
     WHERE p.good.id = :goodId AND p.shop.id = :shopId AND p.validTo is null 
     

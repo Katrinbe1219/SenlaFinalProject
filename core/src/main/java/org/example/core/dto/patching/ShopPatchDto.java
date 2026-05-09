@@ -2,6 +2,7 @@ package org.example.core.dto.patching;
 
 import jakarta.annotation.security.DenyAll;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,6 +17,7 @@ public class ShopPatchDto {
     @Positive(message = "id must be > 0")
     private Long id;
     @NullOrNotBlank
+    @Pattern(regexp = "^[\\p{L}\\s]+$", message = "name must contain only letters and spaces")
     private String name;
     @NullOrNotBlank
     private String address;

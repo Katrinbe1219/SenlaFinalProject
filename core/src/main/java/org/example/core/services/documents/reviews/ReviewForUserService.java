@@ -36,74 +36,120 @@ public class ReviewForUserService {
 
     @Transactional
     public List<ReviewDto> getByUserId(String username, int page, int size){
-        Long userId = userHib.getUserIdByLogin(username);
-        if (userId == null){
-            throw new NotCorrectInput("Пользователь был не найден");
+        try{
+            Long userId = userHib.getUserIdByLogin(username);
+            if (userId == null){
+                throw new NotCorrectInput("Пользователь был не найден");
+            }
+            List<Review> reviews=  reviewHib.getByUserSmallVersion(userId, page, size);
+            if (reviews.isEmpty()) return List.of();
+            return listToDto(reviews);
+
+        }catch(NotCorrectInput e){
+            throw e;
         }
-        List<Review> reviews=  reviewHib.getByUserSmallVersion(userId, page, size);
-        if (reviews.isEmpty()) return List.of();
-        return listToDto(reviews);
+        catch (Exception e){
+            logger.error("ReviewForUserService getByUserId:" + e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
     public ReviewDto getByUserAndGood(String username, Long good){
-        Long userId = userHib.getUserIdByLogin(username);
-        if (userId == null){
-            throw new NotCorrectInput("Пользователь был не найден");
+        try{
+            Long userId = userHib.getUserIdByLogin(username);
+            if (userId == null){
+                throw new NotCorrectInput("Пользователь был не найден");
+            }
+            Review answer =  reviewHib.getByUserAndGood(userId, good);
+            if (answer == null){
+                throw new DoesNoeExist("Does not exist");
+            }
+            return mapper.toDto(answer);
+
+        }catch(NotCorrectInput | DoesNoeExist e){
+            throw e;
+        }catch (Exception e){
+            logger.error("ReviewForUserService getByUserAndGood:" + e.getMessage());
+            throw e;
         }
-        Review answer =  reviewHib.getByUserAndGood(userId, good);
-        if (answer == null){
-            throw new DoesNoeExist("Does not exist");
-        }
-        return mapper.toDto(answer);
+
     }
 
     @Transactional
     public ReviewDto createReview(ReviewCreateDto dto, String login, Long goodId){
+        try{
+            User user = userHib.getByLoginSmallVersion(login);
+            if (user == null){
+                throw new NotCorrectInput("Пользователь не был найден");
+            }
+            Good good = goodHib.findById(goodId, logger);
+            if (good == null){
+                throw new NotCorrectInput("Такой продукт не найден");
+            }
 
-        User user = userHib.getByLoginSmallVersion(login);
-        if (user == null){
-            throw new NotCorrectInput("Пользователь не был найден");
+            if (good.getModeratorStatus() == GoodStatusFromModerator.SUSPICIOUS){
+                throw new PermissionDenied("Currently good is unavailable for reviews");
+            }
+
+            return mapper.toDto(reviewHib.createReview(dto, good, user));
+        }catch (PermissionDenied | NotCorrectInput e){
+            throw e;
         }
-        Good good = goodHib.findById(goodId, logger);
-        if (good == null){
-            throw new NotCorrectInput("Такой продукт не найден");
+        catch (Exception e) {
+            logger.error("ReviewForUserService createReview:" + e.getMessage());
+            throw e;
         }
 
-        if (good.getModeratorStatus() == GoodStatusFromModerator.SUSPICIOUS){
-            throw new PermissionDenied("Currently good is unavailable for reviews");
-        }
-
-        return mapper.toDto(reviewHib.createReview(dto, good, user));
     }
 
     @Transactional
     public void deleteReview(Long goodId, String username){
-        Long userId = userHib.getUserIdByLogin(username);
-        if (userId == null){
-            throw new NotCorrectInput("Пользователь не был найден");
+        try{
+            Long userId = userHib.getUserIdByLogin(username);
+            if (userId == null){
+                throw new NotCorrectInput("Пользователь не был найден");
+            }
+
+            reviewHib.deleteReview(goodId, userId);
+        }catch(NotCorrectInput e){
+            throw e;
+        }catch (Exception e){
+            logger.error("ReviewForUserService deleteReview:" + e.getMessage());
+            throw e;
         }
 
-        reviewHib.deleteReview(goodId, userId);
     }
 
     @Transactional
     public List<ReviewDto> getByFilters(ReviewForUserFilters filters, String username){
-
-        User user = userHib.getByUsernameSmallVersion(username);
-        List<Review> reviews = reviewHib.getMinByFilters(filters, user);
-        if (reviews == null || reviews.isEmpty()){
-            return List.of();
+        try{
+            User user = userHib.getByUsernameSmallVersion(username);
+            List<Review> reviews = reviewHib.getMinByFilters(filters, user);
+            if (reviews.isEmpty()){
+                return List.of();
+            }
+            return listToDto(reviews);
+        }catch (Exception e){
+            logger.error("ReviewForUserService getByFilters:" + e.getMessage());
+            throw e;
         }
-        return listToDto(reviews);
+
     }
 
     private List<ReviewDto> listToDto(List<Review> reviews){
-        List<ReviewDto> dtos = new ArrayList<ReviewDto>();
-        for (Review review : reviews){
-            dtos.add(mapper.toDto(review));
+        try{
+            List<ReviewDto> dtos = new ArrayList<ReviewDto>();
+            for (Review review : reviews){
+                dtos.add(mapper.toDto(review));
+            }
+            return dtos;
+        } catch (Exception e){
+            logger.error("ReviewForUserService listToDto:" + e.getMessage());
+            throw e;
         }
-        return dtos;
+
     }
 
 

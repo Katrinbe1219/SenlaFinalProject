@@ -23,7 +23,7 @@ public class CategoryService {
 
     private static  final Logger logger = LogManager.getLogger(CategoryService.class);
 
-    CategoryHibImpl categoryHib;
+    private CategoryHibImpl categoryHib;
     private CategoryGetDtoMapper categoryGetDtoMapper;
     public CategoryService(CategoryHibImpl categoryHib, CategoryGetDtoMapper categoryGetDtoMapper) {
         this.categoryHib = categoryHib;
@@ -49,44 +49,43 @@ public class CategoryService {
             throw new NotCorrectInput("Name must contain only letters");
         }
 
-        try{
-            Category newCategory = toEntity(categoryCreateDto, parentCheck);
-            return categoryGetDtoMapper.toCategoryGetDto(categoryHib.save(newCategory, logger));
-        }catch (Exception e){
-            logger.error("CategoryService  createCategory: "+e.getMessage());
-            throw e;
-        }
+
+        Category newCategory = toEntity(categoryCreateDto, parentCheck);
+        return categoryGetDtoMapper.toCategoryGetDto(categoryHib.save(newCategory, logger));
 
     }
 
     @Transactional
     public void deleteCategory(Long id){
-        try{
-            categoryHib.delete(id, logger);
-        }catch (Exception e){
-            logger.error("CategoryService  deleteCategory: "+e.getMessage());
-        }
-
+        categoryHib.delete(id, logger);
     }
 
     @Transactional
     public void patchCategory(CategoryPatchDto dto){
-        Category parentCheck = null;
-        if (dto.getParentId() != null){
-            parentCheck= categoryHib.findById(dto.getParentId(), logger);
-            if (parentCheck == null){
-                throw new DoesNoeExist("Parent not found");
+        try{
+            Category parentCheck = null;
+            if (dto.getParentId() != null){
+                parentCheck= categoryHib.findById(dto.getParentId(), logger);
+                if (parentCheck == null){
+                    throw new DoesNoeExist("Parent not found");
+                }
             }
+
+            if (dto.getName()!= null && !isAlpha(dto.getName())){
+                throw new NotCorrectInput("Name must contain only letters");
+            }
+
+
+
+            Category cat = toEntity(dto, parentCheck);
+            categoryHib.update(cat);
+        }catch (NotCorrectInput | DoesNoeExist e){
+            throw e;
+        } catch (Exception e){
+            logger.error("CategoryService  patchCategory: "+e.getMessage());
+            throw e;
         }
 
-        if (dto.getName()!= null && !isAlpha(dto.getName())){
-            throw new NotCorrectInput("Name must contain only letters");
-        }
-
-
-
-        Category cat = toEntity(dto, parentCheck);
-        categoryHib.update(cat);
 
     }
 

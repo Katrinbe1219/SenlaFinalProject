@@ -45,187 +45,241 @@ public class GoodService {
 
     @Transactional
     public List<GoodGetForUserDto> findAllForUser (GoodFilter filters){
-        if (filters.getCategoryIds() != null && !filters.getCategoryIds().isEmpty()){
-            List<Long> allCategories = categoryHib.findAllChildCategoryIds(filters.getCategoryIds());
-            filters.setCategoryIds(allCategories);
+        try{
+            if (filters.getCategoryIds() != null && !filters.getCategoryIds().isEmpty()){
+                List<Long> allCategories = categoryHib.findAllChildCategoryIds(filters.getCategoryIds());
+                filters.setCategoryIds(allCategories);
+            }
+
+            List<Good> goods= goodHib.findAllByFilters(filters, true);
+            if (goods.isEmpty()) return List.of();
+
+            List<GoodGetForUserDto> dtos= new ArrayList<>();
+            for (Good good : goods){
+                dtos.add(goodGetForUserMapper.toDto(good));
+            }
+
+
+            return dtos;
+        }catch (Exception e){
+            logger.error("GoodService findAllForUser:" + e.getMessage());
+            throw e;
         }
 
-        List<Good> goods= goodHib.findAllByFilters(filters, true);
-        if (goods.isEmpty()) return List.of();
-
-        List<GoodGetForUserDto> dtos= new ArrayList<>();
-        for (Good good : goods){
-            dtos.add(goodGetForUserMapper.toDto(good));
-        }
-
-
-        return dtos;
 
     }
+
     @Transactional
     public List<GoodGetFullDto> findAllForAnalyst(GoodFilter filters){
-        if (filters.getCategoryIds() != null && !filters.getCategoryIds().isEmpty()){
-            List<Long> allCategories = categoryHib.findAllChildCategoryIds(filters.getCategoryIds());
-            filters.setCategoryIds(allCategories);
+        try{
+            if (filters.getCategoryIds() != null && !filters.getCategoryIds().isEmpty()){
+                List<Long> allCategories = categoryHib.findAllChildCategoryIds(filters.getCategoryIds());
+                filters.setCategoryIds(allCategories);
+            }
+            List<Good> goods = goodHib.findAllByFilters(filters,false);
+            if (goods.isEmpty()) return List.of();
+
+            return listToDto(goods);
+        }catch (Exception e){
+            logger.error("GoodService findAllForAnalyst:" + e.getMessage());
+            throw e;
         }
-        List<Good> goods = goodHib.findAllByFilters(filters,false);
-        return listToDto(goods);
+
 
     }
 
     @Transactional
     public GoodGetFullDto getFullById(Long id){
-        Good good = goodHib.findByIdFullVersion(id);
-        if (good == null){
-            throw new DoesNoeExist("Good does not exist with given credentials");
+        try{
+            Good good = goodHib.findByIdFullVersion(id);
+            if (good == null){
+                throw new DoesNoeExist("Good does not exist with given credentials");
+            }
+            return goodGetFullDtoMapper.toDto(good);
+        }catch (Exception e){
+            logger.error("GoodService getFullById:" + e.getMessage());
+            throw e;
         }
-        return goodGetFullDtoMapper.toDto(good);
+
     }
 
     private List<GoodGetFullDto> listToDto(List<Good> goods){
-        List<GoodGetFullDto> dtos = new ArrayList<>();
-        for (Good good : goods){
-            dtos.add(goodGetFullDtoMapper.toDto(good));
+        try {
+            List<GoodGetFullDto> dtos = new ArrayList<>();
+            for (Good good : goods){
+                dtos.add(goodGetFullDtoMapper.toDto(good));
+            }
+            return dtos;
+        }catch (Exception e){
+            logger.error("GoodService listToDto:" + e.getMessage());
+            throw e;
         }
-        return dtos;
+
     }
 
     @Transactional
     public GoodGetForUserDto findForUserById(Long id){
-        Good good = goodHib.findByIdFullVersion(id);
-        if (good == null){
-            throw new DoesNoeExist("Good do not exist with given credentials");
+        try{
+            Good good = goodHib.findByIdFullVersion(id);
+            if (good == null){
+                throw new DoesNoeExist("Good do not exist with given credentials");
+            }
+            return goodGetForUserMapper.toDto(good);
+        }catch (Exception e){
+            logger.error("GoodService findForUserById:" + e.getMessage());
+            throw e;
         }
-        return goodGetForUserMapper.toDto(good);
+
     }
 
     @Transactional
     public GoodIdDto createGood(GoodCreateDto dto){
-        Good good = new Good();
-        if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()){
-            List<Tag> tags = checkTagIds(dto.getTagIds());
-            good.setTags(tags);
-        }
-
-        good.setName(dto.getName());
-        good.setDescription(dto.getDescription());
-        good.setRate(BigDecimal.ZERO.doubleValue());
-        good.setCreatedAt(Instant.now());
-        good.setUpdatedAt(Instant.now());
-        good.setModeratorStatus(GoodStatusFromModerator.APPROVED);
-
-        if (dto.getCategoryId() != null){
-            Category category = categoryHib.findById(dto.getCategoryId(), logger);
-            if (category == null){
-                throw new DoesNoeExist("Category does not exist with given credentials");
+        try{
+            Good good = new Good();
+            if (dto.getTagIds() != null && !dto.getTagIds().isEmpty()){
+                List<Tag> tags = checkTagIds(dto.getTagIds());
+                good.setTags(tags);
             }
-            good.setCategory(category);
+
+            good.setName(dto.getName());
+            good.setDescription(dto.getDescription());
+            good.setRate(BigDecimal.ZERO.doubleValue());
+            good.setCreatedAt(Instant.now());
+            good.setUpdatedAt(Instant.now());
+            good.setModeratorStatus(GoodStatusFromModerator.APPROVED);
+
+            if (dto.getCategoryId() != null){
+                Category category = categoryHib.findById(dto.getCategoryId(), logger);
+                if (category == null){
+                    throw new DoesNoeExist("Category does not exist with given credentials");
+                }
+                good.setCategory(category);
+            }
+
+            Unit unit = unitHib.findById(dto.getUnitId(), logger);
+            if (unit == null){
+                throw new DoesNoeExist("Unit does not exist with given credentials");
+            }
+            good.setUnit(unit);
+            Good newGood = goodHib.save(good, logger);
+
+            return new GoodIdDto(newGood.getId(), newGood.getName());
+        }catch (Exception e){
+            logger.error("GoodService createGood:" + e.getMessage());
+            throw e;
         }
 
-        Unit unit = unitHib.findById(dto.getUnitId(), logger);
-        if (unit == null){
-            throw new DoesNoeExist("Unit does not exist with given credentials");
-        }
-        good.setUnit(unit);
-        Good newGood = goodHib.save(good, logger);
-
-        return new GoodIdDto(newGood.getId(), newGood.getName());
 
     }
 
 
     @Transactional
     public void delete(Long id){
-        goodHib.delete(id, logger);
+        try{
+            goodHib.delete(id, logger);
+        }catch (Exception e){
+            logger.error("GoodService delete:" + e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
     public void patch(GoodPatchDto dto){
-        if (dto.getName() != null && !hasAnyLetter(dto.getName())){
-            throw new NotCorrectInput("Name must contain letters");
-        }
-
-        Good good = goodHib.findByIdFullVersion(dto.getId());
-        if (good == null){
-            throw new DoesNoeExist("Good doe not exist with given credentials");
-        }
-
-        if (dto.getName()!=null){
-            if (dto.getName().equalsIgnoreCase(good.getName())){
-                throw new NotCorrectInput("Good already has this name");
-
+        try{
+            Good good = goodHib.findByIdFullVersion(dto.getId());
+            if (good == null){
+                throw new DoesNoeExist("Good does not exist with given credentials");
             }
-            good.setName(dto.getName());
-        }
 
+            if (dto.getName()!=null){
+                if (dto.getName().equalsIgnoreCase(good.getName())){
+                    throw new NotCorrectInput("Good already has this name");
 
-        if (dto.getDescription() != null){
-            good.setDescription(dto.getDescription());
-        }
-
-        if (dto.getTagIds() !=null){
-            if (good.getTags()!= null && dto.getTagIds().size() == good.getTags().size()){
-                if (new HashSet<>(dto.getTagIds())
-                        .containsAll(
-                                good.getTags().stream().map(Tag::getId).toList()
-                        )){
-                    throw new NotCorrectInput("This good already has these tags");
                 }
+                good.setName(dto.getName());
             }
-            List<Tag> tags= !dto.getTagIds().isEmpty()
-                    ? checkTagIds(dto.getTagIds())
-                    : Collections.emptyList();
-            good.setTags(tags);
+
+
+            if (dto.getDescription() != null){
+                good.setDescription(dto.getDescription());
+            }
+
+            if (dto.getTagIds() !=null){
+                if (good.getTags()!= null && dto.getTagIds().size() == good.getTags().size()){
+                    if (new HashSet<>(dto.getTagIds())
+                            .containsAll(
+                                    good.getTags().stream().map(Tag::getId).toList()
+                            )){
+                        throw new NotCorrectInput("This good already has these tags");
+                    }
+                }
+                List<Tag> tags= !dto.getTagIds().isEmpty()
+                        ? checkTagIds(dto.getTagIds())
+                        : Collections.emptyList();
+                good.setTags(tags);
+            }
+
+            if (dto.getCategoryId() != null){
+                if (good.getCategory()!= null && Objects.equals(good.getCategory().getId(), dto.getCategoryId())){
+                    throw new NotCorrectInput("This good already has this category");
+                }
+
+                Category category = categoryHib.findById(dto.getCategoryId(), logger);
+                if (category == null){
+                    throw new DoesNoeExist("Category does not exist with given credentials");
+                }
+
+                good.setCategory(category);
+            }
+
+            if (dto.getUnitId() != null){
+                if (Objects.equals(good.getUnit().getId(), dto.getUnitId())){
+                    throw new NotCorrectInput("This good already has this unit");
+                }
+
+                Unit unit = unitHib.findById(dto.getUnitId(), logger);
+                if (unit == null){
+                    throw new DoesNoeExist("Unit does not exist with given credentials");
+                }
+
+                good.setUnit(unit);
+            }
+
+            good.setUpdatedAt(Instant.now());
+        }catch(NotCorrectInput | DoesNoeExist e){
+            throw e;
+        }
+        catch (Exception e) {
+            logger.error("GoodService patch: " + e.getMessage());
+            throw e;
         }
 
-        if (dto.getCategoryId() != null){
-            Category category = categoryHib.findById(dto.getCategoryId(), logger);
-            if (category == null){
-                throw new DoesNoeExist("Category does not exist with given credentials");
-            }
-            if (good.getCategory()!= null && Objects.equals(good.getCategory().getId(), dto.getCategoryId())){
-                throw new NotCorrectInput("This good already has this category");
-            }
-            good.setCategory(category);
-        }
-
-        if (dto.getUnitId() != null){
-            Unit unit = unitHib.findById(dto.getUnitId(), logger);
-            if (unit == null){
-                throw new DoesNoeExist("Unit does not exist with given credentials");
-            }
-            if (Objects.equals(good.getUnit().getId(), dto.getUnitId())){
-                throw new NotCorrectInput("This good already has this unit");
-            }
-            good.setUnit(unit);
-        }
-
-        good.setUpdatedAt(Instant.now());
 
 
     }
 
 
     private List<Tag> checkTagIds(List<Long> ids){
-        List<Long> idsSorted = ids.stream().distinct().toList();
-        List<Tag> tags = tagHib.findAllById(idsSorted);
+        try{
+            List<Long> idsSorted = ids.stream().distinct().toList();
+            List<Tag> tags = tagHib.findAllById(idsSorted);
 
-        if (tags.size() != idsSorted.size()){
-            Set<Long> foundIds = tags.stream().map(Tag::getId).collect(Collectors.toSet());
-            List<Long> missingIds = idsSorted.stream().filter(id -> !foundIds.contains(id)).toList();
-            throw new DoesNoeExist("Tags are not valid: " + missingIds);
+            if (tags.size() != idsSorted.size()){
+                Set<Long> foundIds = tags.stream().map(Tag::getId).collect(Collectors.toSet());
+                List<Long> missingIds = idsSorted.stream().filter(id -> !foundIds.contains(id)).toList();
+                throw new DoesNoeExist("Tags are not valid: " + missingIds);
+            }
+            return tags;
+        }catch(DoesNoeExist e){
+            throw e;
+        }  catch (Exception e) {
+            logger.error("GoodService checkTagIds: " + e.getMessage());
+            throw e;
         }
-        return tags;
     }
 
 
-
-    private Boolean hasAnyLetter(String str){
-        // ^[\\p{L}]+$" - любые языки мира, \\p{L} - unicode Letter
-        Pattern onlyLetters = Pattern.compile(".*\\p{L}.*");
-        return str != null && onlyLetters.matcher(str).matches();
-
-    }
 
 
 }

@@ -8,6 +8,7 @@ import org.example.core.dto.getting.prices.*;
 import org.example.core.dto.kafka.PriceChangedMessage;
 import org.example.core.dto.kafka.PriceCreatedMessage;
 import org.example.core.exceptions.DoesNoeExist;
+import org.example.core.exceptions.NonHibernateException;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.filters.prices.PriceFilter;
 import org.example.core.hibernate.base_settings.service_dto.CheckingPriceGoodShopExistence;
@@ -49,52 +50,92 @@ public class PriceService {
 
     @Transactional
     public List<PriceGetDtoForUser> getAllForUser(Long goodId, Long shopId){
-        return priceHib.getAllForUser(shopId, goodId);
+        try{
+            return priceHib.getAllForUser(shopId, goodId);
+        } catch (Exception e) {
+            logger.error("PriceService getAllForUser: " + e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
    public List<PriceGetDtoForUser> getComparison(PriceComparisonRequest request){
-        return priceHib.compareByGoodAndShop(request);
+        try{
+            return priceHib.compareByGoodAndShop(request);
+        }catch (Exception e) {
+            logger.error("PriceService getComparison: " + e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
     public void deletePriceByGoodAndShop(Long goodId, Long shopId){
         // изменяется валидность, в истории сохраняется
-        priceHib.makeInvalidPrice(goodId, shopId);
+        try{
+            priceHib.makeInvalidPrice(goodId, shopId);
+        }catch (Exception e) {
+            logger.error("PriceService deletePriceByGoodAndShop: " + e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
     public void deletePriceById(Long id){
-        priceHib.delete(id, logger);
+        try{
+            priceHib.delete(id, logger);
+        }catch (Exception e) {
+            logger.error("PriceService deletePriceById: " + e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
     public PriceGetResultForModerator   getByIdForModerator(Long id){
-        PriceGetResultForModerator result = priceHib.getByIdForModerator(id);
-        if (result == null) {
-            throw new DoesNoeExist("Price does not exist with given credentials");
+        try{
+            PriceGetResultForModerator result = priceHib.getByIdForModerator(id);
+            if (result == null) {
+                throw new DoesNoeExist("Price does not exist with given credentials");
+            }
+            return result;
+        }catch (DoesNoeExist e){
+            throw e;
         }
-        return result;
+        catch (Exception e) {
+            logger.error("PriceService getByIdForModerator: " + e.getMessage());
+            throw e;
+        }
+
     }
 
     @Transactional
     public List<PriceGetResultForModerator> getByFilters(PriceFilter filters){
-        Instant start = null;
-        Instant end = null;
+        try{
+            Instant start = null;
+            Instant end = null;
 
-        if (filters.getStartDate() != null){
-            start = DateTimeUtils.toInstant(filters.getStartDate());
+            if (filters.getStartDate() != null){
+                start = DateTimeUtils.toInstant(filters.getStartDate());
+            }
+
+            if (filters.getEndDate() != null){
+                end = DateTimeUtils.toInstant(filters.getEndDate());
+            }
+
+            if (filters.getCategoryIds()!= null){
+                List<Long> allCat =  categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
+                filters.setCategoryIds(allCat);
+            }
+            return priceHib.getPricesByFilter(filters, start, end);
+
+        }catch(Exception e){
+            logger.error("PriceService getByFilters: " + e.getMessage());
+            throw e;
         }
 
-        if (filters.getEndDate() != null){
-            end = DateTimeUtils.toInstant(filters.getEndDate());
-        }
-
-        if (filters.getCategoryIds()!= null){
-            List<Long> allCat =  categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
-            filters.setCategoryIds(allCat);
-        }
-        return priceHib.getPricesByFilter(filters, start, end);
 
 
     }
@@ -103,144 +144,169 @@ public class PriceService {
 
     @Transactional
     public PriceGetResultForModerator updatePrice(PriceCreateDto dto){
+        try{
+            CheckingPriceGoodShopExistence checking = priceHib.checkBeforeAddPrice(dto.getShopId(), dto.getGoodId());
+            if (checking == null){
+                throw new DoesNoeExist("Price does not exist with given credentials");
+            }
 
-        CheckingPriceGoodShopExistence checking = priceHib.checkBeforeAddPrice(dto.getShopId(), dto.getGoodId());
-        if (checking == null){
-            throw new DoesNoeExist("Price does not exist with given credentials");
+            if ( checking.getPriceId() == null){
+                throw new DoesNoeExist("Price does not exist with given credentials");
+            }
+
+            Good good = goodHib.getReferenceById(dto.getGoodId());
+            Shop shop = shopHib.getReferenceById(dto.getShopId());
+
+
+            Price price = new Price();
+            price.setPrice(dto.getPrice());
+            price.setGood(good);
+            price.setShop(shop);
+            price.setValidFrom(Instant.now());
+
+            int num= priceHib.makeInvalidPrice(dto.getGoodId(), dto.getShopId());
+            if (num != 0){
+                eventPublisher.publishEvent(
+                        new PriceChangedMessage(dto.getGoodId(),dto.getShopId(),  dto.getPrice())
+                );
+            }
+
+            Price newPrice = priceHib.update(price, logger);
+            return toDto(newPrice, good, shop);
+        }catch (DoesNoeExist e){
+            throw e;
+        }
+        catch (Exception e){
+            logger.error("PriceService updatePrice: " + e.getMessage());
+            throw e;
         }
 
-        if ( checking.getPriceId() == null){
-            throw new DoesNoeExist("Price does not exist with given credentials");
-        }
-
-        Good good = goodHib.getReferenceById(dto.getGoodId());
-        Shop shop = shopHib.getReferenceById(dto.getShopId());
-
-
-        Price price = new Price();
-        price.setPrice(dto.getPrice());
-        price.setGood(good);
-        price.setShop(shop);
-        price.setValidFrom(Instant.now());
-
-        Integer num= priceHib.makeInvalidPrice(dto.getGoodId(), dto.getShopId());
-        if (num != 0){
-            eventPublisher.publishEvent(
-                    new PriceChangedMessage(dto.getGoodId(),dto.getShopId(),  dto.getPrice())
-            );
-        }
-
-        Price newPrice = priceHib.update(price, logger);
-        return toDto(newPrice, good, shop);
 
     }
 
     @Transactional
     public PriceGetResultForModerator createPrice(PriceCreateDto dto){
+        try{
+            CheckingPriceGoodShopExistence checking = priceHib.checkBeforeAddPrice(dto.getShopId(), dto.getGoodId());
+            if (checking == null){
+                throw new NonHibernateException("PriceService createPrice checking-CheckingPriceGoodShopExistence is null");
+            }
 
-        CheckingPriceGoodShopExistence checking = priceHib.checkBeforeAddPrice(dto.getShopId(), dto.getGoodId());
-        if (checking != null && checking.getPriceId() != null){
-            throw new NotCorrectInput("You can not create price because it  already exists");
+            if ( checking.getPriceId() != null){
+                throw new NotCorrectInput("You can not create price because it  already exists");
+            }
+            if (checking.getShopId() == null){
+                throw new NotCorrectInput("Shop does not exist with given credentials");
+            }
+
+            if (checking.getGoodId()  == null){
+                throw new NotCorrectInput("Good does not exist with given credentials");
+            }
+
+
+            Good good = goodHib.getReferenceById(dto.getGoodId());
+            Shop shop = shopHib.getReferenceById(dto.getShopId());
+
+
+            Price price = new Price();
+            price.setPrice(dto.getPrice());
+            price.setGood(good);
+            price.setShop(shop);
+            price.setValidFrom(Instant.now());
+
+
+            eventPublisher.publishEvent(
+                    new PriceCreatedMessage(dto.getGoodId(), dto.getShopId(), dto.getPrice())
+            );
+
+
+            Price newPrice = priceHib.save(price, logger);
+            return toDto(newPrice, good, shop);
+        }catch (NotCorrectInput e){
+            throw e;
+        }
+        catch (Exception e) {
+            logger.error("PriceService createPrice: " + e.getMessage());
+            throw e;
         }
 
-        Good good = goodHib.getReferenceById(dto.getGoodId());
-        Shop shop = shopHib.getReferenceById(dto.getShopId());
-
-
-        Price price = new Price();
-        price.setPrice(dto.getPrice());
-        price.setGood(good);
-        price.setShop(shop);
-        price.setValidFrom(Instant.now());
-
-
-        eventPublisher.publishEvent(
-                    new PriceCreatedMessage(dto.getGoodId(), dto.getShopId(), dto.getPrice())
-        );
-
-
-        Price newPrice = priceHib.save(price, logger);
-        return toDto(newPrice, good, shop);
 
     }
-    //TODO отдельная функция для файла: существование
 
     @Transactional
     public void saveAll(List<PriceCreateDto> dtos, OptionForUpload option, boolean isSend){
-//        List<PriceCreateAllDto> fullDtos = new ArrayList<PriceCreateAllDto>();
-//        for (PriceCreateDto dto : dtos){
-//            fullDtos.add(toDto(dto));
-//        }
 
         // при неверных данные отправится пользователю ошибка
-        // option -> skip: получаем только те, которые изменились
-        // option -> stop: все новые, нет никаких проблем, можно использовать dtos ля отправки новых цен
+        // option -> skip: получаем только те, которые изменились -> нельзя отправлять ничего - требование
+        // option -> stop: все новые, нет никаких проблем, можно использовать dtos ля отправки новых цен, ошибка вызовется при конфликте
         // replace -> как новые могут быть, так и замены
-        Map<GoodShopRecord, BigDecimal> oldValues = null;
-        if (option == OptionForUpload.REPLACE && isSend) {
-            List<Long> goodIds = dtos.stream().map(PriceCreateDto::getGoodId).toList();
-            List<Long> shopIds = dtos.stream().map(PriceCreateDto::getShopId).toList();
-            List<Object[]> invalids = priceHib.makeInvalidManyWithReturning(goodIds, shopIds);
+        try{
+            Map<GoodShopRecord, BigDecimal> oldValues = null;
+            if (option == OptionForUpload.REPLACE && isSend) {
+                List<Long> goodIds = dtos.stream().map(PriceCreateDto::getGoodId).toList();
+                List<Long> shopIds = dtos.stream().map(PriceCreateDto::getShopId).toList();
+                List<Object[]> invalids = priceHib.makeInvalidManyWithReturning(goodIds, shopIds);
 
-            oldValues = invalids.stream().collect(Collectors.toMap(
-                    d-> new GoodShopRecord((Long) d[0], (Long) d[1]),
-                    d -> (BigDecimal) d[3]
-            ));
-        }
-
-        priceHib.saveAll(dtos, option);
-        if (option == OptionForUpload.STOP && isSend){
-            for (PriceCreateDto dto : dtos){
-                eventPublisher.publishEvent(
-                        new PriceCreatedMessage(dto.getGoodId(), dto.getShopId(), dto.getPrice())
-                );
+                oldValues = invalids.stream().collect(Collectors.toMap(
+                        d-> new GoodShopRecord((Long) d[0], (Long) d[1]),
+                        d -> (BigDecimal) d[3]
+                ));
             }
 
-        }
-
-        else if (option == OptionForUpload.REPLACE && isSend){
-            for (PriceCreateDto dto : dtos){
-                BigDecimal oldPrice = oldValues.get(new GoodShopRecord(dto.getGoodId(), dto.getShopId()));
-                if (oldPrice != null){
-                    eventPublisher.publishEvent(
-                            new PriceChangedMessage(dto.getGoodId(), dto.getShopId(), dto.getPrice())
-                    );
-                }else{
+            priceHib.saveAll(dtos, option);
+            if (option == OptionForUpload.STOP && isSend){
+                for (PriceCreateDto dto : dtos){
                     eventPublisher.publishEvent(
                             new PriceCreatedMessage(dto.getGoodId(), dto.getShopId(), dto.getPrice())
                     );
                 }
-            }
-        }
-    }
 
-    private PriceCreateAllDto toDto(PriceCreateDto dto){
-        PriceCreateAllDto result = new PriceCreateAllDto();
-        Good good = goodHib.getReferenceById(dto.getGoodId());
-        Shop shop = shopHib.getReferenceById(dto.getShopId());
-        result.setGood(good);
-        result.setShop(shop);
-        result.setPrice(dto.getPrice());
-        return result;
+            }
+
+            else if (option == OptionForUpload.REPLACE && isSend){
+                for (PriceCreateDto dto : dtos){
+                    BigDecimal oldPrice = oldValues.get(new GoodShopRecord(dto.getGoodId(), dto.getShopId()));
+                    if (oldPrice != null){
+                        eventPublisher.publishEvent(
+                                new PriceChangedMessage(dto.getGoodId(), dto.getShopId(), dto.getPrice())
+                        );
+                    }else{
+                        eventPublisher.publishEvent(
+                                new PriceCreatedMessage(dto.getGoodId(), dto.getShopId(), dto.getPrice())
+                        );
+                    }
+                }
+            }
+        }catch (Exception e){
+            logger.error("PriceService saveAll: " + e.getMessage());
+            throw e;
+        }
+
     }
 
 
 
     private PriceGetResultForModerator toDto(Price old, Good good, Shop shop){
-        PriceGetResultForModerator dto = new PriceGetResultForModerator();
-        dto.setId(old.getId());
-        dto.setPrice(old.getPrice());
-        dto.setValidFrom(old.getValidFrom());
-        //if(dto.setValidFrom() !)
-        //TODO if null does it work?
-        dto.setValidTo(old.getValidTo());
 
-        dto.setShopId(shop.getId());
-        dto.setAddress(shop.getAddress());
-        dto.setShopName(shop.getName());
+        try{
+            PriceGetResultForModerator dto = new PriceGetResultForModerator();
+            dto.setId(old.getId());
+            dto.setPrice(old.getPrice());
+            dto.setValidFrom(old.getValidFrom());
 
-        dto.setGoodId(good.getId());
-        dto.setGoodName(good.getName());
-        return dto;
+            dto.setValidTo(old.getValidTo());
+
+            dto.setShopId(shop.getId());
+            dto.setAddress(shop.getAddress());
+            dto.setShopName(shop.getName());
+
+            dto.setGoodId(good.getId());
+            dto.setGoodName(good.getName());
+            return dto;
+        }catch (Exception e){
+            logger.error("PriceService toDto: " + e.getMessage());
+            throw e;
+        }
+
     }
 }

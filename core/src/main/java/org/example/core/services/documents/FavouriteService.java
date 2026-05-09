@@ -41,87 +41,128 @@ public class FavouriteService {
 
     @Transactional
     public List<FavouriteFullDto> findAllForAnalyst(  FavouritesAnalystFilters filters){
+        try{
+            if (filters.getCategoryIds()!=null ){
+                List<Long> allCat = categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
+                filters.setCategoryIds(allCat);
+            }
 
-        if (filters.getCategoryIds()!=null ){
-            List<Long> allCat = categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
-            filters.setCategoryIds(allCat);
+            List<Favourite> favs = favouriteHib.findAllFullVersion(filters);
+            if(favs.isEmpty()) return List.of();
+            return listToDto(favs);
+        }
+        catch (Exception e){
+            logger.error("FavouriteService findAllForAnalyst: " + e.getMessage());
+            throw e;
         }
 
-        List<Favourite> favs = favouriteHib.findAllFullVersion(filters);
-        return listToDto(favs);
     }
 
     @Transactional
     public List<FavouriteGetForUserDto> getAllForUser(String login){
-
-        Long id = userHib.getUserIdByLogin(login);
-        if (id == null){
-            throw new CanNotMakeExecution("FavouriteService getAllForUser - не найден пользователь по login: " + login);
+        try{
+            Long id = userHib.getUserIdByLogin(login);
+            if (id == null){
+                throw new CanNotMakeExecution("FavouriteService getAllForUser - не найден пользователь по login: " + login);
+            }
+            return favouriteHib.findAllByUser(id);
+        }catch (Exception e){
+            logger.error("FavouriteService getAllForUser: " + e.getMessage());
+            throw e;
         }
-        return favouriteHib.findAllByUser(id);
-    }
 
-    @Transactional
-    public FavouriteGetForUserDto getForUser(String login, Long goodId){
-        Long id = userHib.getUserIdByLogin(login);
-        if (id == null){
-            throw new CanNotMakeExecution("FavouriteService getAllForUser - не найден пользователь по login: " + login);
-        }
-        return favouriteHib.findByUserIdAndGoodId(id, goodId);
+
     }
 
 
-
     @Transactional
-    public List<FavouriteCountByGoodDto> countAllByGoodId(FavouritesAnalystFilters filters){
-        if (filters.getCategoryIds()!=null ){
-            List<Long> allCat = categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
-            filters.setCategoryIds(allCat);
+        public List<FavouriteCountByGoodDto> countAllByGoodId(FavouritesAnalystFilters filters){
+        try{
+            if (filters.getCategoryIds()!=null ){
+                List<Long> allCat = categoryHibImpl.findAllChildCategoryIds(filters.getCategoryIds());
+                filters.setCategoryIds(allCat);
+            }
+            return favouriteHib.countAllByGoodId(filters);
+        }catch (Exception e){
+            logger.error("FavouriteService countAllByGoodId: " + e.getMessage());
+            throw e;
         }
-        return favouriteHib.countAllByGoodId(filters);
+
     }
 
     @Transactional
     public FavouriteCountByGoodDto countOneByGoodId(Long goodId){
-        FavouriteCountByGoodDto fav = favouriteHib.countByGoodId(goodId);
-        if (fav == null){
-            throw new DoesNoeExist("Favourite does not exist with given credentials");
+        try{
+            FavouriteCountByGoodDto fav = favouriteHib.countByGoodId(goodId);
+            if (fav == null){
+                throw new DoesNoeExist("Favourite does not exist with given credentials");
+            }
+            return fav;
+        }catch (Exception e){
+            logger.error("FavouriteService countOneByGoodId: " + e.getMessage());
+            throw e;
         }
-        return fav;
+
     }
 
     @Transactional
     public void createFavourite(String login, Long goodId){
-        User user = userHib.getByLoginSmallVersion(login);
-        if (user == null){
-            throw new CanNotMakeExecution("FavouriteService getAllForUser - не найден пользователь по login: " + login);
+        try{
+            User user = userHib.getByLoginSmallVersion(login);
+            if (user == null){
+                throw new CanNotMakeExecution("FavouriteService getAllForUser - не найден пользователь по login: " + login);
+            }
+
+            Good good = goodHib.findById(goodId, logger);
+            if (good == null){
+                throw new DoesNoeExist("Good does not exist with given credentials");
+            }
+
+            Favourite fav = new Favourite();
+            fav.setCreatedAt(Instant.now());
+            fav.setUser(user);
+            fav.setGood(good);
+            favouriteHib.save(fav, logger);
+        }catch (DoesNoeExist e){
+            throw e;
+        }
+        catch (CanNotMakeExecution e){
+            logger.error(" CanNotMakeExecution FavouriteService createFavourite: " + e.getMessage());
+            throw e;
         }
 
-        Good good = goodHib.findById(goodId, logger);
-        if (good == null){
-            throw new DoesNoeExist("Good does not exist with given credentials");
+        catch (Exception e){
+            logger.error("FavouriteService createFavourite: " + e.getMessage());
+            throw e;
         }
 
-        Favourite fav = new Favourite();
-        fav.setCreatedAt(Instant.now());
-        fav.setUser(user);
-        fav.setGood(good);
-        favouriteHib.save(fav, logger);
     }
 
     @Transactional
     public void removeFavourite(String login, Long goodId){
-        Long id = userHib.getUserIdByLogin(login);
-        if (id == null){
-            throw new CanNotMakeExecution("FavouriteService getAllForUser - не найден пользователь по login: " + login);
+        try{
+            Long id = userHib.getUserIdByLogin(login);
+            if (id == null){
+                throw new CanNotMakeExecution("FavouriteService getAllForUser - не найден пользователь по login: " + login);
+            }
+
+            Favourite fav = favouriteHib.findByUserIdAndGoodIdPureVersion(id, goodId);
+            if (fav == null){
+                throw new DoesNoeExist("Favourite does not exist with given credentials");
+            }
+
+            favouriteHib.remove(fav);
+        }catch (DoesNoeExist e){
+            throw e;
+        }catch (CanNotMakeExecution e){
+            logger.error("CanNotMakeExecution FavouriteService removeFavourite: " + e.getMessage());
+            throw e;
+        }
+        catch (Exception e){
+            logger.error("FavouriteService removeFavourite: " + e.getMessage());
+            throw e;
         }
 
-        Favourite fav = favouriteHib.findByUserIdAndGoodIdPureVersion(id, goodId);
-        if (fav == null){
-            throw new DoesNoeExist("Favourite does not exist with given credentials");
-        }
-
-        favouriteHib.remove(fav);
     }
 
     private FavouriteFullDto toDto(Favourite favourite){

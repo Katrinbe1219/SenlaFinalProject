@@ -54,16 +54,16 @@ public class TagService {
     }
 
     @Transactional
-    public void editTag(TagDto tagUpdated) throws NotCorrectInput {
+    public void editTag(TagDto tagUpdated) {
         if (tagUpdated.getId() == null
-                || tagUpdated.getId() == 0 || tagUpdated.getName() == null) {
+                 || tagUpdated.getName() == null) {
             throw new NotCorrectInput("Введите все поля: новое название, id тега");
         }
 
         if (!isAlpha(tagUpdated.getName())) {
             throw new NotCorrectInput("Tag must contain only letters");
         }
-        //Tag tag = toEntity(tagUpdated);
+
         tagHibImpl.update(tagUpdated); // без merge
     }
 
