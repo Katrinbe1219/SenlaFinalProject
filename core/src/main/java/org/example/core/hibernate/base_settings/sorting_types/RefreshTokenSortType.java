@@ -1,6 +1,7 @@
 package org.example.core.hibernate.base_settings.sorting_types;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum RefreshTokenSortType {
     ASC(1), DESC(2), EXPIRES_AT_ASC(3), EXPIRES_AT_DESC(4),
@@ -11,6 +12,10 @@ public enum RefreshTokenSortType {
 
     private RefreshTokenSortType(int code) {
         this.code = code;
+    }
+    @JsonValue
+    public int getCode() {
+        return code;
     }
 
     @JsonCreator

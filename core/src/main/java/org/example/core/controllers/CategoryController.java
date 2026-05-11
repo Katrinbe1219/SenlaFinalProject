@@ -24,6 +24,7 @@ public class CategoryController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public List<CategoryGetDto> getAll(
             @RequestParam(value = "size", defaultValue = "10", required = false) Integer count,
             @RequestParam(value = "page", defaultValue = "0", required = false) Integer page,
@@ -47,7 +48,7 @@ public class CategoryController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
-    public CategoryGetDto createCategory(@RequestBody CategoryCreateDto categoryDto){
+    public CategoryGetDto createCategory(@Valid @RequestBody CategoryCreateDto categoryDto){
         return categoryService.createCategory(categoryDto);
 
     }
@@ -55,11 +56,14 @@ public class CategoryController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public StringResponse deleteCategory(@PathVariable("id") Long id){
+        if (id <=0){
+            throw new NotCorrectInput("id must be > 0");
+        }
         categoryService.deleteCategory(id);
         return new StringResponse("Category deleted");
     }
 
-    @PatchMapping("")
+    @PatchMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public StringResponse editCategory(
                                        @Valid @RequestBody CategoryPatchDto dto){
@@ -68,7 +72,11 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public CategoryGetDto getCategory(@PathVariable("id") Long id){
+        if (id <=0){
+            throw new NotCorrectInput("id must be > 0");
+        }
         return categoryService.getById(id);
     }
 }

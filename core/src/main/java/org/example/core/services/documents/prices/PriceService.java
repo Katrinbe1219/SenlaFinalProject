@@ -43,9 +43,9 @@ public class PriceService {
     GoodHibImpl goodHib;
     ShopHibImpl shopHib;
 
-    @Autowired
+
     private ApplicationEventPublisher eventPublisher;
-    @Autowired
+
     private CategoryHibImpl categoryHibImpl;
 
     @Transactional

@@ -1,6 +1,7 @@
 package org.example.core.hibernate.base_settings.sorting_types;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum GoodSortType {
     ASC(1), DESC(2),
@@ -14,6 +15,10 @@ public enum GoodSortType {
     private int value;
     private GoodSortType(int value) {
         this.value = value;
+    }
+    @JsonValue
+    public int getValue() {
+        return value;
     }
 
     @JsonCreator

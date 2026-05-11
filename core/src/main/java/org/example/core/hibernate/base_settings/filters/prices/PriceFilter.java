@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,11 +31,14 @@ import java.util.List;
 @ValidDateRange(first = "startDate", second = "endDate")
 @ValidDifference(first = "minPrice", second = "maxPrice")
 public class PriceFilter {
+    @Size(min = 1, message = "categoryIds length must be > 0")
     private List<Long> categoryIds;
+    @Size(min = 1, message = "shopIds length must be > 0")
     private List<Long> shopIds;
 
-    //  взаимоисключающие
+    @Size(min = 1, message = "goodIds length must be > 0")
     private List<Long> goodIds;
+    @Size(min = 1, message = "districtIds length must be > 0")
     private List<Long> districtIds;
 
     //  2  против 1

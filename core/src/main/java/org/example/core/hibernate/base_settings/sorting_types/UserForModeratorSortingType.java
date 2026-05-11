@@ -21,8 +21,8 @@ public enum UserForModeratorSortingType {
     }
 
     @JsonValue
-    public String getValue(){
-        return name();
+    public int getValue(){
+        return code;
     }
 
     @JsonCreator

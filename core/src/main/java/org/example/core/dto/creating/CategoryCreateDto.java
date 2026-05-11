@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 public class CategoryCreateDto {
-    @NotBlank
+    @NotBlank(message = "name can not be blank")
     private String name;
     @Positive(message = "parentId must be > 0" )
     private Long parentId;

@@ -22,6 +22,7 @@ public class DistrictController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public List<DistrictDto> getAll(
             @RequestParam(value = "size", defaultValue = "10", required = false) Integer count,
             @RequestParam(value = "page", defaultValue = "0", required = false) Integer page,
@@ -45,6 +46,7 @@ public class DistrictController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public DistrictDto getById(@PathVariable("id") Long id){
         return districtService.getById(id);
     }
@@ -52,6 +54,9 @@ public class DistrictController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN')")
     public StringResponse deleteById(@PathVariable("id") Long id){
+        if (id <= 0){
+            throw new NotCorrectInput("id must be > 0");
+        }
         districtService.deleteDistrict(id);
         return new StringResponse("District deleted");
     }

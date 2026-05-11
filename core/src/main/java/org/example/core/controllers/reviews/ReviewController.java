@@ -43,6 +43,9 @@ public class ReviewController {
         @PathVariable("id") Long id,
         @AuthenticationPrincipal User user
     ){
+        if (id <=0){
+            throw new NotCorrectInput("id must be >0");
+        }
         return reviewService.getByUserAndGood(user.getUsername(), id);
 
     }
@@ -52,6 +55,9 @@ public class ReviewController {
     @DeleteMapping("/{id}")
     public StringResponse deleteReview(@PathVariable("id") Long id,
                                        @AuthenticationPrincipal User user) {
+        if (id <=0){
+            throw new NotCorrectInput("id must be >0");
+        }
         reviewService.deleteReview(id, user.getUsername());
         return new StringResponse("Review was deleted");
     }

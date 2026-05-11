@@ -8,6 +8,7 @@ import org.example.core.hibernate.base_settings.filters.subscriptions.Availabili
 import org.example.core.hibernate.base_settings.filters.subscriptions.PriceSubFilter;
 import org.example.core.services.documents.subscriptions.AvailabilitySubService;
 import org.example.core.services.documents.subscriptions.PriceSubService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,7 @@ public class SubscriptionsController {
     private AvailabilitySubService availabilitySubService;
 
     @GetMapping("/availability")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'ANALYST')")
     public List<AvailabilitySubGetDto> getAvailability(
             @Valid @RequestBody AvailabilitySubFilter filters
     ) {
@@ -30,6 +32,7 @@ public class SubscriptionsController {
     }
 
     @GetMapping("/price")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR', 'ANALYST')")
     public List<PriceSubGetDto> getSubscriptions(
             @Valid @RequestBody PriceSubFilter filters){
         return priceSubService.findAll(filters);

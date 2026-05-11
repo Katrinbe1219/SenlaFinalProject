@@ -17,6 +17,7 @@ import org.example.core.models.types.ModeratorVerdict;
 import org.example.core.services.documents.ModeratorRecalcService;
 import org.example.core.services.objects.GoodService;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,6 +59,10 @@ public class GoodControllerAdvanced {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public StringResponse delete(@PathVariable("id") Long id){
+        if (id <=0){
+            throw new NotCorrectInput("id must be > 0");
+
+        }
         goodService.delete(id);
         return new StringResponse("Good was deleted");
     }
@@ -66,7 +71,10 @@ public class GoodControllerAdvanced {
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public StringResponse patch(@PathVariable("id") Long id,
                                 @Valid @RequestBody GoodPatchDto dto){
+        if (id <=0){
+            throw new NotCorrectInput("id must be > 0");
 
+        }
         dto.setId(id);
         goodService.patch(dto);
         return new StringResponse("Good was updated");
@@ -75,10 +83,12 @@ public class GoodControllerAdvanced {
     @PatchMapping("/{id}/block")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public StringResponse block(@PathVariable("id") Long id,
-                                @RequestBody ModeratorLogCreateDto request){
+                                @RequestBody ModeratorLogCreateDto request,
+                                @AuthenticationPrincipal User user){
+        if (id <=0){
+            throw new NotCorrectInput("id must be > 0");
 
-
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        }
 
         logService.addLog(user, id, ModeratorVerdict.SUSPICIOUS, request.getComment());
         return new StringResponse("Good was blocked");
@@ -87,10 +97,12 @@ public class GoodControllerAdvanced {
     @DeleteMapping("/{id}/block")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public StringResponse unblock(@PathVariable("id") Long id,
-                                  @Valid  @RequestBody ModeratorLogCreateDto dto){
+                                  @Valid  @RequestBody ModeratorLogCreateDto dto,
+                                  @AuthenticationPrincipal User user){
+        if (id <=0){
+            throw new NotCorrectInput("id must be > 0");
 
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-
+        }
         logService.addLog(user, id, dto.getVerdict(), dto.getComment());
         return new StringResponse("Good was unblocked");
     }

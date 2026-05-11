@@ -51,11 +51,11 @@ public class PriceForAnalyzeController {
 
         }
         if (count <=0){
-            throw new NotCorrectInput("Count must be greater than 0");
+            throw new NotCorrectInput("Request Param count must be > 0");
         }
 
-        if (!type.equals("max") && !type.equals("min")) {
-            throw new NotCorrectInput("Type param must be min or max");
+        if (!type.equalsIgnoreCase("max") && !type.equalsIgnoreCase("min")) {
+            throw new NotCorrectInput("Request param type  must be min or max");
         }
         return priceService.getGoodsByShop(type, id, count);
 
@@ -86,7 +86,7 @@ public class PriceForAnalyzeController {
     }
 
     @GetMapping(value = "/shops/good-in-time", produces = MediaType.IMAGE_PNG_VALUE)
-    public void getGoodsByShopId(
+    public void getGoodsByShopIdInTime(
             HttpServletResponse response,
             @Valid @RequestBody PriceInTimeFilter filters
     ) throws Exception {
@@ -117,13 +117,13 @@ public class PriceForAnalyzeController {
     }
 
     @GetMapping(value = "/categories/main/shop/graph", produces = MediaType.IMAGE_PNG_VALUE)
-    public void getShopsStatsByMainShopIdGraph(
+    public void getShopStatsByMainShopIdGraph(
             HttpServletResponse response,
             @Valid @RequestBody ShopStatByCategoryFilter filters
     ) throws Exception {
 
         if (filters.getShopIds() == null || filters.getShopIds().size() !=1){
-            throw  new NotCorrectInput("categoryIds length must be 1");
+            throw  new NotCorrectInput("shopIds length must be 1");
         }
 
 
@@ -156,7 +156,7 @@ public class PriceForAnalyzeController {
     }
 
     @GetMapping(value = "/categories/sub/shop/graph", produces = MediaType.IMAGE_PNG_VALUE)
-    public void getShopsStatsBySubCategoriesInShopGraph(
+    public void getShopStatsBySubCategoriesInShopGraph(
             HttpServletResponse response,
 
             @Valid @RequestBody ShopStatByCategoryFilter filters

@@ -10,7 +10,7 @@ public enum RecalculationInclude {
             return valueOf(value.toUpperCase());
         }
         catch (IllegalArgumentException ex) {
-            throw new NotCorrectInput("Unknown include value: " + value);
+            throw new NotCorrectInput("RecalculationInclude Unknown include value: " + value);
         }
     }
 }

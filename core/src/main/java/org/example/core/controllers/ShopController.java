@@ -23,6 +23,7 @@ public class ShopController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public List<ShopGetDto> getShops(
             @RequestParam(value = "size", defaultValue = "10", required = false) Integer count,
             @RequestParam(value = "page", defaultValue = "0", required = false) Integer page,
@@ -49,7 +50,11 @@ public class ShopController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ShopGetDto getShopById(@PathVariable("id") Long id){
+        if (id <=0){
+            throw new NotCorrectInput("id must be > 0");
+        }
         return shopService.findById(id);
     }
 
@@ -62,6 +67,9 @@ public class ShopController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN')")
     public StringResponse deleteShop(@PathVariable("id") Long id){
+        if (id <=0){
+            throw new NotCorrectInput("id must be > 0");
+        }
         shopService.delete(id);
         return new StringResponse("Shop deleted successfully");
     }

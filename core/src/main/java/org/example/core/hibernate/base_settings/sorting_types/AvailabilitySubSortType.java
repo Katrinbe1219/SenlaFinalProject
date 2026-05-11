@@ -16,9 +16,10 @@ public enum AvailabilitySubSortType {
     }
 
     @JsonValue
-    public String getValue(){
-        return name();
+    public int getValue(){
+        return code;
     }
+
 
     @JsonCreator
     public static AvailabilitySubSortType forValue(int code){

@@ -17,14 +17,20 @@ public enum GoodStatusFromModerator {
         return this.name();
     }
 
+
     @JsonCreator
-    public static GoodStatusFromModerator fromValue(int value) {
-        for (GoodStatusFromModerator type : values()) {
-            if (type.value == value) {
-                return type;
+    public static GoodStatusFromModerator fromJson(Object raw) {
+        if (raw instanceof Integer) {
+            int code = (Integer) raw;
+            for (GoodStatusFromModerator type : values()) {
+                if (type.value == code) return type;
             }
+            throw new IllegalArgumentException("GoodStatusFromModerator  Unknown code: " + code);
         }
-        throw new IllegalArgumentException(" ReviewSortTypes Unknown code: " + value);
+        if (raw instanceof String) {
+            return GoodStatusFromModerator.valueOf((String) raw);
+        }
+        throw new IllegalArgumentException("GoodStatusFromModerator cannot deserialize: " + raw);
     }
 
 }

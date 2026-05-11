@@ -66,19 +66,9 @@ public class RateController {
             throw new  NotCorrectInput("goodId must be given");
         }
 
-
-        if (filters.getCategoryId()!= null || filters.getCategoryIds()!= null){
-            throw new NotCorrectInput("category can not be given");
-        }
-
         if (filters.getTagIds()!= null || filters.getTagId()!= null){
             throw new NotCorrectInput("tag can not be given");
         }
-
-        if (filters.getGoodIds() != null) {
-            throw new NotCorrectInput("Goods ids can not be given");
-        }
-
 
 
         return rateService.getGoodRatesByFilter(filters);

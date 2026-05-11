@@ -20,15 +20,22 @@ public enum ModeratorVerdict {
 
     private int getCode(){return this.value;}
 
+
     @JsonCreator
-    public static ModeratorVerdict forValue( int value) {
-        for (ModeratorVerdict item : ModeratorVerdict.values()) {
-            if (item.getCode() == value) {
-                return item;
+    public static ModeratorVerdict fromJson(Object raw) {
+        if (raw instanceof Integer) {
+            int code = (Integer) raw;
+            for (ModeratorVerdict type : values()) {
+                if (type.value == code) return type;
             }
+            throw new IllegalArgumentException("Unknown code: " + code);
         }
-        throw new IllegalStateException("ModeratorVerdict Unknown code " + value);
+        if (raw instanceof String) {
+            return ModeratorVerdict.valueOf((String) raw);
+        }
+        throw new IllegalArgumentException("Cannot deserialize: " + raw);
     }
+
 
 
 }

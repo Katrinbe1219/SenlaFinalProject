@@ -22,6 +22,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -34,6 +35,7 @@ public class ProfileController {
     private ProfileDtoMapper mapper;
     private UserService service;
     private DeviceInfoExtractor extractor;
+    private Clock clock;
 
 
 
@@ -41,12 +43,7 @@ public class ProfileController {
     public ProfileDto getProfile(
             @AuthenticationPrincipal User user
     ){
-        try{
-            return mapper.toDto(user);
-        } catch (Exception e) {
-            throw new NonHibernateException("ProfileController getProfile: " + e.getMessage());
-        }
-
+        return mapper.toDto(user);
     }
     @PatchMapping
     // without password
@@ -56,7 +53,7 @@ public class ProfileController {
             @AuthenticationPrincipal User user)  {
 
 
-        if (Duration.between(user.getUpdatedAt(), Instant.now()).toDays() < 3){
+        if (Duration.between(user.getUpdatedAt(), Instant.now(clock)).toDays() < 3){
             throw new PermissionDenied("You can not update profile, 3 days did not past from last update");
         }
 
@@ -87,7 +84,7 @@ public class ProfileController {
     public StringResponse updatePassword(@Valid @RequestBody UpdateUserPasswordDto dto,
                                          @AuthenticationPrincipal User  user){
 
-        if (Duration.between(user.getUpdatedAt(), Instant.now()).toDays() < 3){
+        if (Duration.between(user.getUpdatedAt(), Instant.now(clock)).toDays() < 3){
             throw new PermissionDenied("You can not update profile, 3 days did not past from last update");
         }
 

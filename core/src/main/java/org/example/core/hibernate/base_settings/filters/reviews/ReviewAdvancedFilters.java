@@ -46,6 +46,7 @@ public class ReviewAdvancedFilters {
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
     private LocalDate blockedAt; //
+    @Positive( message = "blockedBy must be >0")
     private Long blockedBy; //
 
 

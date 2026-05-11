@@ -40,7 +40,7 @@ public class UserForModeratorController {
         }
 
         userService.updateRole(userId, RoleTypes.MIN_USER, true);
-        return new StringResponse("Upgraded successfully");
+        return new StringResponse("Deleted successfully");
     }
 
     @PatchMapping("/lock/{id}")

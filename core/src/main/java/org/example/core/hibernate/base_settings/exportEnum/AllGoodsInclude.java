@@ -10,7 +10,7 @@ public enum AllGoodsInclude {
             return valueOf(value.toUpperCase());
         }
         catch (IllegalArgumentException ex) {
-            throw new NotCorrectInput("Unknown include value: " + value);
+            throw new NotCorrectInput(" AllGoodsInclude Unknown include value: " + value);
         }
     }
 }

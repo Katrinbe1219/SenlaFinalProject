@@ -1,6 +1,7 @@
 package org.example.core.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,6 +28,7 @@ public class User implements UserDetails {
     @Getter
     private String login;
     private String password;
+    @Email
     private String email;
 
     @Column(name="created_at")
@@ -50,6 +52,7 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.getName()));
     }
+
 
     @Override
     public String getPassword() {

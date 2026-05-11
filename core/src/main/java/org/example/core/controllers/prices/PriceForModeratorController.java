@@ -87,9 +87,6 @@ public class PriceForModeratorController {
             @RequestParam("goodId") Long goodId,
             @RequestParam("shopId") Long shopId
     ){
-        if (goodId == null || shopId == null) {
-            throw new NotCorrectInput("Not all credentials were given");
-        }
         if (goodId <=0){
             throw new NotCorrectInput("goodId must be >0 ");
         }

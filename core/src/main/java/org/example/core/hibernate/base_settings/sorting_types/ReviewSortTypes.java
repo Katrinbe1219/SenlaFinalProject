@@ -18,8 +18,8 @@ public enum ReviewSortTypes {
     }
 
     @JsonValue
-    public String getValue() {
-        return this.name();
+    public int getValue() {
+        return code;
     }
 
     @JsonCreator

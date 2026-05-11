@@ -2,6 +2,7 @@ package org.example.core.hibernate.base_settings.sorting_types;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.example.core.models.types.GoodStatusFromModerator;
 
 public enum ModeratorRecalcSortType {
     ASC(1), DESC(2), GOOD_ID_ASC(3),
@@ -19,14 +20,18 @@ public enum ModeratorRecalcSortType {
     }
 
     @JsonCreator
-    public static ModeratorRecalcSortType forValue(int value){
-        for (ModeratorRecalcSortType type : values()){
-            if (type.value == value){
-                return type;
+    public static ModeratorRecalcSortType fromJson(Object raw) {
+        if (raw instanceof Integer) {
+            int code = (Integer) raw;
+            for (ModeratorRecalcSortType type : values()) {
+                if (type.value == code) return type;
             }
+            throw new IllegalArgumentException(" ModeratorRecalcSortType unknown code: " + code);
         }
-
-        throw new IllegalArgumentException("ModeratorRecalcSortType unknown value: " + value);
+        if (raw instanceof String) {
+            return ModeratorRecalcSortType.valueOf((String) raw);
+        }
+        throw new IllegalArgumentException(" ModeratorRecalcSortType cannot deserialize: " + raw);
     }
 
 

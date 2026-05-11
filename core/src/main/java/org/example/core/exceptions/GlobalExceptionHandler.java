@@ -42,13 +42,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("errors", error));
     }
 
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<?> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex) {
+        makeLog(ex);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new StringResponse(ex.getMessage()));
+    }
+
     @ExceptionHandler(PermissionDenied.class)
     public ResponseEntity<StringResponse> handlePermissionDenied(PermissionDenied ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse(ex.getMessage()));
+        makeLog(ex);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new StringResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<StringResponse> handlePermissionDenied(IllegalArgumentException ex) {
+        makeLog(ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse(ex.getMessage()));
     }
 
@@ -85,12 +93,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EntityAlreadyExist.class)
     public ResponseEntity<StringResponse> handleEntityAlreadyExists(EntityAlreadyExist ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new StringResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(DoesNoeExist.class)
     public ResponseEntity<StringResponse> handleDoesNoeExist(DoesNoeExist ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new StringResponse(ex.getMessage()));
     }
 
 
@@ -105,7 +113,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<StringResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(new StringResponse(ex.getMessage()));
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
@@ -143,25 +151,25 @@ public class GlobalExceptionHandler {
         String fullMessage = message + " " + rootCause;
 
         if (fullMessage.contains("duplicate key") || fullMessage.contains("unique constraint")){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(
                     new StringResponse("DUPLICATE KEY " + extractDuplicateDetails(fullMessage))
             );
         }
 
         if (fullMessage.contains("foreign key")){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(
                     new StringResponse("FOREIGN KEY " + extractDuplicateDetails(fullMessage) + ": данный объект связан с другим - удаление запрещено")
             );
         }
 
         if (fullMessage.contains("null value")){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(
               new StringResponse("NULL VALUE " + extractColumnName(fullMessage))
             );
         }
 
         if (fullMessage.contains("value too long")){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(
                     new StringResponse("VALUE TOO LONG " + extractColumnName(fullMessage))
             );
         }

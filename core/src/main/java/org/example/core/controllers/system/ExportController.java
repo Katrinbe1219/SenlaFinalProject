@@ -79,6 +79,8 @@ public class ExportController {
                 ? Set.of()
                 : include.stream().map(ShopsCurrentPricesIncludeTypes::fromString).collect(Collectors.toSet());
 
+        ExportFormat formatType = ExportFormat.getFormat(format);
+
         boolean shopsAreIncluded = includes.contains(ShopsCurrentPricesIncludeTypes.SHOPS);
         boolean categoriesAreIncluded = includes.contains(ShopsCurrentPricesIncludeTypes.CATEGORIES);
 
@@ -107,7 +109,7 @@ public class ExportController {
 
 
 
-        ExportFormat formatType = ExportFormat.getFormat(format);
+
         HttpHeaders headers = new HttpHeaders();
         byte[] excelBytes = null;
 
@@ -160,6 +162,11 @@ public class ExportController {
             @PathVariable("id") Long goodId,
             @RequestParam("shopId") Long shopId
     ){
+        if (goodId <=0 || shopId <=0){
+            throw new NotCorrectInput("Path variable id and request param shopId must be > 0");
+
+        }
+
         List<PriceHistoryByGoodAndShop> prices = priceService.getPriceHistoryByGoodId(goodId, shopId);
         if (prices.isEmpty()){
             throw new DoesNoeExist("Nothing was found");
@@ -189,14 +196,6 @@ public class ExportController {
             throw new NotCorrectInput("Csv can not be applied with include");
         }
 
-        List<ReviewFullDto> reviews = reviewService.getByFilters(filters);
-
-        if (reviews.isEmpty()){
-            throw new DoesNoeExist("Nothing was found");
-        }
-
-        HttpHeaders headers = new HttpHeaders();
-
         Set<ReviewsHistoryInclude> includes = include == null
                 ? Set.of()
                 : include.stream().map(ReviewsHistoryInclude::fromString).collect(Collectors.toSet());
@@ -205,7 +204,13 @@ public class ExportController {
         boolean goodsAreIncluded = includes.contains(ReviewsHistoryInclude.GOODS);
 
 
+        List<ReviewFullDto> reviews = reviewService.getByFilters(filters);
 
+        if (reviews.isEmpty()){
+            throw new DoesNoeExist("Nothing was found");
+        }
+
+        HttpHeaders headers = new HttpHeaders();
 
         byte[] exportBytes= null;
         switch (formatType){
@@ -254,9 +259,7 @@ public class ExportController {
 
     @GetMapping("/reviews/history/good")
     public ResponseEntity<byte[]> getReviewsHistoryByGoodId(
-
             @Valid @RequestBody ReviewAdvancedFilters filters
-
     ){
 
 
@@ -379,13 +382,14 @@ public class ExportController {
         Set<AllGoodsInclude> includes = include == null
                 ? Set.of()
                 : include.stream().map(AllGoodsInclude::getEnum).collect(Collectors.toSet());
+        ExportFormat formatType = ExportFormat.getFormat(format);
 
         List<GoodGetFullDto> goods = goodService.findAllForAnalyst(filters);
         if (goods.isEmpty()){
             throw new DoesNoeExist("Nothing was found");
         }
 
-        ExportFormat formatType = ExportFormat.getFormat(format);
+
         byte[] exportBytes = null;
         HttpHeaders headers = new HttpHeaders();
 

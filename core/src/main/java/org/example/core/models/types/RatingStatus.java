@@ -18,13 +18,19 @@ public enum RatingStatus {
         return this.name();
     }
 
+
     @JsonCreator
-    public static RatingStatus fromCode(int code) {
-        for (RatingStatus type : values()) {
-            if (type.value == code) {
-                return type;
+    public static RatingStatus fromJson(Object raw) {
+        if (raw instanceof Integer) {
+            int code = (Integer) raw;
+            for (RatingStatus type : values()) {
+                if (type.value == code) return type;
             }
+            throw new IllegalArgumentException("Unknown code: " + code);
         }
-        throw new IllegalArgumentException("Unknown code: " + code);
+        if (raw instanceof String) {
+            return RatingStatus.valueOf((String) raw);
+        }
+        throw new IllegalArgumentException("Cannot deserialize: " + raw);
     }
 }

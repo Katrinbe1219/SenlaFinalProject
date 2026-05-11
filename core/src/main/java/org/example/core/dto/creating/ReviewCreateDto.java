@@ -15,10 +15,10 @@ import org.example.core.models.User;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReviewCreateDto {
-    @NullOrNotBlank
+    @NullOrNotBlank(message = "review must be null or not blank")
     private String review;
-    @NotNull
+    @NotNull(message = "rate must not be null")
     @Min(value = 0, message = "rate must be >= 0")
     @Max(value = 5, message = "rate must be <=5")
-    private int rate;
+    private Integer rate;
 }

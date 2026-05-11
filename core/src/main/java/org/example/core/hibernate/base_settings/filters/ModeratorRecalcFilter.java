@@ -1,10 +1,7 @@
 package org.example.core.hibernate.base_settings.filters;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,10 +25,12 @@ import java.util.List;
 @MutuallyExclusiveExtended(first="curDate", second = "endDate", third = "startDate")
 @ValidDateRange(first = "startDate", second = "endDate")
 public class ModeratorRecalcFilter {
+    @Size(min = 1, message = "moderatorIds length must be > 0")
     private List<Long> moderatorIds;
     @Positive( message = "moderatorId must be > 0")
     private Long moderatorId;
 
+    @Size(min = 1, message = "goodIds length must be > 0")
     private List<Long> goodIds;
     @Positive( message = "goodId must be > 0")
     private Long goodId;

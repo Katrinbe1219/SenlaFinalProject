@@ -3,6 +3,7 @@ package org.example.core.controllers.reviews;
 import jakarta.validation.Valid;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.dto.getting.reviews.ReviewFullDto;
+import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.filters.reviews.ReviewAdvancedFilters;
 import org.example.core.models.User;
 import org.example.core.services.documents.reviews.ReviewAdvancedService;
@@ -23,12 +24,18 @@ public class ReviewModeratorController {
 
     @GetMapping("/{id}")
     public ReviewFullDto getReviewById (@PathVariable("id") Long reviewId){
+        if (reviewId <=0){
+            throw new NotCorrectInput("id must be > 0");
+        }
         return reviewService.getReviewById(reviewId);
     }
 
     @PatchMapping("/{id}/block")
     public StringResponse blockReviewById(@PathVariable("id") Long reviewId,
                                           @AuthenticationPrincipal User moderator){
+        if (reviewId <=0){
+            throw new NotCorrectInput("id must be > 0");
+        }
 
         reviewService.blockReviewById(reviewId, moderator.getLogin());
         return new StringResponse("Review blocked");
@@ -37,6 +44,9 @@ public class ReviewModeratorController {
     @DeleteMapping("/{id}/block")
     public StringResponse unblockReviewById(@PathVariable("id") Long reviewId,
                                             @AuthenticationPrincipal User moderator){
+        if (reviewId <=0){
+            throw new NotCorrectInput("id must be > 0");
+        }
         reviewService.unblockReviewById(reviewId, moderator.getLogin());
         return new StringResponse("Review unblocked");
     }

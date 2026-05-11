@@ -32,7 +32,7 @@ public class PriceForUserController {
 
     @GetMapping
     // для user это обязательно указывать какой продукт и откуда!
-    // TODO зачем page, count
+    @PreAuthorize("hasAnyRole('MIN_USER', 'MAX_USER')")
     public List<PriceGetDtoForUser> getPrices(
             @RequestParam("goodId") Long goodId,
             @RequestParam("shopId") Long shopId

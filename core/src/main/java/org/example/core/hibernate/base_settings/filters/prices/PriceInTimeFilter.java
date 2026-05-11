@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.example.annotations.ValidDateRange;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -15,12 +16,13 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
+@ValidDateRange(first = "startDate", second = "endDate")
 public class PriceInTimeFilter {
     @Positive(message = "shopId must be > 0")
     @NotNull(message = "shopId must not be null")
     private Long shopId;
     @Positive(message = "goodId must be > 0")
-    @NotNull(message = "shopId must not be null")
+    @NotNull(message = "goodId must not be null")
     private Long goodId;
 
     @JsonFormat(pattern = "dd.MM.yyyy")

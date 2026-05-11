@@ -22,6 +22,7 @@ public class TagController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public List<TagDto> getAllTags(
             @RequestParam(value = "count", defaultValue = "10", required = false) Integer count,
             @RequestParam(value = "page", defaultValue = "0", required = false) Integer page,
@@ -46,7 +47,9 @@ public class TagController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     public TagDto addTag(@RequestBody Map<String,String> nameParam){
-        if (nameParam == null || nameParam.get("name") == null){
+        if (nameParam == null || nameParam.getOrDefault("name", null) == null ||
+                nameParam.get("name").isBlank()
+        ){
             throw new NotCorrectInput("Name must be given");
         }
         return tagService.createTag(nameParam.get("name"));
@@ -55,6 +58,9 @@ public class TagController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     public StringResponse deleteTag(@PathVariable("id") Long id){
+        if (id <= 0) {
+            throw new NotCorrectInput("id must be > 0");
+        }
         tagService.deleteTag(id);
         return new StringResponse("Tag deleted");
     }
@@ -63,8 +69,12 @@ public class TagController {
     @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     public StringResponse editTag(@PathVariable("id") Long id,
                                   @RequestBody Map<String, String> nameParam){
-        if (nameParam == null || nameParam.get("name") == null || nameParam.get("name").isBlank()) {
+        if (nameParam == null || nameParam.getOrDefault("name", null) == null || nameParam.get("name").isBlank()) {
             throw new NotCorrectInput("Name must be given");
+        }
+
+        if (id <=0){
+            throw new NotCorrectInput("id must be > 0");
         }
 
         TagDto dto = new TagDto();
@@ -75,7 +85,11 @@ public class TagController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public TagDto getTag(@PathVariable("id") Long id){
+        if (id <= 0){
+            throw new NotCorrectInput("id must be > 0");
+        }
         return tagService.getTagById(id);
     }
 

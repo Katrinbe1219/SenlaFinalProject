@@ -1,5 +1,6 @@
 package org.example.core.dto.auth;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ public class RegisterDto {
     private String username;
     @NotBlank
     private String login;
+    @Email(message = "your email is not valid")
     private String email;
     @NotBlank
     private String password;

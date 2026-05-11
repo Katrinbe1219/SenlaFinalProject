@@ -3,6 +3,7 @@ package org.example.core.controllers.favourites;
 import jakarta.validation.Valid;
 import org.example.core.dto.getting.favourites.FavouriteCountByGoodDto;
 import org.example.core.dto.getting.favourites.FavouriteFullDto;
+import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.filters.FavouritesAnalystFilters;
 import org.example.core.services.documents.FavouriteService;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,9 @@ public class FavouritesForAnalystController {
 
     @GetMapping("/count/{id}")
     public FavouriteCountByGoodDto getCountByAllGoods(@PathVariable("id") Long goodId){
-        return favouriteService.countOneByGoodId(goodId);
+        if (goodId <=0){
+            throw new NotCorrectInput("id must be > 0");
+
+        }        return favouriteService.countOneByGoodId(goodId);
     }
 }

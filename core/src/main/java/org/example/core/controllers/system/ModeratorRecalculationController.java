@@ -31,7 +31,6 @@ public class ModeratorRecalculationController {
     }
 
     @PatchMapping("/change-status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public StringResponse changeStatusForMany(
             @Valid @RequestBody ManyModeratorLogCreateDto dto,
             @AuthenticationPrincipal User user

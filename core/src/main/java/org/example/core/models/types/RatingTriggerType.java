@@ -18,13 +18,19 @@ public enum RatingTriggerType {
       return this.name();
    }
 
+
    @JsonCreator
-   public static RatingTriggerType fromCode(int code) {
-      for (RatingTriggerType type : values()) {
-         if (type.value == code) {
-            return type;
+   public static RatingTriggerType fromJson(Object raw) {
+      if (raw instanceof Integer) {
+         int code = (Integer) raw;
+         for (RatingTriggerType type : values()) {
+            if (type.value == code) return type;
          }
+         throw new IllegalArgumentException("Unknown code: " + code);
       }
-      throw new IllegalArgumentException("Unknown code: " + code);
+      if (raw instanceof String) {
+         return RatingTriggerType.valueOf((String) raw);
+      }
+      throw new IllegalArgumentException("Cannot deserialize: " + raw);
    }
 }

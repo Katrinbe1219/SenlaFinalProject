@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+// TODO revoke All By user_id after changing password
 
 @Service
-// TODO revoke All By user_id after changing password
 @AllArgsConstructor
 public class RefreshTokenService {
     private static final Logger logger = LogManager.getLogger(RefreshTokenService.class);

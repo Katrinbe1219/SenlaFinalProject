@@ -46,7 +46,7 @@ public class UnitController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','MODERATOR')")
     public UnitDto createUnit(@Valid @RequestBody UnitCreateDto unitDto){
-        if (unitDto.getFullName() == null || unitDto.getShortName() == null){
+        if (unitDto.getFullName() == null && unitDto.getShortName() == null){
             throw new NotCorrectInput("Any name must be given");
         }
         return unitService.create(unitDto);
@@ -65,9 +65,11 @@ public class UnitController {
                                     @RequestBody Map<String,String> params
 
     )   {
-        if (params.get("shortName") == null && params.get("fullName") == null
-                || (params.get("shortName") != null && params.get("shortName").isBlank()  &&
-                params.get("fullName") != null && params.get("fullName").isBlank()) ){
+        if (params.getOrDefault("shortName", null) == null
+                && params.getOrDefault("fullName", null) == null
+
+                || (params.getOrDefault("shortName", null) != null && params.get("shortName").isBlank()  &&
+                params.getOrDefault("fullName", null) != null && params.get("fullName").isBlank()) ){
             throw new NotCorrectInput("Changes were not given");
         }
 
@@ -82,6 +84,9 @@ public class UnitController {
 
     @GetMapping("/{id}")
     public UnitDto getUnit(@PathVariable("id") Long id) {
+        if (id <= 0){
+            throw new NotCorrectInput("id mist be > 0");
+        }
         return unitService.getById(id);
     }
 }

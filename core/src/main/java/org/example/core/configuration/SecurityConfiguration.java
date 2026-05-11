@@ -1,6 +1,8 @@
 package org.example.core.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
+import org.example.core.exceptions.CustomAccessDeniedHandler;
 import org.example.core.security.*;
 import org.example.core.services.auth.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
@@ -43,23 +47,38 @@ public class SecurityConfiguration implements WebMvcConfigurer {
                                                    ) throws Exception {
         CustomLoginFilter filter = new CustomLoginFilter(manager, jwtService, refreshTokenService,
                 deviceInfoExtractor, mapper);
+        CustomAccessDeniedHandler customAccessDeniedHandler = new CustomAccessDeniedHandler();
         http.authorizeHttpRequests(auth ->
                     auth
 
                             .requestMatchers("/analyst/**").hasAnyRole("ADMIN", "ANALYST")
                             .requestMatchers("/categories/**", "/districts/**",
-                                        "/tags/**", "/units/**", "/login", "/refresh",
-                                    "/shops/**", "/goods/**","/prices/**").permitAll()
+                                        "/tags/**", "/units/**",
+                                    "/shops/**", "/goods/**","/prices/**").authenticated()
                             .requestMatchers("/favourites/**", "/reviews/**").hasAnyRole("MIN_USER", "MAX_USER")
                             .requestMatchers("/moderator/**").hasAnyRole("ADMIN", "MODERATOR")
                             .requestMatchers("/admin/**").hasRole("ADMIN")
 
                             .requestMatchers("/profile/**").hasAnyRole("ADMIN", "ANALYST", "MODERATOR", "MIN_USER", "MAX_USER")
                             .requestMatchers("/rates/**", "/export/**","/subscriptions/**").hasAnyRole("ADMIN", "ANALYST", "MODERATOR")
-                            .requestMatchers("/**").permitAll()
+                            .requestMatchers("/login", "/refresh","/**").permitAll()
 
         )
         .csrf(AbstractHttpConfigurer::disable)
+        .exceptionHandling(ex ->
+                        ex.accessDeniedHandler(customAccessDeniedHandler)
+                                .authenticationEntryPoint((request, response, authException) -> {
+                                    // для неаутентифицированных → 401 с JSON
+                                    response.setContentType("application/json");
+                                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                    response.getWriter().write(
+                                            new ObjectMapper().writeValueAsString(
+                                                    Map.of("message", authException.getMessage())
+                                            )
+                                    );
+                                })
+
+        )
         .addFilterBefore(jwtCheckFilter, UsernamePasswordAuthenticationFilter.class)
         .addFilterAt(filter, UsernamePasswordAuthenticationFilter.class)
         .addFilterAfter(new JwtRefreshFilter(refreshTokenService, deviceInfoExtractor, mapper), UsernamePasswordAuthenticationFilter.class)

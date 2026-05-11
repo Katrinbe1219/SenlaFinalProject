@@ -13,7 +13,6 @@
     <include file="007-insert-rating-recalculatio.xml" relativeToChangelogFile="true"/>
     <include file="008-insert-prices.xml" relativeToChangelogFile="true"/>
     <include file="009-add-table-favourites.xml" relativeToChangelogFile="true"/>
-    <include file="010-add-table-outbox-for-kafka.xml" relativeToChangelogFile="true"/>
-    <include file="011-add-tables-for-kafka-subscribtion.xml" relativeToChangelogFile="true"/>
+    <include file="010-add-tables-for-kafka-subscribtion.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

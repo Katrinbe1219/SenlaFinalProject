@@ -35,7 +35,7 @@ public class GoodController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('MAX_USER', 'MIN_USER')")
+    @PreAuthorize("!hasAnyRole('ADMIN', 'MODERATOR', 'ANALYST')")
     public List<GoodGetForUserDto> findAll(
             @Valid @RequestBody GoodFilter filters
     ){
@@ -52,7 +52,11 @@ public class GoodController {
 
 
     @GetMapping("/{id}")
+    @PreAuthorize("!hasAnyRole('ADMIN', 'MODERATOR', 'ANALYST')")
     public GoodGetForUserDto findById(@PathVariable("id") Long id){
+        if (id <=0){
+            throw new NotCorrectInput("id must be > 0");
+        }
         return goodService.findForUserById(id);
     }
 
@@ -83,6 +87,9 @@ public class GoodController {
     @PreAuthorize("hasAnyRole('MAX_USER', 'MIN_USER')")
     public StringResponse favouriteGood(@PathVariable("id") Long goodId,
                                         @AuthenticationPrincipal User user){
+        if (goodId <=0){
+            throw new NotCorrectInput("goodId must be > 0");
+        }
         favouriteService.createFavourite(user.getUsername(), goodId);
         return new StringResponse("Favourite was added");
     }
@@ -91,6 +98,10 @@ public class GoodController {
     @PreAuthorize("hasAnyRole('MAX_USER', 'MIN_USER')")
     public StringResponse unFavouriteGood(@PathVariable("id") Long goodId,
                                           @AuthenticationPrincipal User user){
+
+        if (goodId <=0){
+            throw new NotCorrectInput("goodId must be > 0");
+        }
         favouriteService.removeFavourite(user.getUsername(), goodId);
         return new StringResponse("Favourite was removed");
     }

@@ -2,6 +2,7 @@ package org.example.core.controllers.favourites;
 
 import org.example.core.dto.getting.favourites.FavouriteGetForUserDto;
 import org.example.core.services.documents.FavouriteService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
