@@ -70,7 +70,7 @@ services:
 
   # ─── ZOOKEEPER ─────────────────────────────────────────────
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.5.0
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -107,7 +107,7 @@ services:
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
 
   kafka-broker-1:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.5.0
     hostname: kafka-broker-1
     depends_on:
       zookeeper:
@@ -144,7 +144,7 @@ services:
       start_period: 30s
 
   kafka-broker-2:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.5.0
     hostname: kafka-broker-2
     depends_on:
       zookeeper:
@@ -181,7 +181,7 @@ services:
       start_period: 30s
 
   kafka-broker-3:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.5.0
     hostname: kafka-broker-3
     depends_on:
       zookeeper:
