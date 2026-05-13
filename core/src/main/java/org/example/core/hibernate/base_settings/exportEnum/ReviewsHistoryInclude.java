@@ -3,7 +3,7 @@ package org.example.core.hibernate.base_settings.exportEnum;
 import org.example.core.exceptions.NotCorrectInput;
 
 public enum ReviewsHistoryInclude {
-    GOODS_ALL, GOODS, MODERATORS, MODERATORS_ALL;
+   GOODS, MODERATORS;
 
     public static ReviewsHistoryInclude fromString(String value) {
         try{

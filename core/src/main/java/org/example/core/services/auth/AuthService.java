@@ -56,6 +56,7 @@ public class AuthService {
         user.setEmail(dto.getEmail());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setNonLocked(true);
+
         user.setRole(userHib.getDefaultRole());
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());

@@ -34,7 +34,6 @@ public class EmailService {
     public void sendPriceASync(String toEmail, String goodName, BigDecimal targetPrice, BigDecimal newPrice){
 
             try {SimpleMailMessage message = new SimpleMailMessage();
-                System.out.println("ASKJDAKSJDh");
                 message.setTo(toEmail);
                 message.setSubject(goodName);
                 message.setFrom(from);
@@ -43,9 +42,9 @@ public class EmailService {
                                 "\nВы ставили цену: " + targetPrice +
                                 "\nЦена товара сейчас: " + newPrice
                 );
-                System.out.println("aslkdjalksdjasd sended");
+                logger.info("Discount Message is about to be sent");
                 mailSender.send(message);
-                System.out.println("SENDED!!!!");
+                logger.info("Message was sent");;
             }
             catch (MailException e){
                 logger.error("MailException EmailService sendPriceASync: " + e.getMessage());
@@ -64,7 +63,10 @@ public class EmailService {
                             "\n Магазин " + shopId + " " + shopName + ", адрес: " + shopAddress
 
             );
-            mailSender.send(message);}
+            mailSender.send(message);
+            logger.info("Message about availability is send");
+        }
+
         catch (MailException e){
             logger.error("MailException EmailService sendAvailableASync: " + e.getMessage());
         }

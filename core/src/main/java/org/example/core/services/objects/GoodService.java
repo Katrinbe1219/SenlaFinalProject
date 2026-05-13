@@ -124,6 +124,9 @@ public class GoodService {
             if (good == null){
                 throw new DoesNoeExist("Good do not exist with given credentials");
             }
+            if (good.getModeratorStatus() == GoodStatusFromModerator.SUSPICIOUS){
+                throw new NotCorrectInput("Currently good unavailable");
+            }
             return goodGetForUserMapper.toDto(good);
         }catch (Exception e){
             logger.error("GoodService findForUserById:" + e.getMessage());

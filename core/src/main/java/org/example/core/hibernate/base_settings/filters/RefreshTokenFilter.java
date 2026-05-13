@@ -28,7 +28,7 @@ import java.util.List;
 @ValidDateRange(first = "startLastUsedAt", second = "endLastUsedAt")
 public class RefreshTokenFilter {
 
-    @Min(value = 1, message = "userIds length > 0")
+    @Min(value = 1, message = "userId must be > 0")
     private Long userId;
     @Size(min=1, message = "userIds must be > 0")
     private List<Long> userIds;

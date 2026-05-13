@@ -76,7 +76,7 @@ public class UserForModeratorController {
                 (filters.getRoleType() != RoleTypes.MAX_USER && filters.getRoleType() != RoleTypes.MIN_USER)){
             throw new PermissionDenied("Your are not allowed to get these users");
         }
-        return userService.getAllUsers(filters);
+        return userService.getAllUsers(filters, true);
     }
 
 }

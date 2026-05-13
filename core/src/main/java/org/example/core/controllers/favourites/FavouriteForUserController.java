@@ -17,6 +17,7 @@ import java.util.List;
 public class FavouriteForUserController {
     private FavouriteService favouriteService;
 
+
     public FavouriteForUserController(FavouriteService favouriteService) {
         this.favouriteService = favouriteService;
     }

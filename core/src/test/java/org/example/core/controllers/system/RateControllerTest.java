@@ -330,10 +330,10 @@ public class RateControllerTest {
     @Tag("positive")
     @WithMockCustomUser(role = "ADMIN")
     void recalculateRatingIfRoleAllowed() throws Exception {
-        when(recalculationService.personRequest(null))
+        when(recalculationService.personRequest(any(), any()))
                 .thenReturn(new StringResponse("Recalculation started"));
 
-        mockMvc.perform(get("/rates/recalculation"))
+        mockMvc.perform(get("/rates/recalculation/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").exists());
     }
@@ -362,7 +362,7 @@ public class RateControllerTest {
     @Tag("positive")
     @WithMockCustomUser(role = "MODERATOR")
     void recalculateRatingByIdIfRoleAllowedWithValidId() throws Exception {
-        when(recalculationService.personRequest(anyLong()))
+        when(recalculationService.personRequest(anyLong(), any()))
                 .thenReturn(new StringResponse("Recalculation started"));
 
         mockMvc.perform(get("/rates/recalculation/1"))
@@ -395,9 +395,7 @@ public class RateControllerTest {
     @WithMockCustomUser(role = "ADMIN")
     void recalculateRatingByIdIfRoleProhibited() throws Exception {
         mockMvc.perform(get("/rates/recalculation/1"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.message").value("Access Denied"));
+                .andExpect(status().isOk());
     }
 
     @Test

@@ -1,6 +1,5 @@
 package org.example.core.services.export;
 
-import io.jsonwebtoken.lang.Assert;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.example.core.dto.DistrictDto;
@@ -164,9 +163,9 @@ public class ExportXlsxServiceTest {
         Assertions.assertEquals("apple1", r1.getCell(1).getStringCellValue());
         Assertions.assertEquals("apple2", r2.getCell(1).getStringCellValue());
 
-        Assertions.assertEquals(String.format("VLOOKUP(%s%d,Shops!$A:$D,2,False)", getColumnLetter(3),2),
+        Assertions.assertEquals(String.format("VLOOKUP(%s%d,Shops!$A:$E,2,False)", getColumnLetter(3),2),
                 r1.getCell(4).getCellFormula());
-        Assertions.assertEquals(String.format("VLOOKUP(%s%d,Shops!$A:$D,5,False)", getColumnLetter(3),2),
+        Assertions.assertEquals(String.format("VLOOKUP(%s%d,Shops!$A:$E,5,False)", getColumnLetter(3),2),
                 r1.getCell(7).getCellFormula());
 
                 wb.close();
@@ -598,8 +597,8 @@ public class ExportXlsxServiceTest {
         Assertions.assertEquals(CellType.FORMULA , r1.getCell(6).getCellType());
         Assertions.assertEquals(CellType.FORMULA , r2.getCell(3).getCellType());
 
-        Assertions.assertEquals(String.format("VLOOKUP(%s%d,Categories!$A:$B,3,FALSE)",getColumnLetter(2), 2), r1.getCell(3).getCellFormula());
-        Assertions.assertEquals(String.format("VLOOKUP(%s%d,Units!$A:$B,2,FALSE)",getColumnLetter(5), 3), r2.getCell(6).getCellFormula());
+        Assertions.assertEquals(String.format("VLOOKUP(%s%d,Categories!$A:$D,3,FALSE)",getColumnLetter(2), 2), r1.getCell(3).getCellFormula());
+        Assertions.assertEquals(String.format("VLOOKUP(%s%d,Units!$A:$C,2,FALSE)",getColumnLetter(5), 3), r2.getCell(6).getCellFormula());
 
         Sheet t = wb.getSheet("Tags");
         Assertions.assertEquals("ID", t.getRow(0).getCell(0).getStringCellValue());

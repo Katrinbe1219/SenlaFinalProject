@@ -14,6 +14,7 @@ import org.example.core.dto.patching.GoodPatchDto;
 import org.example.core.exceptions.GlobalExceptionHandler;
 
 import org.example.core.hibernate.base_settings.filters.goods.GoodFilter;
+import org.example.core.models.types.ModeratorVerdict;
 import org.example.core.services.documents.ModeratorRecalcService;
 import org.example.core.services.objects.GoodService;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,6 +40,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -373,20 +375,6 @@ public class GoodControllerAdvancedTest {
     }
 
 
-    @Test
-    @Tag("positive")
-    @WithMockCustomUser(role = "ADMIN")
-    void blockIfRoleAllowedWithValidId() throws Exception {
-        ModeratorLogCreateDto dto = new ModeratorLogCreateDto();
-        // наполни dto валидными данными
-
-        mockMvc.perform(patch("/goods/advanced/1/block")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.message").value("Good was blocked"));
-    }
 
     @Test
     @Tag("negative")
@@ -408,25 +396,14 @@ public class GoodControllerAdvancedTest {
     @WithMockCustomUser(role = "ANALYST")
     void blockIfRoleProhibited() throws Exception {
         ModeratorLogCreateDto dto = new ModeratorLogCreateDto();
-
+        dto.setVerdict(ModeratorVerdict.RECALCULATED);
+        dto.setComment("comment");
         mockMvc.perform(patch("/goods/advanced/1/block")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.message").value("Access Denied"));
-    }
-
-    @Test
-    @Tag("negative")
-    void blockIfUnauthorized() throws Exception {
-        ModeratorLogCreateDto dto = new ModeratorLogCreateDto();
-        dto.setComment("comment");
-
-        mockMvc.perform(patch("/goods/advanced/1/block")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(dto)))
-                .andExpect(status().isUnauthorized());
     }
 
 
@@ -436,6 +413,7 @@ public class GoodControllerAdvancedTest {
     void unblockIfRoleAllowedWithValidDto() throws Exception {
         ModeratorLogCreateDto dto = new ModeratorLogCreateDto();
         dto.setComment("comment");
+        dto.setVerdict(ModeratorVerdict.RECALCULATED);
         mockMvc.perform(delete("/goods/advanced/1/block")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(dto)))

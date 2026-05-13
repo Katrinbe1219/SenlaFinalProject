@@ -11,6 +11,7 @@ import org.example.core.hibernate.objects.GoodHibImpl;
 import org.example.core.models.Good;
 import org.example.core.models.types.RatingStatus;
 import org.example.core.models.types.RatingTriggerType;
+import org.example.core.models.types.RoleTypes;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -127,7 +128,7 @@ public class AsyncRecalculationService {
 
 
     @Transactional
-    public void recalculationForGood(Long goodId, AtomicBoolean isRecalculating
+    public void recalculationForGood(Long goodId, AtomicBoolean isRecalculating, RoleTypes role
     ) {
         try {
             Good good = goodHib.findById(goodId, logger);
@@ -137,14 +138,16 @@ public class AsyncRecalculationService {
             }
 
             Double oldRate = good.getRate();
+            RatingTriggerType type = role==RoleTypes.ADMIN ? RatingTriggerType.ADMIN : RatingTriggerType.MODERATOR;
+
             try {
                 Double newRate = priceHib.recalculateForGood(goodId);
-                rateHib.saveLog(good, null, RatingStatus.SUCCESS, RatingTriggerType.MODERATOR, oldRate, newRate);
+                rateHib.saveLog(good, null, RatingStatus.SUCCESS, type, oldRate, newRate);
 
             }catch (Exception e){
                 Map<Long,Good> info = new HashMap<>();
                 info.put(good.getId(), good);
-                rateHib.saveErrors(info,e.getMessage(), RatingStatus.FAILED, RatingTriggerType.MODERATOR);
+                rateHib.saveErrors(info,e.getMessage(), RatingStatus.FAILED, type);
                 throw e;
             }
         }

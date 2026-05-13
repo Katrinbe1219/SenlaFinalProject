@@ -81,7 +81,11 @@ public class UserService {
                 return new TokenPair(newToken, refreshToken);
             }
             return null;
-        } catch (Exception e) {
+        }
+        catch (NotCorrectInput | DoesNoeExist | PermissionDenied | EntityAlreadyExist e){
+            throw  e;
+        }
+        catch (Exception e) {
             logger.error("UserService patchDefault: " + e.getMessage());
             throw e;
         }
@@ -99,7 +103,7 @@ public class UserService {
                 throw new NotCorrectInput("Password can not be the same");
             }
 
-            if (!passwordEncoder.matches(oldPassword, user.getPassword())){
+            if (passwordEncoder.matches(oldPassword, user.getPassword())){
                 throw new NotCorrectInput("Old password is not valid");
             }
 
@@ -108,7 +112,12 @@ public class UserService {
             user.setUpdatedAt(Instant.now());
             userHib.update(user, logger);
             refreshHib.deleteAllByUser(user.getId());
-        }catch (Exception e){
+        }
+
+        catch (NotCorrectInput | DoesNoeExist | PermissionDenied e){
+            throw  e;
+        }
+        catch (Exception e){
             logger.error("UserService patchPassword: " + e.getMessage());
             throw e;
         }
@@ -140,7 +149,11 @@ public class UserService {
             }
             user.setRole(role);
             userHib.update(user, logger);
-        }catch (Exception e){
+        }
+        catch (NotCorrectInput | DoesNoeExist | PermissionDenied e){
+            throw  e;
+        }
+        catch (Exception e){
             logger.error("UserService updateRole: " + e.getMessage());
             throw e;
         }
@@ -167,7 +180,11 @@ public class UserService {
 
             user.setNonLocked(nonLocked);
             userHib.update(user, logger);
-        }catch (Exception e){
+        }
+        catch (NotCorrectInput | DoesNoeExist e){
+            throw  e;
+        }
+        catch (Exception e){
             logger.error("UserService updateLockedState: " + e.getMessage());
             throw e;
         }
@@ -175,9 +192,9 @@ public class UserService {
     }
 
     @Transactional
-    public List<UserFullDto> getAllUsers(UserAdvancedFilter filters){
+    public List<UserFullDto> getAllUsers(UserAdvancedFilter filters, boolean isModerator){
         try{
-            List<User> users = userHib.getUsersByFilter(filters);
+            List<User> users = userHib.getUsersByFilter(filters, isModerator);
             if (users == null){
                 return List.of();
             }
@@ -235,8 +252,15 @@ public class UserService {
     public UserFullDto getUserById(Long id){
         try{
             User user = userHib.gtByIdFullVersion(id);
+            if (user == null){
+                throw new DoesNoeExist("User does not exist with given credentials");
+
+            }
             return mapper.toDto(user);
-        }catch (Exception e){
+        }catch (DoesNoeExist e){
+            throw e;
+        }
+        catch (Exception e){
             logger.error("UserService getUserById: " + e.getMessage());
             throw e;
         }

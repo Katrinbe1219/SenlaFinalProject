@@ -84,19 +84,6 @@ public class ReviewAdvancedServiceTest {
     @Test
     @DisplayName("blockReviewByIdIfOperationNotFound")
     @Tag("negative")
-    void blockReviewByIdIfOperationNotFound(){
-        when(userHib.getByLoginSmallVersion(anyString()))
-                .thenReturn(new User());
-        when(reviewHib.blockReview(anyLong(), any(User.class)))
-                .thenReturn(Boolean.FALSE);
-        Exception e= Assertions.assertThrows(DoesNoeExist.class, ()->
-                service.blockReviewById(1L, "login"));
-        Assertions.assertTrue( e.getMessage().contains("Review does not exist with given credentials"));
-    }
-
-    @Test
-    @DisplayName("blockReviewByIdIfOperationNotFound")
-    @Tag("negative")
     void blockReviewByIdIfRepositoryFailed(){
         when(userHib.getByLoginSmallVersion(anyString()))
                 .thenThrow(new NonHibernateException("testing"));

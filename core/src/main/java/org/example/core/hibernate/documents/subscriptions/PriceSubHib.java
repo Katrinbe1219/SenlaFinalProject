@@ -181,8 +181,8 @@ public class PriceSubHib extends HibernateAbstractDao<PriceSubscription, Long, L
             case DESC -> builder.desc(root.get("id"));
             case CREATED_AT_ASC -> builder.asc(root.get("createdAt"));
             case CREATED_AT_DESC -> builder.desc(root.get("createdAt"));
-            case PRICE_ASC -> builder.asc(root.get("price"));
-            case PRICE_DESC -> builder.desc(root.get("price"));
+            case PRICE_ASC -> builder.asc(root.get("targetPrice"));
+            case PRICE_DESC -> builder.desc(root.get("targetPrice"));
             case GOOD_ID_ASC -> builder.asc(root.get("good").get("id"));
             case GOOD_ID_DESC -> builder.desc(root.get("good").get("id"));
             case USER_ID_ASC -> builder.asc(root.get("user").get("id"));

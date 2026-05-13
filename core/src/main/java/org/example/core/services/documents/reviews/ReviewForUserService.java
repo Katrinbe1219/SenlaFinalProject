@@ -123,10 +123,9 @@ public class ReviewForUserService {
     }
 
     @Transactional
-    public List<ReviewDto> getByFilters(ReviewForUserFilters filters, String username){
+    public List<ReviewDto> getByFilters(ReviewForUserFilters filters){
         try{
-            User user = userHib.getByUsernameSmallVersion(username);
-            List<Review> reviews = reviewHib.getMinByFilters(filters, user);
+            List<Review> reviews = reviewHib.getMinByFilters(filters);
             if (reviews.isEmpty()){
                 return List.of();
             }

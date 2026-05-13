@@ -34,7 +34,7 @@ public class PriceForUserController {
     // для user это обязательно указывать какой продукт и откуда!
     @PreAuthorize("hasAnyRole('MIN_USER', 'MAX_USER')")
     public List<PriceGetDtoForUser> getPrices(
-            @RequestParam("goodId") Long goodId,
+            @RequestParam(value = "goodId", required = false) Long goodId,
             @RequestParam("shopId") Long shopId
     ){
 
@@ -42,7 +42,7 @@ public class PriceForUserController {
             throw new NotCorrectInput("shopId must be > 0");
         }
 
-        if (goodId <=0) {
+        if (goodId != null && goodId <=0) {
             throw new NotCorrectInput("goodId must be > 0");
         }
         return priceService.getAllForUser(goodId, shopId);

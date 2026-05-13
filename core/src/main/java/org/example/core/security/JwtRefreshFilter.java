@@ -45,7 +45,7 @@ public class JwtRefreshFilter extends OncePerRequestFilter {
         }catch (Exception e){
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write(mapper.writeValueAsString(e));
+            response.getWriter().write(mapper.writeValueAsString(e.getMessage()));
         }finally {
             response.getWriter().flush();
             response.getWriter().close();

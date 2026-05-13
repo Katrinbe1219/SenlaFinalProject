@@ -83,7 +83,7 @@ public class GoodControllerAdvanced {
     @PatchMapping("/{id}/block")
     @PreAuthorize("hasAnyRole('ADMIN', 'MODERATOR')")
     public StringResponse block(@PathVariable("id") Long id,
-                                @RequestBody ModeratorLogCreateDto request,
+                                @Valid @RequestBody ModeratorLogCreateDto request,
                                 @AuthenticationPrincipal User user){
         if (id <=0){
             throw new NotCorrectInput("id must be > 0");
@@ -102,6 +102,13 @@ public class GoodControllerAdvanced {
         if (id <=0){
             throw new NotCorrectInput("id must be > 0");
 
+        }
+        if (dto.getVerdict() == null){
+            throw new NotCorrectInput("verdict must be given");
+        }
+
+        if (dto.getVerdict() == ModeratorVerdict.SUSPICIOUS){
+            throw new NotCorrectInput("It is already blocked");
         }
         logService.addLog(user, id, dto.getVerdict(), dto.getComment());
         return new StringResponse("Good was unblocked");

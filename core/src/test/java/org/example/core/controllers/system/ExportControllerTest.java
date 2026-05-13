@@ -120,7 +120,7 @@ public class ExportControllerTest {
                         .param("format", "csv"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition",
-                        "attachment; filename=\"report.csv\""))
+                        "attachment; filename=\"current_prices.csv\""))
                 .andExpect(content().contentType("text/csv"));
     }
 
@@ -137,7 +137,7 @@ public class ExportControllerTest {
                         .param("format", "xlsx"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition",
-                        "attachment; filename=\"report.xlsx\""));
+                        "attachment; filename=\"current_prices.xlsx\""));
     }
 
     @Test
@@ -200,7 +200,7 @@ public class ExportControllerTest {
                         .param("shopId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition",
-                        "attachment; filename=\"report.csv\""))
+                        "attachment; filename=\"prices.csv\""))
                 .andExpect(content().contentType("text/csv"));
     }
 
@@ -260,7 +260,7 @@ public class ExportControllerTest {
                         .content(mapper.writeValueAsString(filters)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition",
-                        "attachment; filename=\"report.csv\""))
+                        "attachment; filename=\"price_history.csv\""))
                 .andExpect(content().contentType("text/csv"));
     }
 
@@ -351,7 +351,7 @@ public class ExportControllerTest {
                         .content(mapper.writeValueAsString(filters)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition",
-                        "attachment; filename=\"report.csv\""));
+                        "attachment; filename=\"good_history.csv\""));
     }
 
     @Test

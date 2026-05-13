@@ -3,6 +3,7 @@ package org.example.core.services.documents;
 
 import jakarta.persistence.Tuple;
 import lombok.AllArgsConstructor;
+import org.apache.kafka.common.network.Mode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.core.dto.creating.ManyModeratorLogCreateDto;
@@ -81,9 +82,30 @@ public class ModeratorRecalcService {
 
     }
 
+    //            if (lastLogs.isEmpty()){
+//                throw new NotCorrectInput("Goods's ids are not valid");
+//            }
+//
+//            if (lastLogs.size() != goodsUpdate.size()){
+//                throw new NotCorrectInput("Goods's ids are not valid");
+//            }
+
     @Transactional
     public void addManyLogs(ManyModeratorLogCreateDto dto, User user){
         try{
+
+            Map<Long, List<ModeratorVerdict>> grouped = dto.getVerdicts().stream()
+                    .collect(Collectors.groupingBy(
+                            ModeratorLogCreateDto::getGoodId,
+                            Collectors.mapping(ModeratorLogCreateDto::getVerdict, Collectors.toList())
+                    ));
+
+            List<String> errors = grouped.entrySet().stream()
+                    .filter(e -> e.getValue().size() > 1)
+                    .map(e -> "Good " + e.getKey() + " has multiple verdicts: " + e.getValue())
+                    .toList();
+
+            if (!errors.isEmpty()) throw new ManyIncorrectInputsException(errors);
 
             Map<Long, ModeratorVerdict> goodsUpdate = dto.getVerdicts().stream().collect(Collectors.toMap(
                     ModeratorLogCreateDto::getGoodId,
@@ -97,13 +119,7 @@ public class ModeratorRecalcService {
             ));
 
             List<ModeratorRatingCheck> lastLogs = recalcHib.getModeratorRatingChecksByGoodIds(goodsUpdate.keySet());
-            if (lastLogs.isEmpty()){
-                throw new NotCorrectInput("Goods's ids are not valid");
-            }
 
-            if (lastLogs.size() != goodsUpdate.size()){
-                throw new NotCorrectInput("Goods's ids are not valid");
-            }
 
 
             Map<Long, ModeratorVerdict> lastVerdicts = lastLogs.stream()
@@ -112,13 +128,23 @@ public class ModeratorRecalcService {
                             ModeratorRatingCheck::getVerdict
                     ));
 
-            List<String> errors = new ArrayList<>();
+            errors = new ArrayList<>();
             for (Long id : goodsUpdate.keySet()) {
                 ModeratorVerdict last = lastVerdicts.get(id);
                 ModeratorVerdict incoming = goodsUpdate.get(id);
 
                 if (last != null && last == incoming) {
                     errors.add("Good " + id + " already has status " + incoming);
+                }
+                if (last == null && incoming != ModeratorVerdict.SUSPICIOUS){
+                    errors.add("Good " + id + " has no history and can not be anything except " + ModeratorVerdict.SUSPICIOUS);
+                }
+                if (last != null && last != incoming){
+                    if (last == ModeratorVerdict.APPROVED && incoming == ModeratorVerdict.RECALCULATED ||
+                            incoming == ModeratorVerdict.APPROVED && last == ModeratorVerdict.RECALCULATED){
+                        errors.add("Good " + id + " was approved already, it can not be " + incoming);
+                    }
+
                 }
             }
 

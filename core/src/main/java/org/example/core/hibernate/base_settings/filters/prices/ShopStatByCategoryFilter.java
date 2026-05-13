@@ -17,7 +17,6 @@ import java.util.List;
 @NoArgsConstructor
 @ValidDateRange(first = "startDate", second = "endDate")
 public class ShopStatByCategoryFilter {
-//    @NotNull(message = "categoryIds must be given")
     @Size(min = 1, message = "categoryIds length must be > 0")
     private List<Long> categoryIds;
 
@@ -25,7 +24,6 @@ public class ShopStatByCategoryFilter {
     private  List<Long> shopIds;
 
 
-    // либо оба, либо текущая
     @JsonFormat(pattern = "dd.MM.yyyy")
     @DateTimeFormat(pattern = "dd.MM.yyyy")
     private LocalDate startDate;

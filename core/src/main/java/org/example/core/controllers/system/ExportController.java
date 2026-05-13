@@ -92,7 +92,7 @@ public class ExportController {
             filters.setShops(true);
         }
 
-        if (shopIds != null && shopIds.isEmpty()){
+        if (shopIds != null && !shopIds.isEmpty()){
             filters.setShopsIds(shopIds);
         }
 
@@ -108,8 +108,6 @@ public class ExportController {
         }
 
 
-
-
         HttpHeaders headers = new HttpHeaders();
         byte[] excelBytes = null;
 
@@ -119,7 +117,7 @@ public class ExportController {
                 excelBytes = csvService.getShopsCurrentPrices(info, filters);
                 headers.setContentType(MediaType.parseMediaType("text/csv"));
                 headers.setContentDisposition(
-                        ContentDisposition.attachment().filename("report.csv").build()
+                        ContentDisposition.attachment().filename("current_prices.csv").build()
                 );
             }
             case XLSX -> {
@@ -130,7 +128,12 @@ public class ExportController {
                     tags = tagService.getAllTags(null, null, BaseSortTypes.ASC, null);
                 }
                 if (shopsAreIncluded){
-                    shops = shopService.findAll(null, null, BaseSortTypes.ASC,null,null);
+                    if (shopIds!=null && !shopIds.isEmpty()){
+                        shops = shopService.findAll(null, null, BaseSortTypes.ASC,shopIds,null);
+
+                    }else{
+                        shops = shopService.findAll(null, null, BaseSortTypes.ASC,null,null);
+                    }
                 }
                 if (categoriesAreIncluded){
                     categories = categoryService.getAllCategories(null, null, BaseSortTypes.ASC, null);
@@ -140,7 +143,7 @@ public class ExportController {
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 ));
                 headers.setContentDisposition(
-                        ContentDisposition.attachment().filename("report.xlsx").build()
+                        ContentDisposition.attachment().filename("current_prices.xlsx").build()
                 );
 
                 excelBytes = xlsxService.generateReportForCurrentShopsPrices(tags, info, shops, categories);
@@ -175,7 +178,7 @@ public class ExportController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("text/csv"));
         headers.setContentDisposition(
-                ContentDisposition.attachment().filename("report.csv").build()
+                ContentDisposition.attachment().filename("prices.csv").build()
         );
         headers.setContentLength(exportBytes.length);
         return new ResponseEntity<>(exportBytes, headers, HttpStatus.OK);
@@ -203,7 +206,6 @@ public class ExportController {
         boolean moderatorsAreIncluded = includes.contains(ReviewsHistoryInclude.MODERATORS);
         boolean goodsAreIncluded = includes.contains(ReviewsHistoryInclude.GOODS);
 
-
         List<ReviewFullDto> reviews = reviewService.getByFilters(filters);
 
         if (reviews.isEmpty()){
@@ -218,7 +220,7 @@ public class ExportController {
                 exportBytes = csvService.getReviewsHistory(reviews);
                 headers.setContentType(MediaType.parseMediaType("text/csv"));
                 headers.setContentDisposition(
-                        ContentDisposition.attachment().filename("report.csv").build()
+                        ContentDisposition.attachment().filename("price_history.csv").build()
                 );
             }
             case XLSX -> {
@@ -240,7 +242,8 @@ public class ExportController {
                     goods = reviews.stream().map(
                             ReviewFullDto::getGood
                     ).collect(Collectors.toMap(
-                            GoodForReviewDto::getId, u-> u
+                            GoodForReviewDto::getId, u-> u,
+                            (old, n) -> old
                     ));
                 }
 
@@ -249,7 +252,7 @@ public class ExportController {
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 ));
                 headers.setContentDisposition(
-                        ContentDisposition.attachment().filename("report.xlsx").build()
+                        ContentDisposition.attachment().filename("price_history.xlsx").build()
                 );
             }
         }
@@ -277,7 +280,7 @@ public class ExportController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("text/csv"));
         headers.setContentDisposition(
-                ContentDisposition.attachment().filename("report.csv").build()
+                ContentDisposition.attachment().filename("good_history.csv").build()
         );
 
         headers.setContentLength(exportBytes.length);

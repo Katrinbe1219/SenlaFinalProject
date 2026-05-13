@@ -9,6 +9,7 @@ import org.example.core.models.Good;
 import org.example.core.models.Price;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.springframework.stereotype.Repository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Service
+@Repository
 public class PriceForCalculationHibImpl  extends HibernateAbstractDao<Price, Long, Logger> {
     private final static Logger logger = LogManager.getLogger(PriceForCalculationHibImpl.class);
     protected PriceForCalculationHibImpl() {
@@ -34,7 +35,9 @@ public class PriceForCalculationHibImpl  extends HibernateAbstractDao<Price, Lon
         WHERE r.good_id = goods.id AND  r.blocked = false)
         WHERE id = :goodId
         RETURNING rate
-""", Double.class).setParameter("goodId", goodId).uniqueResultOptional().orElse(null);
+""", Double.class)
+                    .setParameter("goodId", goodId)
+                    .uniqueResultOptional().orElse(null);
         }
         catch(HibernateException e) {
             logger.error("Hibernate Ошибка в PriceAnalyseHibImpl recalculateForGood " + e.getMessage());

@@ -12,11 +12,13 @@ import org.example.core.exceptions.DoesNoeExist;
 import org.example.core.exceptions.NotCorrectInput;
 import org.example.core.hibernate.base_settings.filters.rates.RatesFilter;
 import org.example.core.hibernate.base_settings.filters.rates.RatingRecalcFilter;
+import org.example.core.models.User;
 import org.example.core.services.RecalculationService;
 import org.example.core.services.documents.RateService;
 import org.example.core.services.graphics.GraphicalAnalyseService;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -70,6 +72,10 @@ public class RateController {
             throw new NotCorrectInput("tag can not be given");
         }
 
+        if (filters.getCategoryIds() != null || filters.getCategoryId() != null){
+            throw new NotCorrectInput("category can not be given");
+        }
+
 
         return rateService.getGoodRatesByFilter(filters);
     }
@@ -106,19 +112,22 @@ public class RateController {
 
     // recalculation rating--------------------------------------
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/recalculation")
+    // access denied?
+    @GetMapping("/recalculation/all")
     public StringResponse recalculateRating(
+            @AuthenticationPrincipal User user
     ){
-        return recalculationService.personRequest(null);
+        return recalculationService.personRequest(null, user.getRole().getName());
     }
 
     @GetMapping("/recalculation/{id}")
-    @PreAuthorize("hasRole('MODERATOR')")
-    public StringResponse recalculateRatingById(@PathVariable("id") Long id){
+    @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')")
+    public StringResponse recalculateRatingById(@PathVariable("id") Long id,
+                                                @AuthenticationPrincipal User user){
         if (id==null || id <=0){
             throw new NotCorrectInput("id must be > 0");
         }
-        return recalculationService.personRequest(id);
+        return recalculationService.personRequest(id, user.getRole().getName());
     }
 
 

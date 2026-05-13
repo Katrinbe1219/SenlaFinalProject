@@ -234,10 +234,9 @@ public class ReviewForUserServiceTest {
     @Tag("positive")
     @DisplayName("getByFiltersIfEmpty")
     void getByFiltersIfEmpty() {
-        when(userHib.getByUsernameSmallVersion(anyString())).thenReturn(new User());
-        when(reviewHib.getMinByFilters(any(), any())).thenReturn(List.of());
+        when(reviewHib.getMinByFilters(any())).thenReturn(List.of());
 
-        List<ReviewDto> result = service.getByFilters(new ReviewForUserFilters(), "username");
+        List<ReviewDto> result = service.getByFilters(new ReviewForUserFilters());
 
         Assertions.assertTrue(result.isEmpty());
     }
@@ -249,11 +248,10 @@ public class ReviewForUserServiceTest {
         Review review = new Review();
         ReviewDto dto = new ReviewDto();
 
-        when(userHib.getByUsernameSmallVersion(anyString())).thenReturn(new User());
-        when(reviewHib.getMinByFilters(any(), any())).thenReturn(List.of(review, review));
+        when(reviewHib.getMinByFilters(any())).thenReturn(List.of(review, review));
         when(mapper.toDto(any())).thenReturn(dto);
 
-        List<ReviewDto> result = service.getByFilters(new ReviewForUserFilters(), "username");
+        List<ReviewDto> result = service.getByFilters(new ReviewForUserFilters());
 
         Assertions.assertEquals(2, result.size());
         verify(mapper, times(2)).toDto(any());
@@ -263,13 +261,12 @@ public class ReviewForUserServiceTest {
     @Tag("negative")
     @DisplayName("getByFiltersIfRepositoryThrows")
     void getByFiltersIfRepositoryThrows() {
-        when(userHib.getByUsernameSmallVersion(anyString())).thenReturn(new User());
-        when(reviewHib.getMinByFilters(any(), any()))
+        when(reviewHib.getMinByFilters(any()))
                 .thenThrow(new RuntimeException("db error"));
 
         Exception ex = Assertions.assertThrows(
                 RuntimeException.class,
-                () -> service.getByFilters(new ReviewForUserFilters(), "username")
+                () -> service.getByFilters(new ReviewForUserFilters())
         );
 
         Assertions.assertEquals("db error", ex.getMessage());

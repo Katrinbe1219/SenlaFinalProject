@@ -39,7 +39,7 @@ public class PriceForAnalyzeController {
 
 
     @GetMapping("/shops/{id}/goods")
-    // получение максимальных и минимальных продуктов
+    // получение максимальных и минимальных продуктов на данный момент p.validTO is NULL
     public List<GoodAnalyseForShopDto> getGoodsByShopId(
             @PathVariable("id") Long id,
             @RequestParam(value = "type", defaultValue = "max", required = false) String type,
@@ -191,7 +191,6 @@ public class PriceForAnalyzeController {
             @Valid @RequestBody DistrictStatisticFilter filters
     ){
         return priceService.getShopsStatByDistricts(filters);
-
     }
 
     @GetMapping(value = "/shops/district/graph", produces = MediaType.IMAGE_PNG_VALUE)

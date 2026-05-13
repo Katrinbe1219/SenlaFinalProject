@@ -15,6 +15,7 @@ public class ModeratorLogCreateDto {
     @Positive(message = "goodId must be > 0")
     private Long goodId;
 
+
     private ModeratorVerdict verdict;
     @NotBlank(message = "comment must be given")
     private String comment;

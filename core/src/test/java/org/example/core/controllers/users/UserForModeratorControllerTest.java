@@ -32,6 +32,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -243,7 +244,7 @@ public class UserForModeratorControllerTest {
         UserAdvancedFilter filters = new UserAdvancedFilter();
         filters.setRoleType(RoleTypes.MIN_USER);
 
-        when(userService.getAllUsers(any())).thenReturn(List.of());
+        when(userService.getAllUsers(any(), anyBoolean())).thenReturn(List.of());
 
         mockMvc.perform(get("/moderator/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -259,7 +260,7 @@ public class UserForModeratorControllerTest {
         UserAdvancedFilter filters = new UserAdvancedFilter();
         filters.setRoleType(RoleTypes.MAX_USER);
 
-        when(userService.getAllUsers(any())).thenReturn(List.of(new UserFullDto()));
+        when(userService.getAllUsers(any(), anyBoolean())).thenReturn(List.of(new UserFullDto()));
 
         mockMvc.perform(get("/moderator/users")
                         .contentType(MediaType.APPLICATION_JSON)

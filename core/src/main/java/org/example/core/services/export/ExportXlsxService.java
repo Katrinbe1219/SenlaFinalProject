@@ -117,17 +117,17 @@ public class ExportXlsxService {
                 index = 4;
 
                 if (shops != null){
-                    formula = String.format("VLOOKUP(%s%d,Shops!$A:$D,2,False)",getColumnLetter(index-1), i+2);
+                    formula = String.format("VLOOKUP(%s%d,Shops!$A:$E,2,False)",getColumnLetter(index-1), i+2);
                     row.createCell(index).setCellFormula(formula);
                     index++;
-                    formula = String.format("VLOOKUP(%s%d,Shops!$A:$D,3,False)",getColumnLetter(index-2), i+2);
+                    formula = String.format("VLOOKUP(%s%d,Shops!$A:$E,3,False)",getColumnLetter(index-2), i+2);
                     row.createCell(index).setCellFormula(formula);
                     index++;
-                    formula = String.format("VLOOKUP(%s%d,Shops!$A:$D,4,False)",getColumnLetter(index-3), i+2);
+                    formula = String.format("VLOOKUP(%s%d,Shops!$A:$E,4,False)",getColumnLetter(index-3), i+2);
 
                     row.createCell(index).setCellFormula(formula);
                     index++;
-                    formula = String.format("VLOOKUP(%s%d,Shops!$A:$D,5,False)",getColumnLetter(index-4), i+2);
+                    formula = String.format("VLOOKUP(%s%d,Shops!$A:$E,5,False)",getColumnLetter(index-4), i+2);
                     row.createCell(index).setCellFormula(formula);
                     index++;
                 }
@@ -487,9 +487,9 @@ public class ExportXlsxService {
                 row.createCell(1).setCellValue(dto.getName());
                 row.createCell(2).setCellValue(dto.getCategory().getId());
                 if (isCategory){
-                    formula = String.format("VLOOKUP(%s%d,Categories!$A:$B,3,FALSE)",getColumnLetter(2), i+2);
+                    formula = String.format("VLOOKUP(%s%d,Categories!$A:$D,3,FALSE)",getColumnLetter(2), i+2);
                     row.createCell(3).setCellFormula(formula);
-                    formula = String.format("VLOOKUP(%s%d,Categories!$A:$B,4,FALSE)",getColumnLetter(2),i+2);
+                    formula = String.format("VLOOKUP(%s%d,Categories!$A:$D,4,FALSE)",getColumnLetter(2),i+2);
                     row.createCell(4).setCellFormula(formula);
                 }else{
                     row.createCell(3).setCellValue(dto.getCategory().getName());
@@ -497,9 +497,9 @@ public class ExportXlsxService {
                 }
                 row.createCell(5).setCellValue(dto.getUnit().getId());
                 if (isUnit){
-                    formula = String.format("VLOOKUP(%s%d,Units!$A:$B,2,FALSE)",getColumnLetter(5), i+2);
+                    formula = String.format("VLOOKUP(%s%d,Units!$A:$C,2,FALSE)",getColumnLetter(5), i+2);
                     row.createCell(6).setCellFormula(formula);
-                    formula = String.format("VLOOKUP(%s%d,Units!$A:$B,3,FALSE)",getColumnLetter(5), i+2);
+                    formula = String.format("VLOOKUP(%s%d,Units!$A:$C,3,FALSE)",getColumnLetter(5), i+2);
                     row.createCell(7).setCellFormula(formula);
 
                 }else{

@@ -32,7 +32,7 @@ public class TagHibImpl extends HibernateAbstractDao<Tag, Long, Logger> {
         try {
             Tag old = session.get(Tag.class, dto.getId());
             if (old == null){
-                throw new NotCorrectInput("Такого tag не существует");
+                throw new DoesNoeExist("Такого tag не существует");
             }
 
             if(dto.getName().equalsIgnoreCase(old.getName())){
@@ -49,8 +49,8 @@ public class TagHibImpl extends HibernateAbstractDao<Tag, Long, Logger> {
             logger.error("Hibernate Exception TagHibImpl update(TagDto): " + e.getMessage());
             throw new CanNotMakeExecution(e.getMessage());
         }
-        catch (NotCorrectInput e){
-            throw new DoesNoeExist("Tag does not exist with given credentials");
+        catch (NotCorrectInput | DoesNoeExist e){
+            throw e;
         }
         catch (Exception e){
             logger.error("NonHibernate Exception TagHibImpl update(TagDto):: "+e.getMessage());

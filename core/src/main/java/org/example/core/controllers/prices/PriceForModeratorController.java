@@ -35,6 +35,7 @@ public class PriceForModeratorController {
     }
 
     @PatchMapping("/update")
+    // чисто обновление, подгрузка категории необязательна в результате
     public PriceGetResultForModerator updatePriceForGoodInShop(@Valid @RequestBody PriceCreateDto dto) {
         return priceService.updatePrice(dto);
     }
@@ -66,7 +67,10 @@ public class PriceForModeratorController {
                 dtos = importFileXlsxService.importPrices(file.getInputStream());
                 priceService.saveAll(dtos, optionForUpload, isSend);
             }
-        }catch (Exception e){
+        }catch (NotCorrectInput e){
+            throw e;
+        }
+        catch (Exception e){
             throw new NonHibernateException("PriceForModeratorController uploadFile: File can not be open: " + e.getMessage());
         }
 

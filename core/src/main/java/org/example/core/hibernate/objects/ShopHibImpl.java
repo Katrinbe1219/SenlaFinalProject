@@ -63,11 +63,11 @@ public class ShopHibImpl extends HibernateAbstractDao<Shop, Long, Logger> {
             };
 
             List<JpaPredicate> predicates = new ArrayList<>();
-            if (ids!=null){
+            if (ids!=null && !ids.isEmpty()){
                 predicates.add(root.get("id").in(ids));
             }
 
-            if (districtIds!=null){
+            if (districtIds!=null && !districtIds.isEmpty()){
                 predicates.add(root.get("district").get("id").in(districtIds));
             }
             query.select(root)
@@ -105,11 +105,11 @@ public class ShopHibImpl extends HibernateAbstractDao<Shop, Long, Logger> {
             return shop.orElse(null);
         }
         catch(HibernateException e){
-            logger.error("Hibenate ShopHibimpl findById: " + e.getMessage());
+            logger.error("Hibernate ShopHibImpl findById: " + e.getMessage());
             throw new CanNotMakeExecution(e.getMessage());
         }
         catch (Exception e){
-            logger.error("NonHibernate Exception ShopHibimpl findById: "+e.getMessage());
+            logger.error("NonHibernate Exception ShopHibImpl findById: "+e.getMessage());
             throw new NonHibernateException(e.getMessage());
         }
     }

@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @DependsOn("liquibase")
 public class GoodHibImpl extends HibernateAbstractDao<Good, Long, Logger> {
     private static final Logger logger = LogManager.getLogger(GoodHibImpl.class);
-    GoodHibImpl() {
+    public GoodHibImpl() {
         super(Good.class);
     }
 
@@ -55,26 +55,6 @@ public class GoodHibImpl extends HibernateAbstractDao<Good, Long, Logger> {
     }
 
 
-
-    @Transactional
-    public List<RecalculationForGoodDto> getAllIds(){
-
-        try{
-            Session session = getSessionFactory().getCurrentSession();
-            return session.createQuery("""
-                SELECT g.id AS goodId, g.rate AS rate FROM Good g
-            """, RecalculationForGoodDto.class).getResultList();
-        }
-        catch(HibernateException e) {
-            logger.error("Hibernate Ошибка в GoodHinImpl getAllIds " + e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception GoodHinImpl getAllIds: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
-
     @Transactional
     public List<RecalculationForGoodDto> getAllIdsForRecalculation(){
 
@@ -82,7 +62,9 @@ public class GoodHibImpl extends HibernateAbstractDao<Good, Long, Logger> {
             Session session = getSessionFactory().getCurrentSession();
             return session.createQuery("""
                 SELECT g.id AS goodId, g.rate AS rate FROM Good g WHERE g.moderatorStatus = :status
-            """, RecalculationForGoodDto.class).setParameter("status", GoodStatusFromModerator.APPROVED).getResultList();
+            """, RecalculationForGoodDto.class)
+                    .setParameter("status", GoodStatusFromModerator.APPROVED)
+                    .getResultList();
         }
         catch(HibernateException e) {
             logger.error("Hibernate Ошибка в GoodHinImpl getAllIdsForRecalculation " + e.getMessage());
@@ -93,25 +75,6 @@ public class GoodHibImpl extends HibernateAbstractDao<Good, Long, Logger> {
             throw new NonHibernateException(e.getMessage());
         }
     }
-
-    @Transactional
-    public void updateRating(Long goodId, Double rating){
-        try{
-            Session session = getSessionFactory().getCurrentSession();
-            session.createMutationQuery("""
-UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
-""").setParameter("rating", rating).setParameter("goodId", goodId).executeUpdate();
-        }
-        catch(HibernateException e) {
-            logger.error("Hibernate Ошибка в GoodHinImpl updateRating " + e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception GoodHinImpl updateRating: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
-
 
     @Transactional
     public Good findByIdFullVersion(Long id){
@@ -211,23 +174,6 @@ UPDATE Good g SET g.rate = :rating WHERE g.id = :goodId
         }
         catch (Exception e){
             logger.error("NonHibernate Exception GoodHinImpl findAllForUserDto: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
-
-    @Transactional
-    public List<Object[]> getStatusByIds(Set<Long> ids){
-        try{
-            Session session = getSessionFactory().getCurrentSession();
-            return session.createQuery("SELECT g.id, g.moderatorStatus FROm Good  g WHERE g.id IN (:ids)", Object[].class)
-                    .setParameter("ids", ids).getResultList();
-        }
-        catch(HibernateException e) {
-            logger.error("Hibernate Ошибка в GoodHinImpl getStatusByIds " + e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception GoodHinImpl getStatusByIds: "+e.getMessage());
             throw new NonHibernateException(e.getMessage());
         }
     }

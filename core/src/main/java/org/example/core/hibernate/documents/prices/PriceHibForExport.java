@@ -44,9 +44,11 @@ public class PriceHibForExport extends HibernateAbstractDao<Price, Long, Logger>
             sql.append(" FROM prices AS p INNER JOIN shops AS s ON p.shop_id = s.id INNER JOIN goods AS g ON p.good_id = g.id ");
             buildFrom(filters, sql);
 
+            sql.append(" WHERE p.valid_to IS NULL ");
+
             if (filters.getShopsIds() != null && !filters.getShopsIds().isEmpty()){
                 sql.append("""
-                         WHERE s.id IN (:shopsIds)
+                         AND  s.id IN (:shopsIds)
                         """);
             }
             var query = session.createNativeQuery(sql.toString(), Tuple.class);
@@ -89,6 +91,7 @@ public class PriceHibForExport extends HibernateAbstractDao<Price, Long, Logger>
             dto.setShopName(t.get("shop_name", String.class));
             dto.setDistrictId(t.get("district_id", Long.class));
             dto.setDistrictName(t.get("district_name", String.class));
+            dto.setAddress(t.get("address", String.class));
         }
 
         if (filters.isTags()){
@@ -104,7 +107,7 @@ public class PriceHibForExport extends HibernateAbstractDao<Price, Long, Logger>
     ){
         if (filters.isShops()){
             builder.append("""
-                     ,s.name AS shop_name, s.address AS shop_address,
+                     ,s.name AS shop_name, s.address AS address,
                       d.id AS district_id , d.name  AS district_name
                     """);
         }

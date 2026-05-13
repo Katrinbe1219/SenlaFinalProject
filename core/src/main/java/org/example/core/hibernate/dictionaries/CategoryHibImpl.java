@@ -73,7 +73,7 @@ public class CategoryHibImpl extends HibernateAbstractDao<Category, Long, Logger
                     "        )\n" +
                     "        FROM Category c\n" +
                     "        LEFT JOIN c.parent p");
-            if (ids!=null){
+            if (ids!=null && !ids.isEmpty()){
                 sql.append(" WHERE c.id IN (:ids) ");
             }
 
@@ -85,7 +85,7 @@ public class CategoryHibImpl extends HibernateAbstractDao<Category, Long, Logger
                         .setMaxResults(count);
             }
 
-            if (ids!=null){
+            if (ids!=null  && !ids.isEmpty()){
                 query.setParameter("ids", ids);
             }
 
@@ -120,47 +120,6 @@ public class CategoryHibImpl extends HibernateAbstractDao<Category, Long, Logger
         }
     }
 
-    @Transactional
-    public List<Category> getSubCategoriesByMainFullVersion(Long mainId) throws CanNotMakeExecution {
-        Session session = getSessionFactory().getCurrentSession();
-        try {
-            return session.createQuery(
-                    "SELECT DISTINCT c FROM Category c" +
-                            " LEFT JOIN FETCH  c.parent " +
-                            " WHERE c.parent = :id"  , Category.class
-            )
-                    .setParameter("parent", mainId).list();
-        }
-        catch (HibernateException e){
-            logger.error("Hibernate Exception CategoryHibImpl getSubCategoriesByMain: "+e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception CategoryHibImpl getSubCategoriesByMain: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-
-    }
-
-    @Transactional
-    public Category findByNameFullVersion(String name) throws  CanNotMakeExecution, NonHibernateException{
-        Session session = getSessionFactory().getCurrentSession();
-        try {
-            return  session.createQuery(
-                    "SELECT DISTINCT c FROM Category c " +
-                            "LEFT JOIN FETCH c.parent " +
-                            "WHERE c.name = :name" , Category.class
-            ).setParameter("name", name).uniqueResultOptional().orElse(null);
-        }
-        catch (HibernateException e){
-            logger.error("Hibernate Exception CategoryHibImpl findByName: "+e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception CategoryHibImpl findByName: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
 
     @Transactional
     // возвращает новый объект
@@ -187,14 +146,10 @@ public class CategoryHibImpl extends HibernateAbstractDao<Category, Long, Logger
             logger.error("Hibernate Exception CategoryHibImpl update(CategoryDto): "+e.getMessage());
             throw new CanNotMakeExecution(e.getMessage());
         }
-        catch (NotCorrectInput e){
+        catch (NotCorrectInput | DoesNoeExist e){
             throw e;
         }
-        catch (DoesNoeExist e){
-            throw new DoesNoeExist("Category with id: " + old.getId() + " does not exist");
-        }
         catch (Exception e){
-
             logger.error("NonHibernate Exception CategoryHibImpl update(CategoryDto): "+e.getMessage());
             throw new NonHibernateException(e.getMessage());
         }

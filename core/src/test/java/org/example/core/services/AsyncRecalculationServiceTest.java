@@ -9,6 +9,7 @@ import org.example.core.hibernate.objects.GoodHibImpl;
 import org.example.core.models.Good;
 import org.example.core.models.types.RatingStatus;
 import org.example.core.models.types.RatingTriggerType;
+import org.example.core.models.types.RoleTypes;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -44,7 +45,7 @@ public class AsyncRecalculationServiceTest {
         when(goodHib.findById(anyLong(), any(Logger.class)))
                 .thenReturn(null);
         Assertions.assertThrows(NotCorrectInput.class, () -> {
-            asyncRecalculationService.recalculationForGood(1L,flag );
+            asyncRecalculationService.recalculationForGood(1L,flag, RoleTypes.MODERATOR );
         });
     }
 
@@ -58,7 +59,7 @@ public class AsyncRecalculationServiceTest {
         when(priceHib.recalculateForGood(anyLong()))
                 .thenThrow(new RuntimeException("Проблема"));
 
-       Assertions.assertThrows(RuntimeException.class, () -> asyncRecalculationService.recalculationForGood(1L,flag ));
+       Assertions.assertThrows(RuntimeException.class, () -> asyncRecalculationService.recalculationForGood(1L,flag, RoleTypes.MODERATOR ));
         verify(rateHib).saveErrors(any(), eq("Проблема"), eq(RatingStatus.FAILED), eq(RatingTriggerType.MODERATOR));
         verify(rateHib, never()).saveLog(any(), any(), eq(RatingStatus.SUCCESS), eq(RatingTriggerType.MODERATOR), any(), any());
     }
@@ -76,7 +77,7 @@ public class AsyncRecalculationServiceTest {
         when(priceHib.recalculateForGood(anyLong()))
                 .thenReturn(2D);
 
-        asyncRecalculationService.recalculationForGood(1L,flag);
+        asyncRecalculationService.recalculationForGood(1L,flag, RoleTypes.MODERATOR);
 
         verify(rateHib, never()).saveErrors(any(), eq("Проблема"), eq(RatingStatus.FAILED), eq(RatingTriggerType.MODERATOR));
         verify(rateHib).saveLog(any(), any(), eq(RatingStatus.SUCCESS), eq(RatingTriggerType.MODERATOR), eq(oldGood.getRate()), eq(2D));

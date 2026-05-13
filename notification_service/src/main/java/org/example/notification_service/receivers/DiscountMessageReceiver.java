@@ -40,7 +40,7 @@ public class DiscountMessageReceiver {
     )
     public void handle(String dto, Acknowledgment ack) {
         try{
-            System.out.println("HEREEE");
+            logger.info("Discount Message received");
             DiscountMessage message= objectMapper.readValue(dto, DiscountMessage.class);
             proccessMessage(message);
             ack.acknowledge();
@@ -58,13 +58,13 @@ public class DiscountMessageReceiver {
 
     private void proccessMessage(DiscountMessage dto){
         try {
-            // TODO  checkout category
+
             List<Long> cats = null;
             if (dto.getCategoryId()!= null){
                 cats = catHib.getCategories(dto.getCategoryId()).stream().map(Category::getId).toList();
                 if (cats.isEmpty())  cats = List.of(dto.getCategoryId());
 
-                System.out.println(cats.size());
+                logger.debug("category's size " + cats.size());
             }
 
             List<Long> goods=null;

@@ -56,12 +56,14 @@ public class ProfileController {
         if (Duration.between(user.getUpdatedAt(), Instant.now(clock)).toDays() < 3){
             throw new PermissionDenied("You can not update profile, 3 days did not past from last update");
         }
+        if (dto.getNewEmail() == null && dto.getNewUsername() == null && dto.getNewLogin() == null){
+            throw new NotCorrectInput("You need to give changes");
 
+        }
 
         if (dto.getNewLogin()!= null && dto.getNewLogin().equals(user.getLogin())){
             throw new NotCorrectInput("Login can not be the same");
         }
-
 
 
         if (dto.getNewUsername() != null && dto.getNewUsername().equals(user.getUsernameNotUserDetails())){

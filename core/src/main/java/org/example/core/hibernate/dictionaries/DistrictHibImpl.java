@@ -14,5 +14,4 @@ public class DistrictHibImpl extends HibernateAbstractDao<District, Long, Logger
         super(District.class);
     }
 
-
 }

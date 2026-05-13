@@ -95,7 +95,7 @@ public class AdminControllerTest {
 
 
         List<UserFullDto> expected = List.of(new UserFullDto(), new UserFullDto());
-        when(userService.getAllUsers(any(UserAdvancedFilter.class))).thenReturn(expected);
+        when(userService.getAllUsers(any(UserAdvancedFilter.class), anyBoolean())).thenReturn(expected);
 
         mockMvc.perform(get("/admin/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -116,7 +116,7 @@ public class AdminControllerTest {
         filters.setEndUpdatedAt(LocalDate.of(2024,1,2));
 
         List<UserFullDto> expected = List.of(new UserFullDto(), new UserFullDto());
-        when(userService.getAllUsers(any(UserAdvancedFilter.class))).thenReturn(expected);
+        when(userService.getAllUsers(any(UserAdvancedFilter.class), anyBoolean())).thenReturn(expected);
 
         mockMvc.perform(get("/admin/users")
                         .contentType(MediaType.APPLICATION_JSON)

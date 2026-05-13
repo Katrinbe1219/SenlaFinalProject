@@ -39,7 +39,7 @@ public class AvailabilitySubscriptionReceiver {
     public void handle(String dto, Acknowledgment ack) {
         try{
             PriceCreatedMessage message = mapper.readValue(dto, PriceCreatedMessage.class);
-
+            logger.info("Availability Message received");
             processPrice(message);
             ack.acknowledge();
         }
@@ -56,7 +56,7 @@ public class AvailabilitySubscriptionReceiver {
     void processPrice(PriceCreatedMessage dto){
         List<AvailabilitySubscription> subscriptions = availabilitySubHib.findAll(dto.getGoodId(), dto.getShopId());
         if (subscriptions.isEmpty())  return;
-
+        logger.info("Availability Messages are about to be send");
         subscriptions.forEach(sub -> {
             if (sub.getUser().getEmail()!=null){
                 emailService.sendAvailableASync(
@@ -68,6 +68,9 @@ public class AvailabilitySubscriptionReceiver {
                 );
             }
         });
+
+        List<Long> ids = subscriptions.stream().map(AvailabilitySubscription::getId).toList();
+        availabilitySubHib.deleteByIds(ids);
 
     }
 

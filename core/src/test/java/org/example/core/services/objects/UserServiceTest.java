@@ -156,7 +156,7 @@ public class UserServiceTest {
         user.setId(1L);
 
         when(passwordEncoder.matches(anyString(), anyString()))
-                .thenReturn(Boolean.TRUE);
+                .thenReturn(Boolean.FALSE);
         when(passwordEncoder.encode(anyString())).thenReturn("password-new");
 
         service.patchPassword(dto, user);
@@ -189,13 +189,13 @@ public class UserServiceTest {
     void patchPasswordIfOldPasswordIsInvalid(){
         UpdateUserPasswordDto dto = new UpdateUserPasswordDto();
         dto.setNewPassword("password-new");
-        dto.setOldPassword("password");
+        dto.setOldPassword("password-old");
 
         User user = new User();
         user.setPassword("password-old");
 
         when(passwordEncoder.matches(any(), anyString()))
-                .thenReturn(Boolean.FALSE);
+                .thenReturn(Boolean.TRUE);
 
         Exception ex = Assertions.assertThrows(NotCorrectInput.class,()->service.patchPassword(dto, user));
         Assertions.assertEquals("Old password is not valid", ex.getMessage());

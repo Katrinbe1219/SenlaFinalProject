@@ -106,26 +106,6 @@ public class RefreshTokenHibImpl extends HibernateAbstractDao<RefreshToken, Long
     }
 
     @Transactional
-    public Optional<RefreshToken> findByTokenHash(String tokenHash) {
-        Session session = getSessionFactory().getCurrentSession();
-        try{
-            return session.createQuery("""
-                SELECT rt FROM RefreshToken rt
-               WHERE rt.tokenHash = :tokenHash
-             """, RefreshToken.class).setParameter("tokenHash", tokenHash)
-                    .uniqueResultOptional();
-        }
-        catch (HibernateException e){
-            logger.error("Проблема RefreshTokenHibImpl findByTokenHash: " +  e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception RefreshTokenHibImpl findByTokenHash: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
-
-    @Transactional
     public Optional<RefreshToken> findFullByTokenHash(String tokenHash) {
         Session session = getSessionFactory().getCurrentSession();
 
@@ -183,7 +163,9 @@ public class RefreshTokenHibImpl extends HibernateAbstractDao<RefreshToken, Long
             SELECT DISTINCT rt FROM RefreshToken rt
             LEFT JOIN FETCH rt.user
             WHERE rt.user.id = :userId AND rt.expiresAt >= :time
-""", RefreshToken.class).setParameter("userId", userId).setParameter("time", Instant.now())
+""", RefreshToken.class)
+                    .setParameter("userId", userId)
+                    .setParameter("time", Instant.now())
                     .getResultList();
         }
         catch (HibernateException e){

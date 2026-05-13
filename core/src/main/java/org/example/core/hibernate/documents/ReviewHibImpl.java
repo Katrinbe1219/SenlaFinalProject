@@ -6,10 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.core.dto.creating.ReviewCreateDto;
 import org.example.core.dto.getting.reviews.ReviewDto;
-import org.example.core.exceptions.CanNotMakeExecution;
-import org.example.core.exceptions.DoesNoeExist;
-import org.example.core.exceptions.NonHibernateException;
-import org.example.core.exceptions.NotCorrectInput;
+import org.example.core.exceptions.*;
 import org.example.core.hibernate.base_settings.HibernateAbstractDao;
 import org.example.core.hibernate.base_settings.filters.reviews.ReviewForUserFilters;
 import org.example.core.hibernate.base_settings.filters.reviews.ReviewAdvancedFilters;
@@ -138,12 +135,23 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
     public boolean blockReview(Long id, User moderator){
         Session session = getSessionFactory().getCurrentSession();
         try {
-            int updatedRows = session.createMutationQuery("""
-                UPDATE Review r SET r.blocked = true, r.blockedBy = :blockedBy, r.blockedAt = :blockedAt WHERE r.id = :id
-                """).setParameter("id", id).setParameter("blockedBy", moderator).setParameter("blockedAt", Instant.now()).executeUpdate();
-            if (updatedRows != 0) return true;
-            return false;
-         }
+            Review review = findById(id, logger);
+
+            if (review == null) {
+                throw new DoesNoeExist("Review does not exist with given credentials");
+            }
+            if (review.getBlocked()){
+                throw new NotCorrectInput("This review is already blocked");
+            }
+            review.setBlocked(true);
+            review.setBlockedAt(Instant.now());
+            review.setBlockedBy(moderator);
+            session.flush();
+            return true;
+
+         } catch (NotCorrectInput | DoesNoeExist e) {
+            throw e;
+        }
         catch (HibernateException e){
             logger.error("Hibernate ReviewHibImpl blockReview: "+  e.getMessage());
             throw new CanNotMakeExecution(e.getMessage());
@@ -158,17 +166,38 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
     public void unblockReview(Long id, String login){
         Session session = getSessionFactory().getCurrentSession();
         try {
-            Review review = findById(id, logger);
-            if (review == null) {
+            Optional<Review> check = session.createQuery(
+                    "SELECT  r FROM Review r " +
+                            "LEFT JOIN FETCH r.user " +
+                            " WHERE r.id=:id ")
+                    .setParameter("id", id)
+                    .uniqueResultOptional();
+
+            if (check.isEmpty()) {
                 throw new DoesNoeExist("Review does not exist with given credentials");
             }
-            if (!review.getBlockedBy().getLogin().equals(login)){
-                throw new DoesNoeExist("This review was blocked by you");
+
+            Review review=  check.get();
+            if (!review.getBlocked()){
+                throw new NotCorrectInput("This review is not blocked");
+            }
+            if (review.getBlockedBy() == null){
+                logger.error("ReviewHibImpl unblock good is blocked but blockedBy is null ");
+                throw new NonHibernateException("ReviewHibImpl unblock good is blocked but blockedBy is null ");
+            }
+
+            if ( !review.getBlockedBy().getLogin().equals(login)){
+                throw new PermissionDenied("This review was blocked not by you");
             }
             review.setBlocked(false);
+            review.setBlockedBy(null);
+            review.setBlockedAt(null);
             session.flush();
 
 
+        }
+        catch(DoesNoeExist | PermissionDenied  | NotCorrectInput e){
+            throw e;
         }
         catch (HibernateException e){
             logger.error("Hibarenate ReviewHibImpl unblockReview: "+  e.getMessage());
@@ -179,31 +208,6 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
             throw new NonHibernateException(e.getMessage());
         }
     }
-
-    @Transactional
-    public Long countByFilters(ReviewAdvancedFilters filters) throws CanNotMakeExecution {
-        Session session = getSessionFactory().getCurrentSession();
-        try{
-            HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
-            JpaCriteriaQuery<Long> query = builder.createQuery(Long.class);
-            JpaRoot<Review> root = query.from(Review.class);
-
-            List<JpaPredicate> predicates = buildPredicates(builder, root, filters);
-            query.select(builder.count(root))
-                    .where(builder.and(predicates.toArray(new JpaPredicate[0])));
-
-            return  session.createQuery(query).uniqueResultOptional().orElse(null);
-        }
-        catch(HibernateException e){
-            logger.error("Hibernate ReviewHibImpl countByFilters: "+  e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception ReviewHibImpl countByFilters: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
-
 
     @Transactional
     public List<Review> getFullByFilters(ReviewAdvancedFilters filters) throws CanNotMakeExecution {
@@ -243,7 +247,7 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
 
 
     @Transactional
-    public List<Review> getMinByFilters(ReviewForUserFilters filters, User user) throws CanNotMakeExecution {
+    public List<Review> getMinByFilters(ReviewForUserFilters filters) throws CanNotMakeExecution {
         Session session = getSessionFactory().getCurrentSession();
         try{
 
@@ -252,11 +256,7 @@ public class ReviewHibImpl extends HibernateAbstractDao<Review, Long, Logger> {
             JpaRoot<Review> root = query.from(Review.class);
 
             List<JpaPredicate> predicates = buildPredicates(builder, root, filters);
-            if (user != null){
-                // если передается user, то тогда идет запрос от user для фильтрации
-                predicates.add( builder.equal(root.get("user").get("id"), user.getId()));
-                predicates.add(builder.equal(root.get("blockedBy"), false));
-            }
+            predicates.add(builder.equal(root.get("blocked"), false));
 
             query.select(root)
                     .where(builder.and(predicates.toArray(new JpaPredicate[0])))

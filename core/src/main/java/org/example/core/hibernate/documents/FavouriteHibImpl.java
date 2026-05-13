@@ -117,29 +117,6 @@ public class FavouriteHibImpl extends HibernateAbstractDao<Favourite, Long, Logg
     }
 
     @Transactional
-    public FavouriteGetForUserDto findByUserIdAndGoodId(Long userId, Long goodId){
-        try{
-            Session session = getSessionFactory().getCurrentSession();
-            return session.createQuery("""
-            SELECT DISTINCT  new  org.example.core.dto.getting.favourites.FavouriteGetForUserDto(
-            g.name, g.id )
-            FROM Favourite  f 
-            JOIN f.good g 
-            WHERE f.user.id = :userId AND g.id = :goodId
-            """, FavouriteGetForUserDto.class)
-                    .setParameter("goodId", goodId).setParameter("userId", userId).uniqueResultOptional().orElse(null);
-        }
-        catch(HibernateException e) {
-            logger.error("Hibernate Ошибка в FavouriteHibImpl findByUserIdAndGoodId " + e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception FavouriteHibImpl findByUserIdAndGoodId: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
-
-    @Transactional
     public Favourite findByUserIdAndGoodIdPureVersion(Long userId, Long goodId){
         try{
             Session session = getSessionFactory().getCurrentSession();
@@ -209,7 +186,6 @@ public class FavouriteHibImpl extends HibernateAbstractDao<Favourite, Long, Logg
         }
     }
     @Transactional
-    //TODO for analyst
     public FavouriteCountByGoodDto countByGoodId(Long goodId){
         try{
             Session session = getSessionFactory().getCurrentSession();

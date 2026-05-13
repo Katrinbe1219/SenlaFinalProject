@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 @DependsOn("liquibase")
 @Repository
 public class UnitHibImpl extends HibernateAbstractDao<Unit, Long, Logger> {
-    protected UnitHibImpl() {
+    public UnitHibImpl() {
         super(Unit.class);
     }
 }

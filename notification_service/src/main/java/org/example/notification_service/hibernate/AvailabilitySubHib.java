@@ -48,7 +48,7 @@ public class AvailabilitySubHib {
     public void deleteByIds(List<Long> ids){
         try{
             Session session =sessionFactory.getCurrentSession();
-            session.createMutationQuery("DELETE FROM AvailabilitySubscription  WHERE id in (:ids)")
+            session.createMutationQuery("DELETE FROM AvailabilitySubscription a  WHERE id in (:ids)")
                     .setParameter("ids", ids).executeUpdate();
         }
         catch(HibernateException e) {

@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.example.annotations.MutuallyExclusiveExtended;
+import org.example.annotations.ValidDateRange;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @MutuallyExclusiveExtended(first = "reviewDate", second="lastDate", third="firstDate")
+@ValidDateRange(first = "firstDate", second = "lastDate")
 public class ReviewForUserFilters {
     @Positive(message = "goodId must be  > 0")
     @NotNull(message = "goodId can not be null")

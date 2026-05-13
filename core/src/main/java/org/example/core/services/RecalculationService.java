@@ -4,12 +4,12 @@ import jakarta.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.example.core.dto.getting.StringResponse;
-import org.example.core.exceptions.NonHibernateException;
-import org.example.core.exceptions.UnavailableExecution;
+import org.example.core.exceptions.*;
 import org.example.core.hibernate.documents.prices.PriceForCalculationHibImpl;
 import org.example.core.hibernate.documents.RateHibImpl;
 import org.example.core.hibernate.objects.GoodHibImpl;
 import org.example.core.models.types.RatingTriggerType;
+import org.example.core.models.types.RoleTypes;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -46,7 +46,7 @@ public class RecalculationService {
     }
 
     @Transactional
-    public StringResponse personRequest(Long goodId){
+    public StringResponse personRequest(Long goodId, RoleTypes role){
         if (isRecalculating.get()){
             return new StringResponse("Пересчет уже выполняется, попробуйте позже");
         }
@@ -61,21 +61,26 @@ public class RecalculationService {
                 if (targetTime.isBefore(currentTime)) {
                     targetTime = targetTime.plusDays(1);
                 }
-                //TODO switch to admin
-                if (goodId == null ){
+                if (goodId == null  && role == RoleTypes.ADMIN){
                     if (ChronoUnit.HOURS.between(currentTime, targetTime) < 3){
                         return new StringResponse("Время пересчета ограничено для всех продуктов, попробуйте позже");
                     }
                     asyncRecalculationService.recalculationForAll(RatingTriggerType.ADMIN, isRecalculating);
-                }else{
+                }else if (goodId == null  && role != RoleTypes.ADMIN){
+                    throw new PermissionDenied("You are not allowed to recalculate all");
+                }
+                else{
 
                     if (ChronoUnit.MINUTES.between(currentTime, targetTime) < 6){
                         return new StringResponse("Время пересчета ограничено для всех продуктов, попробуйте позже");
                     }
                     try{
-                        asyncRecalculationService.recalculationForGood(goodId, isRecalculating);
+                        asyncRecalculationService.recalculationForGood(goodId, isRecalculating, role);
 
-                    }catch (Exception e){
+                    }catch (PermissionDenied | DoesNoeExist | NotCorrectInput e){
+                        throw e;
+                    }
+                    catch (Exception e){
                         throw new NonHibernateException("RecalculationService moderatorRequest " + e.getMessage());
                     }
                 }

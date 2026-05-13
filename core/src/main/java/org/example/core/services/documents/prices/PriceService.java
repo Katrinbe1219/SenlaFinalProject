@@ -74,8 +74,15 @@ public class PriceService {
     public void deletePriceByGoodAndShop(Long goodId, Long shopId){
         // изменяется валидность, в истории сохраняется
         try{
-            priceHib.makeInvalidPrice(goodId, shopId);
-        }catch (Exception e) {
+            int num = priceHib.makeInvalidPrice(goodId, shopId);
+            if (num == 0){
+                throw new NotCorrectInput("Price was no  deleted, check credentials or try later");
+
+            }
+        }catch (NotCorrectInput e){
+            throw e;
+        }
+        catch (Exception e) {
             logger.error("PriceService deletePriceByGoodAndShop: " + e.getMessage());
             throw e;
         }
@@ -85,8 +92,14 @@ public class PriceService {
     @Transactional
     public void deletePriceById(Long id){
         try{
-            priceHib.delete(id, logger);
-        }catch (Exception e) {
+            int num = priceHib.makeInvalidPrice(id);
+            if (num == 0){
+                throw new NotCorrectInput("Price was no  deleted, check credentials or try later");
+            }
+        }catch (NotCorrectInput e){
+            throw e;
+        }
+        catch (Exception e) {
             logger.error("PriceService deletePriceById: " + e.getMessage());
             throw e;
         }
@@ -171,6 +184,7 @@ public class PriceService {
                 );
             }
 
+            // чисто обновление, подгрузка категории необязательна
             Price newPrice = priceHib.update(price, logger);
             return toDto(newPrice, good, shop);
         }catch (DoesNoeExist e){
@@ -242,18 +256,19 @@ public class PriceService {
         // replace -> как новые могут быть, так и замены
         try{
             Map<GoodShopRecord, BigDecimal> oldValues = null;
-            if (option == OptionForUpload.REPLACE && isSend) {
+            boolean isSkipped = option == OptionForUpload.REPLACE && isSend;
+            if (isSkipped) {
                 List<Long> goodIds = dtos.stream().map(PriceCreateDto::getGoodId).toList();
                 List<Long> shopIds = dtos.stream().map(PriceCreateDto::getShopId).toList();
                 List<Object[]> invalids = priceHib.makeInvalidManyWithReturning(goodIds, shopIds);
 
                 oldValues = invalids.stream().collect(Collectors.toMap(
                         d-> new GoodShopRecord((Long) d[0], (Long) d[1]),
-                        d -> (BigDecimal) d[3]
+                        d -> (BigDecimal) d[2]
                 ));
             }
 
-            priceHib.saveAll(dtos, option);
+            priceHib.saveAll(dtos, option, isSkipped);
             if (option == OptionForUpload.STOP && isSend){
                 for (PriceCreateDto dto : dtos){
                     eventPublisher.publishEvent(
@@ -277,7 +292,10 @@ public class PriceService {
                     }
                 }
             }
-        }catch (Exception e){
+        }catch (NotCorrectInput e){
+            throw e;
+        }
+        catch (Exception e){
             logger.error("PriceService saveAll: " + e.getMessage());
             throw e;
         }

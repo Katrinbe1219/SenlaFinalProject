@@ -20,7 +20,7 @@ public class GoodPatchDto {
     //// ^[\\p{L}]+$" - любые языки мира, \\p{L} - unicode Letter
     @Pattern(regexp = ".*\\p{L}.*", message = "Name must contain letters")
     private String name;
-    @NullOrNotBlank
+    @NullOrNotBlank(message = "description can not be blank")
     private String description;
 
     private List<Long> tagIds;

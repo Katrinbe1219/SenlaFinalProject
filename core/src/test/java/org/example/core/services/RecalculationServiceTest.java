@@ -4,6 +4,7 @@ import jakarta.servlet.UnavailableException;
 import org.example.core.dto.getting.StringResponse;
 import org.example.core.exceptions.UnavailableExecution;
 import org.example.core.models.types.RatingTriggerType;
+import org.example.core.models.types.RoleTypes;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,7 +49,7 @@ public class RecalculationServiceTest {
         ReflectionTestUtils.setField(recalculationService, "isRecalculating",
                 new AtomicBoolean(true));
         Assertions.assertEquals(new StringResponse("Пересчет уже выполняется, попробуйте позже"),
-                recalculationService.personRequest(1L));
+                recalculationService.personRequest(1L, RoleTypes.ADMIN));
         verify(asyncRecalculationService, never()).recalculationForAll(eq(RatingTriggerType.ADMIN), any());
     }
 
@@ -60,7 +61,7 @@ public class RecalculationServiceTest {
         ReflectionTestUtils.setField(recalculationService, "isRecalculating",
                 new AtomicBoolean(false));
         Assertions.assertEquals(new StringResponse("Успешный пересчет"),
-                recalculationService.personRequest(null));
+                recalculationService.personRequest(null, RoleTypes.ADMIN));
         verify(asyncRecalculationService).recalculationForAll(eq(RatingTriggerType.ADMIN), any());
     }
 
@@ -80,7 +81,7 @@ public class RecalculationServiceTest {
         ReflectionTestUtils.setField(recalculationService,"clock", earlyMorning);
 
         Assertions.assertEquals(new StringResponse("Время пересчета ограничено для всех продуктов, попробуйте позже"),
-                recalculationService.personRequest(null));
+                recalculationService.personRequest(null, RoleTypes.ADMIN));
         verify(asyncRecalculationService, never()).recalculationForAll(eq(RatingTriggerType.ADMIN), any());
     }
 
@@ -94,7 +95,7 @@ public class RecalculationServiceTest {
                 new AtomicBoolean(false));
 
         Assertions.assertEquals(new StringResponse("Успешный пересчет"),
-                recalculationService.personRequest(null));
+                recalculationService.personRequest(null, RoleTypes.ADMIN));
         verify(asyncRecalculationService).recalculationForAll(eq(RatingTriggerType.ADMIN), any());
     }
 
@@ -115,8 +116,8 @@ public class RecalculationServiceTest {
         ReflectionTestUtils.setField(recalculationService,"clock", earlyMorning);
 
         Assertions.assertEquals(new StringResponse("Время пересчета ограничено для всех продуктов, попробуйте позже"),
-                recalculationService.personRequest(1L));
-        verify(asyncRecalculationService, never()).recalculationForGood(anyLong(), any());
+                recalculationService.personRequest(1L, RoleTypes.MODERATOR));
+        verify(asyncRecalculationService, never()).recalculationForGood(anyLong(), any(), any());
     }
 
     @Test
@@ -129,8 +130,8 @@ public class RecalculationServiceTest {
                 new AtomicBoolean(false));
 
         Assertions.assertEquals(new StringResponse("Успешный пересчет"),
-                recalculationService.personRequest(1L));
-        verify(asyncRecalculationService).recalculationForGood(anyLong(), any());
+                recalculationService.personRequest(1L, RoleTypes.MODERATOR));
+        verify(asyncRecalculationService).recalculationForGood(anyLong(), any(), any());
     }
 
     @Test

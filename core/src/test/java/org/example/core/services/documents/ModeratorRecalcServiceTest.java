@@ -154,22 +154,20 @@ class ModeratorRecalcServiceTest {
 
     @Test
     @Tag("negative")
-    @DisplayName("addManyLogsIfGoodIdsNotValid")
-    void addManyLogsIfGoodIdsNotValid() {
+    @DisplayName("addManyLogsIfDuplicates")
+    void addManyLogsIfDuplicates() {
         ModeratorLogCreateDto dto = new ModeratorLogCreateDto();
         dto.setGoodId(1L);
         dto.setVerdict(ModeratorVerdict.SUSPICIOUS);
 
         ManyModeratorLogCreateDto many = new ManyModeratorLogCreateDto();
-        many.setVerdicts(List.of(dto));
+        many.setVerdicts(List.of(dto,dto));
 
-        when(recalcHib.getModeratorRatingChecksByGoodIds(any())).thenReturn(List.of());
-
-        Exception ex = Assertions.assertThrows(
-                NotCorrectInput.class,
+         Assertions.assertThrows(
+                ManyIncorrectInputsException.class,
                 () -> service.addManyLogs(many, new User())
         );
-        Assertions.assertTrue(ex.getMessage().contains("Goods's ids are not valid"));
+
     }
 
     @Test
@@ -195,11 +193,11 @@ class ModeratorRecalcServiceTest {
         log.setVerdict(ModeratorVerdict.APPROVED);
         when(recalcHib.getModeratorRatingChecksByGoodIds(any())).thenReturn(List.of(log));
 
-        Exception ex = Assertions.assertThrows(
-                NotCorrectInput.class,
+         Assertions.assertThrows(
+                ManyIncorrectInputsException.class,
                 () -> service.addManyLogs(many, new User())
         );
-        Assertions.assertTrue(ex.getMessage().contains("Goods's ids are not valid"));
+
     }
 
     @Test

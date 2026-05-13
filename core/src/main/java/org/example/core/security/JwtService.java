@@ -22,7 +22,7 @@ public class JwtService {
 
     @Value("${secret}")
     String secret;
-    private final Long expiration = 86400L;
+    private final Long expiration = 900_000L;
 
     private SecretKey getSecretKey(){
         return Keys.hmacShaKeyFor(secret.getBytes());
@@ -38,7 +38,7 @@ public class JwtService {
                             .map(GrantedAuthority::getAuthority)
                             .collect(Collectors.toList()))
                     .issuedAt(Date.from(Instant.now()))
-                    .expiration(Date.from(Instant.now().plusMillis(expiration * 1000)))
+                    .expiration(Date.from(Instant.now().plusMillis(expiration )))
                     .signWith(getSecretKey(), Jwts.SIG.HS256)
                     .compact();
         }catch (Exception e){

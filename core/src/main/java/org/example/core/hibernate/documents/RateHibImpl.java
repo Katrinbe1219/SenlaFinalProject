@@ -13,10 +13,7 @@ import org.example.core.hibernate.base_settings.HibernateAbstractDao;
 import org.example.core.hibernate.base_settings.filters.rates.RatesFilter;
 import org.example.core.hibernate.base_settings.filters.rates.RatingRecalcFilter;
 import org.example.core.hibernate.base_settings.service_dto.RateExportDto;
-import org.example.core.models.Good;
-import org.example.core.models.RatingRecalculationLog;
-import org.example.core.models.Review;
-import org.example.core.models.Tag;
+import org.example.core.models.*;
 import org.example.core.models.types.RatingStatus;
 import org.example.core.models.types.RatingTriggerType;
 import org.example.core.utils.DateTimeUtils;
@@ -85,7 +82,7 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
 
             Session session = getSessionFactory().getCurrentSession();
             int count = 0;
-            for (Long goodsId: oldRates.keySet()) {
+            for (Long goodsId: newInfo.keySet()) {
                 RatingRecalculationLog log = new RatingRecalculationLog();
                 log.setRecalculatedAt(Instant.now());
                 log.setGood(newInfo.get(goodsId));
@@ -128,7 +125,6 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
     public void saveErrors(Map<Long, Good> info, String errorMessage, RatingStatus status,
                          RatingTriggerType type ) {
         try{
-
             Session session = getSessionFactory().getCurrentSession();
             int count = 0;
             for (Long goodsId: info.keySet()) {
@@ -173,7 +169,9 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
 
             List<JpaPredicate> predicates = new ArrayList<>();
             predicates.add(builder.equal(root.get("good").get("id"), goodId));
-            predicates.add(builder.equal(root.get("ratingStatus"), RatingStatus.SUCCESS));
+            predicates.add(
+                    builder.or(root.get("ratingStatus").equalTo(RatingStatus.SUCCESS),
+                            root.get("ratingStatus").equalTo(RatingStatus.FIRST_ADDED)));
 
             query.select(builder.construct(
                     RateValidGoodDto.class,
@@ -182,11 +180,14 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
                     root.get("newRate"),
                     root.get("triggeredBy")
                     )).where(builder.and(predicates.toArray(new JpaPredicate[0])))
-                    .orderBy(builder.asc(root.get("newRate")), builder.desc(root.get("recalculatedAt")));
+                    .orderBy(builder.desc(root.get("newRate")), builder.desc(root.get("recalculatedAt")));
 
-            return session.createQuery(query)
-                    .setMaxResults(count)
-                    .list();
+            var squery = session.createQuery(query);
+            if (count != 0){
+                squery.setMaxResults(count);
+            }
+
+            return squery.list();
         }
         catch (HibernateException e) {
             logger.error("Hibernate RateHinImpl findMaxRatesAmongProduct " + e.getMessage());
@@ -208,17 +209,20 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
             JpaCriteriaQuery<RateFullDto> query = builder.createQuery(RateFullDto.class);
             JpaRoot<RatingRecalculationLog> root = query.from(RatingRecalculationLog.class);
 
+            JpaJoin<RatingRecalculationLog, Good> goodJoin = root.join("good", JoinType.LEFT);
+            JpaJoin<Good, Category> categoryJoin = goodJoin.join("category", JoinType.LEFT);
+
             List<JpaPredicate> predicates = buildPredicates(builder, root, filters);
 
             query.select(builder.construct(
                     RateFullDto.class,
                     root.get("id"),
-                    root.get("good").get("name"),
-                    root.get("good").get("category").get("name"),
+                    goodJoin.get("name"),
+                    categoryJoin.get("name"),
                     root.get("recalculatedAt"),
                     root.get("triggeredBy"),
                     root.get("ratingStatus"),
-                    root.get("errorMessage"),
+                    builder.coalesce(root.get("errorMessage"), (String) null),
                     root.get("newRate")
             )).where(predicates.toArray(new JpaPredicate[0])).orderBy(builder.desc(root.get("recalculatedAt")));
             return session.createQuery(query).getResultList();
@@ -242,18 +246,21 @@ public class RateHibImpl extends HibernateAbstractDao<RatingRecalculationLog,Lon
             JpaRoot<RatingRecalculationLog> root = query.from(RatingRecalculationLog.class);
             List<JpaPredicate> predicates = buildPredicates(builder, root, filters);
 
+            JpaJoin<RatingRecalculationLog, Good> goodJoin = root.join("good", JoinType.LEFT);
+            JpaJoin<Good, Category> categoryJoin = goodJoin.join("category", JoinType.LEFT);
 
             query.select(builder.construct(
                     RateExportDto.class,
                     root.get("id"),
-                    root.get("good").get("id"),
-                    root.get("good").get("name"),
-                    root.get("good").get("category").get("id"),
-                    root.get("good").get("category").get("name"),
+                    goodJoin.get("id"),
+                    goodJoin.get("name"),
+
+                            categoryJoin.get("id"),
+                            categoryJoin.get("name"),
                     root.get("recalculatedAt"),
                     root.get("triggeredBy"),
                     root.get("ratingStatus"),
-                    root.get("errorMessage"),
+                    builder.coalesce(root.get("errorMessage"), (String) null),
                     root.get("newRate")
             )).where(predicates.toArray(new JpaPredicate[0]));
             return session.createQuery(query).getResultList();

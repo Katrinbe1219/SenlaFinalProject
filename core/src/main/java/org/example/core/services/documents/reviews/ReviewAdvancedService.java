@@ -59,8 +59,8 @@ public class ReviewAdvancedService {
                  logger.error("Moderator does not exist with login " + login);
                  throw new CanNotMakeExecution("Moderator does not exist with login " + login);
              }
-             boolean operation = reviewHib.blockReview(reviewId, moderator);
-             if (!operation) throw new DoesNoeExist("Review does not exist with given credentials");
+             reviewHib.blockReview(reviewId, moderator);
+
 
          }catch (DoesNoeExist | CanNotMakeExecution e){
              throw e;

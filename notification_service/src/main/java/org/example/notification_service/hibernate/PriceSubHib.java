@@ -54,13 +54,24 @@ public class PriceSubHib {
             Session session =sessionFactory.getCurrentSession();
             Long[] goodIds= pairs.stream().map(GoodShopPair::goodId).toArray(Long[]::new);
             Long[]shopIds = pairs.stream().map(GoodShopPair::shopId).toArray(Long[]::new);
-            return session.createNativeQuery(
-                    "SELECT ps.* FROM price_subscriptions ps " +
+            List<Long> ids = session.createNativeQuery(
+                    "SELECT ps.id FROM price_subscriptions ps " +
                             "JOIN unnest(:goodIds, :shopIds) AS pairs(goodId,shopId) " +
                             "ON ps.good_id = pairs.goodId AND ps.shop_id = pairs.shopId ",
-                            PriceSubscription.class)
+                            Long.class)
                     .setParameter("goodIds", goodIds)
                     .setParameter("shopIds", shopIds)
+                    .getResultList();
+
+            if (ids.isEmpty()) return List.of();
+            return session.createQuery(
+                            "SELECT ps FROM PriceSubscription ps " +
+                                    "JOIN FETCH ps.user " +
+                                    "JOIN FETCH ps.good " +
+                                    "JOIN FETCH ps.shop " +
+                                    "WHERE ps.id IN :ids",
+                            PriceSubscription.class)
+                    .setParameter("ids", ids)
                     .getResultList();
         }
         catch(HibernateException e) {

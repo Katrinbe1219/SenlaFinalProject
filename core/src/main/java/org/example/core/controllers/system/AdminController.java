@@ -29,7 +29,7 @@ public class AdminController {
 
     @GetMapping("/users")
     public List<UserFullDto> getUsers(@Valid @RequestBody UserAdvancedFilter filters){
-        return userService.getAllUsers(filters);
+        return userService.getAllUsers(filters, false);
     }
 
     @PostMapping("/users/analyst")

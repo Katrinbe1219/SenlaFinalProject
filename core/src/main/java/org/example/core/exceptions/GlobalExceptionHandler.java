@@ -132,6 +132,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<StringResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         logger.error("RestControllerAdvice HttpMessageNotReadableException: " + ex.getMessage());
+        if (ex.getMessage().contains(" Required request body is missing")){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse("Body is missing"));
+
+        }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new StringResponse("Invalid credentials"));
     }
 

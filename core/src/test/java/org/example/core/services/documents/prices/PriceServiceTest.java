@@ -324,7 +324,7 @@ public class PriceServiceTest {
 
         service.saveAll(List.of(dto1, dto2), OptionForUpload.STOP, true);
 
-        verify(priceHib).saveAll(any(), eq(OptionForUpload.STOP));
+        verify(priceHib).saveAll(any(), eq(OptionForUpload.STOP), anyBoolean());
         verify(eventPublisher,
                 times(2)).publishEvent(any(PriceCreatedMessage.class));
         verify(eventPublisher,
@@ -342,7 +342,7 @@ public class PriceServiceTest {
 
         service.saveAll(List.of(dto), OptionForUpload.STOP, false);
 
-        verify(priceHib).saveAll(any(), eq(OptionForUpload.STOP));
+        verify(priceHib).saveAll(any(), eq(OptionForUpload.STOP), anyBoolean());
         verify(eventPublisher, never()).publishEvent(any());
     }
 
@@ -357,7 +357,7 @@ public class PriceServiceTest {
 
         service.saveAll(List.of(dto), OptionForUpload.SKIP, true);
 
-        verify(priceHib).saveAll(any(), eq(OptionForUpload.SKIP));
+        verify(priceHib).saveAll(any(), eq(OptionForUpload.SKIP), anyBoolean());
         verify(eventPublisher, never()).publishEvent(any());
     }
 
@@ -376,15 +376,15 @@ public class PriceServiceTest {
         dto1.setPrice(BigDecimal.valueOf(150));
 
         // старая цена существует — PriceChangedMessage
-        Object[] row = new Object[]{1L, 1L, null, BigDecimal.valueOf(100)};
-        Object[] row1 = new Object[]{2L, 2L, null, BigDecimal.valueOf(130)};
+        Object[] row = new Object[]{1L, 1L, BigDecimal.valueOf(1), BigDecimal.valueOf(100)};
+        Object[] row1 = new Object[]{2L, 2L, BigDecimal.valueOf(2), BigDecimal.valueOf(130)};
         List<Object[]> list = List.of(row,row1);
         when(priceHib.makeInvalidManyWithReturning(any(), any()))
                 .thenReturn( list);
 
         service.saveAll(List.of(dto, dto1), OptionForUpload.REPLACE, true);
 
-        verify(priceHib).saveAll(any(), eq(OptionForUpload.REPLACE));
+        verify(priceHib).saveAll(any(), eq(OptionForUpload.REPLACE), anyBoolean());
         verify(eventPublisher, times(2)).publishEvent(any(PriceChangedMessage.class));
         verify(eventPublisher, never()).publishEvent(any(PriceCreatedMessage.class));
     }
@@ -398,13 +398,12 @@ public class PriceServiceTest {
         dto.setShopId(1L);
         dto.setPrice(BigDecimal.valueOf(200));
 
-        // старой цены нет — PriceCreatedMessage
         when(priceHib.makeInvalidManyWithReturning(any(), any()))
                 .thenReturn(List.of());
 
         service.saveAll(List.of(dto), OptionForUpload.REPLACE, true);
 
-        verify(priceHib).saveAll(any(), eq(OptionForUpload.REPLACE));
+        verify(priceHib).saveAll(any(), eq(OptionForUpload.REPLACE), anyBoolean());
         verify(eventPublisher).publishEvent(any(PriceCreatedMessage.class));
         verify(eventPublisher, never()).publishEvent(any(PriceChangedMessage.class));
     }
@@ -422,7 +421,7 @@ public class PriceServiceTest {
 
         // makeInvalidManyWithReturning не должен вызываться
         verify(priceHib, never()).makeInvalidManyWithReturning(any(), any());
-        verify(priceHib).saveAll(any(), eq(OptionForUpload.REPLACE));
+        verify(priceHib).saveAll(any(), eq(OptionForUpload.REPLACE), anyBoolean());
         verify(eventPublisher, never()).publishEvent(any());
     }
 
@@ -441,7 +440,7 @@ public class PriceServiceTest {
         newOne.setPrice(BigDecimal.valueOf(300));
 
         // только первый dto имеет старую цену
-        Object[] row = new Object[]{1L, 1L, null, BigDecimal.valueOf(100)};
+        Object[] row = new Object[]{1L, 1L, BigDecimal.valueOf(1), BigDecimal.valueOf(100)};
         List<Object[]> rows = new ArrayList<>();
         rows.add(row);
         when(priceHib.makeInvalidManyWithReturning(any(), any()))

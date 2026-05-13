@@ -50,12 +50,12 @@ public class PriceAnalyseHibImpl extends HibernateAbstractDao<Price,Long, Logger
             return session.createQuery("""
             SELECT  DISTINCT  new  org.example.core.dto.getting.statistics.shops.ShopStatisticDto (
             :shopId,
-            MIN(p.price),
             MAX(p.price),
+            MIN(p.price),
             CAST(AVG(p.price)  AS big_decimal)
             )
             FROM Price p
-            WHERE p.shop.id = :shopId
+            WHERE p.shop.id = :shopId AND p.validTo IS NULL
             """, ShopStatisticDto.class)
                     .setParameter("shopId", shopId).uniqueResultOptional().orElse(null);
         }
@@ -80,7 +80,7 @@ public class PriceAnalyseHibImpl extends HibernateAbstractDao<Price,Long, Logger
                 p.price,
                 p.id
             ) FROM Price p
-            WHERE p.shop.id = :shopId
+            WHERE p.shop.id = :shopId AND p.validTo IS NULL
             ORDER BY p.price DESC
             """, GoodAnalyseForShopDto.class)
                     .setMaxResults(count)
@@ -107,7 +107,7 @@ public class PriceAnalyseHibImpl extends HibernateAbstractDao<Price,Long, Logger
                 p.price,
                 p.id
             ) FROM Price p
-            WHERE p.shop.id = :shopId
+            WHERE p.shop.id = :shopId AND p.validTo IS NULL
             ORDER BY p.price ASC
             """, GoodAnalyseForShopDto.class)
                     .setMaxResults(count)

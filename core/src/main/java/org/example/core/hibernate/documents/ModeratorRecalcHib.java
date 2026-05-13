@@ -1,5 +1,6 @@
 package org.example.core.hibernate.documents;
 
+import jakarta.persistence.criteria.JoinType;
 import jakarta.transaction.Transactional;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -105,6 +106,8 @@ public class ModeratorRecalcHib extends HibernateAbstractDao<ModeratorRatingChec
 
             List<JpaPredicate> predicates = buildPredicates(filters, builder, root);
             JpaOrder order = buildOrder(filters, builder, root);
+            root.fetch("good", JoinType.LEFT);
+            root.fetch("moderator", JoinType.LEFT);
 
             query.select(root).where(predicates.toArray(new JpaPredicate[0])).orderBy(order);
             var squery = session.createQuery(query);

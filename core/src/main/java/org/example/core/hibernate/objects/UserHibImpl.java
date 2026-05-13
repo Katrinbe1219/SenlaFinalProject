@@ -40,7 +40,7 @@ public class UserHibImpl extends HibernateAbstractDao<User, Long, Logger> {
         try{
             Session session = getSessionFactory().getCurrentSession();
             return session.createQuery("SELECT r FROm Role  r WHERE r.name = :role", Role.class)
-                    .setParameter("role", "MIN_USER").uniqueResultOptional().orElse(null);
+                    .setParameter("role", RoleTypes.MIN_USER).uniqueResultOptional().orElse(null);
         }
         catch(HibernateException e){
             logger.error("Hibernate  UserHibImpl getDefaultRole: " + e.getMessage());
@@ -53,30 +53,6 @@ public class UserHibImpl extends HibernateAbstractDao<User, Long, Logger> {
 
     }
 
-    @Transactional
-    public User getUserByUsernameFullVersion(String username) throws CanNotMakeExecution {
-        Session session = getSessionFactory().getCurrentSession();
-        try {
-            HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
-            JpaCriteriaQuery<User> query = builder.createQuery(User.class);
-            JpaRoot<User> root = query.from(User.class);
-            query.where(builder.equal(root.get("username"), username));
-//            Hibernate.initialize(root.get("role")); // - Не работает, тут просто путь, другое дело если бы было user.getRole
-            root.fetch("role", JoinType.LEFT);
-
-            Optional<User> result = session.createQuery(query).uniqueResultOptional();
-            return result.orElse(null);
-
-        }
-        catch(HibernateException e){
-            logger.error("Hibernate  UserHibImpl getUserByUsernameFullVersion: " + e.getMessage());
-            throw  new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception UserHibImpl getUserByUsernameFullVersion: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
 
     @Transactional
     public List<User> findByUsernameOrLoginOrEmail(String login, String username, String email){
@@ -182,25 +158,6 @@ public class UserHibImpl extends HibernateAbstractDao<User, Long, Logger> {
         }
     }
 
-
-    @Transactional
-    public Long getUserIdByUsername(String username) throws CanNotMakeExecution {
-        Session session = getSessionFactory().getCurrentSession();
-        try{
-            return session.createQuery("""
-                SELECT u.id FROM User u WHERE u.username = :username
-             """, Long.class).setParameter("username", username).uniqueResultOptional().orElse(null);
-        }
-        catch(HibernateException e){
-            logger.error("Hibernate  UserHibImpl getUserIdByUsername: " + e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception UserHibImpl getUserIdByUsername: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
-
     @Transactional
     public Long getUserIdByLogin(String login) throws CanNotMakeExecution {
         try{
@@ -263,50 +220,21 @@ public class UserHibImpl extends HibernateAbstractDao<User, Long, Logger> {
 
     }
 
-    @Transactional
-    public List<User> getUsersByFilter(UserAdvancedFilter filters){
-        try{
-            Session session = getSessionFactory().getCurrentSession();
-            List<Long> ids = getUsersIdsByFilter(filters);
-            if (ids.isEmpty()) return List.of();
 
-            List<User> res =  session.createQuery("""
-            SELECT u FROM User u 
-            LEFT JOIN FETCH u.role
-            WHERE u.id IN (:ids)
-            """, User.class)
-                    .setParameter("ids", ids)
-                    .getResultList();
 
-            Map<Long, User> maps = res.stream().collect(Collectors.toMap(
-                    User::getId, user -> user
-            ));
-
-            return ids.stream().map(maps::get).collect(Collectors.toList());
-        }
-        catch(HibernateException e){
-            logger.error("Hibernate  UserHibImpl getUsersByFilter: " + e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception UserHibImpl getUsersByFilter: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-
-    }
 
     @Transactional
-    public List<Long> getUsersIdsByFilter(UserAdvancedFilter filters){
+    public List<User> getUsersByFilter(UserAdvancedFilter filters, boolean isModerator){
         try{
             Session session = getSessionFactory().getCurrentSession();
             HibernateCriteriaBuilder builder = session.getCriteriaBuilder();
-            JpaCriteriaQuery<Long> query = builder.createQuery(Long.class);
+            JpaCriteriaQuery<User> query = builder.createQuery(User.class);
             JpaRoot<User> root = query.from(User.class);
 
-            List<JpaPredicate> predicates = buildPredicates(builder, root, filters);
+            List<JpaPredicate> predicates = buildPredicates(builder, root, filters, isModerator);
             JpaOrder order = buildOrder(filters, builder, root);
 
-            query.select(root.get("id"))
+            query.select(root)
                     .where(predicates.toArray(new JpaPredicate[predicates.size()]))
                     .orderBy(order);
             return session.createQuery(query).getResultList();
@@ -327,7 +255,8 @@ public class UserHibImpl extends HibernateAbstractDao<User, Long, Logger> {
     private List<JpaPredicate>  buildPredicates(
             HibernateCriteriaBuilder builder,
             JpaRoot<User> root,
-            UserAdvancedFilter filters
+            UserAdvancedFilter filters,
+            boolean isModerator
     ){
         List<JpaPredicate> predicates = new ArrayList<JpaPredicate>();
         if (filters.getLocked() != null ) {
@@ -390,7 +319,7 @@ public class UserHibImpl extends HibernateAbstractDao<User, Long, Logger> {
             predicates.add(
                     builder.equal(root.get("role").get("name"), filters.getRoleType())
             );
-        }else{
+        }else if (isModerator){
             predicates.add(
                     builder.or(
                             builder.equal(root.get("role").get("name"), RoleTypes.MIN_USER),
@@ -417,24 +346,5 @@ public class UserHibImpl extends HibernateAbstractDao<User, Long, Logger> {
         };
 
     }
-
-    @Transactional
-    public List<ModeratorDto> getModerators(){
-        try{
-            Session session = getSessionFactory().getCurrentSession();
-            return session.createQuery("""
-                SELECT u.id, u.username FROM User u WHERE u.role.name = :role
-            """, ModeratorDto.class).setParameter("role", "MODERATOR").getResultList();
-        }
-        catch(HibernateException e){
-            logger.error("Hibernate  UserHibImpl getModerators: " + e.getMessage());
-            throw new CanNotMakeExecution(e.getMessage());
-        }
-        catch (Exception e){
-            logger.error("NonHibernate Exception UserHibImpl getModerators: "+e.getMessage());
-            throw new NonHibernateException(e.getMessage());
-        }
-    }
-
 
 }

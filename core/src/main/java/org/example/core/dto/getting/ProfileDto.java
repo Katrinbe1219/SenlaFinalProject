@@ -13,6 +13,7 @@ import java.time.Instant;
 public class ProfileDto {
     private String username;
     private String login;
+    private String email;
     private String role;
     @JsonFormat(pattern = "dd.MM.yyyy",timezone = "Europe/Moscow")
     private Instant createdAt;

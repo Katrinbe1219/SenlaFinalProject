@@ -80,7 +80,7 @@ public class GoodController {
             @Valid @RequestBody ReviewForUserFilters filters,
             @AuthenticationPrincipal User user
         ){
-        return reviewService.getByFilters(filters, user.getUsername());
+        return reviewService.getByFilters(filters);
     }
 
     @PostMapping("/{id}/favourite")
