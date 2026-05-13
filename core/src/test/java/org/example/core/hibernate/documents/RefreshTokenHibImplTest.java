@@ -170,31 +170,6 @@ public class RefreshTokenHibImplTest {
 
     }
 
-//    @Test
-//    @DisplayName("findAllByFiltersWithFiltersWithUserIdsAndPagination")
-//    void findAllByFiltersWithFiltersWithUserIdsAndPagination(){
-//        User user = createUser("login-new", "new-username");
-//        User user1 = createUser("login-new1", "new-username1");
-//
-//        createToken(user1, null, "hashhhh", null);
-//        createToken(basicUser, Instant.now().plus(4, ChronoUnit.DAYS), "hash1", null);
-//        createToken(user, Instant.now().plus(2, ChronoUnit.DAYS), "hash2", null);
-//
-//        //----------
-//        RefreshTokenFilter filters = new RefreshTokenFilter();
-//        filters.setUserIds(List.of(user.getId(), user1.getId()));
-//        filters.setSize(1);
-//        filters.setSortType(RefreshTokenSortType.DESC);
-//
-//        List<RefreshToken> found =  refreshTokenHib.findAllByFilters(filters);
-//        System.out.println(found);
-//        Assertions.assertEquals(1, found.size());
-//        Assertions.assertFalse(found.stream().map(r -> r.getUser().getId()).toList().contains(basicUser.getId()));
-//        Assertions.assertFalse(found.stream().map(r -> r.getUser().getId()).toList().contains(user1.getId()));
-//        Assertions.assertTrue(found.stream().map(r -> r.getUser().getId()).toList().contains(user.getId()));
-//
-//    }
-
     @Test
     @DisplayName("findByUserAndDeviceIfNotFound")
     void findByUserAndDeviceIfNotFound(){
